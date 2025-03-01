@@ -1,3 +1,4 @@
+# Import necessary libraries
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier, plot_tree
@@ -14,10 +15,13 @@ import pickle
 # Data Loading
 df_total_ksi = pd.read_csv('TOTAL_KSI.csv')
 
+# Display information about the dataset
 print(df_total_ksi.info())  # Column types and missing values
 
+# Display summary statistics for all columns
 print(df_total_ksi.describe(include='all'))  # Summary stats for all columns
 
+# Calculate and display missing data
 missing_data = df_total_ksi.isnull().sum().sort_values(ascending=False)
 missing_percent = (missing_data/len(df_total_ksi)) * 100
 pd.concat([missing_data, missing_percent], axis=1, keys=['Total Missing', 'Percent Missing'])
@@ -45,6 +49,7 @@ print(labels.info())
 df_features = df_total_ksi[relevant_features]
 print(df_features.info())
 
+# Identify numeric and categorical features
 numeric_features = []
 categorical_features = []
 
@@ -57,9 +62,12 @@ for col in df_features.columns:
 print('Numeric Features:', numeric_features)
 print('Categorical Features:', categorical_features)
 
+# Encode labels
 label_encoder = LabelEncoder()
 labels_encoded = label_encoder.fit_transform(labels)
 print(labels_encoded.shape)
+
+# Preprocessor pipeline
 
 preprocessor = ColumnTransformer(
     transformers=[
@@ -86,11 +94,14 @@ param_grid = {
     'classifier__max_features': ['sqrt', 'log2', None],
 }
 
+# Insert the last 10 items from df_features and labels_encoded into unseen_features and unseen_labels
+unseen_features = df_features.iloc[-10:]
+unseen_labels = labels_encoded[-10:]
+# Remove the last 10 items from df_features and labels_encoded
+df_features = df_features.iloc[:-10]
+labels_encoded = labels_encoded[:-10]
+
 # Data Splitting
-
-unseen_features = df_features.iloc[0:-10]
-unseen_labels = labels_encoded[0:-10]
-
 X_train, X_test, y_train, y_test = train_test_split(df_features, labels_encoded, test_size=0.2, random_state=48)
 
 
@@ -120,6 +131,15 @@ plt.figure(figsize=(15,10))
 plot_tree(best_dt.named_steps['classifier'], filled=True)
 plt.show()
 
+# Unseen Data Prediction
+best_dt.fit(unseen_features, unseen_labels)
+unseen_predictions = best_dt.predict(unseen_features)
+print(f"Unseen Data Accuracy: {accuracy_score(unseen_labels, unseen_predictions):.3f}")
+
+# Plot the tree
+plt.figure(figsize=(15,10))
+plot_tree(best_dt.named_steps['classifier'], filled=True)
+plt.show()
 
 # Model Serialization
 with open('dt_model.pkl', 'wb') as f:
