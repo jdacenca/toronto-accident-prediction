@@ -6,7 +6,7 @@ np.random.seed(17)
 
 try:
     # Loading & Checking the data
-    data_ksi = pd.read_csv('./Total_KSI.csv')
+    data_ksi = pd.read_csv('./data/Total_KSI.csv')
     
     if data_ksi is not None:
         pd.set_option("display.max_columns", 100)
@@ -68,14 +68,14 @@ from Visualizer import Visualizer
 try:
     visualizer = Visualizer(data_ksi)
 
-    visualizer.scatter_plot("scatter_plot.png")
-    visualizer.pie_chart("pie_chart.png")
-    visualizer.bar_chart("bar_chart.png")
-    visualizer.heatmap_correlation("heatmap_correlation.png")
-    visualizer.heatmap_missing_values("heatmap_missing_values.png")
-    visualizer.hist_plot("hist_plot.png")
-    visualizer.pair_plot("pair_plot.png")
-    visualizer.spline_plot("spline_plot.png")
+    visualizer.scatter_plot("./images/scatter_plot.png")
+    visualizer.pie_chart("./images/pie_chart.png")
+    visualizer.bar_chart("./images/bar_chart.png")
+    visualizer.heatmap_correlation("./images/heatmap_correlation.png")
+    visualizer.heatmap_missing_values("./images/heatmap_missing_values.png")
+    visualizer.hist_plot("./images/hist_plot.png")
+    visualizer.pair_plot("./images/pair_plot.png")
+    visualizer.spline_plot("./images/spline_plot.png")
 
     # Encode the target variable (ACCLASS) using LabelEncoder
     label_encoder = LabelEncoder()
