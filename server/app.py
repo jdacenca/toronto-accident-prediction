@@ -32,10 +32,8 @@ if __name__ == '__main__':
 
     # Train the model
     model_trainer.train_model()
-    y_pred = model_trainer.predict()
 
-    # Generate Confusion Matrix
-    cm = confusion_matrix(data_processor.y_test, y_pred)
     performance.conf_matrix(cm, '../client/public/images/confusion_matrix_svm.png')
+    performance.plot_classification_report_radial('../client/public/images/classification_report_svm.png')
 
     app.run(debug=True)
