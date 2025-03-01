@@ -1,3 +1,4 @@
+
 # Import necessary libraries
 import pandas as pd
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -10,7 +11,7 @@ from sklearn.metrics import (accuracy_score, precision_score,
                             ConfusionMatrixDisplay)
 from sklearn.impute import SimpleImputer
 import matplotlib.pyplot as plt
-import pickle
+import joblib
 
 # Data Loading
 df_total_ksi = pd.read_csv('TOTAL_KSI.csv')
@@ -117,9 +118,6 @@ print(f"Best Parameters: {grid_search.best_params_}")
 print(f"Best Estimator: {grid_search.best_estimator_}")
 print(f"Training Accuracy: {grid_search.best_score_:.3f}")
 print(f"Testing Accuracy: {accuracy_score(y_test, y_pred):.3f}")
-print(f"Testing Precision: {precision_score(y_test, y_pred, average="micro"):.3f}")
-print(f"Testing Recall: {recall_score(y_test, y_pred, average="micro"):.3f}")
-print(f"Testing F1 Score: {f1_score(y_test, y_pred, average="micro"):.3f}")
 
 # Visualization
 fig, ax = plt.subplots(figsize=(8, 6))
@@ -142,5 +140,4 @@ plot_tree(best_dt.named_steps['classifier'], filled=True)
 plt.show()
 
 # Model Serialization
-with open('dt_model.pkl', 'wb') as f:
-    pickle.dump(best_dt, f)
+joblib.dump(best_dt, 'dt_model.pkl')
