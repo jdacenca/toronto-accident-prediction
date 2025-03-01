@@ -129,16 +129,18 @@ try:
         ('svm', SVC(random_state=17))
     ])
 
-    param_grid_svm = [
-        {'svm__kernel': ['linear'], 'svm__C': [1]}, # linear kernel    
-        {'svm__kernel': ['rbf'], 'svm__C': [100], 'svm__gamma': [0.03]},  # rbf kernel
-        {'svm__kernel': ['poly'], 'svm__C': [0.1], 'svm__gamma': [3.0], 'svm__degree': [3]}  # poly kernel 
-    ]
+    # Best Parameters by Kernel
     # param_grid_svm = [
-    #     {'svm__kernel': ['linear'], 'svm__C': [0.01, 0.1, 1, 10, 100]},  # linear kernel    
-    #     {'svm__kernel': ['rbf'], 'svm__C': [0.01, 0.1, 1, 10, 100], 'svm__gamma': [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]},  # rbf kernel
-    #     {'svm__kernel': ['poly'], 'svm__C': [0.01, 0.1, 1, 10, 100], 'svm__gamma': [0.01, 0.03, 0.1, 0.3, 1.0, 3.0], 'svm__degree': [2, 3]}  # poly kernel 
+    #     {'svm__kernel': ['linear'], 'svm__C': [1]}, # linear kernel    
+    #     {'svm__kernel': ['rbf'], 'svm__C': [100], 'svm__gamma': [0.03]},  # rbf kernel
+    #     {'svm__kernel': ['poly'], 'svm__C': [0.1], 'svm__gamma': [3.0], 'svm__degree': [3]}  # poly kernel 
     # ]
+
+    param_grid_svm = [
+        {'svm__kernel': ['linear'], 'svm__C': [0.01, 0.1, 1, 10, 100]},  # linear kernel    
+        {'svm__kernel': ['rbf'], 'svm__C': [0.01, 0.1, 1, 10, 100], 'svm__gamma': [0.01, 0.03, 0.1, 0.3, 1.0, 3.0]},  # rbf kernel
+        {'svm__kernel': ['poly'], 'svm__C': [0.01, 0.1, 1, 10, 100], 'svm__gamma': [0.01, 0.03, 0.1, 0.3, 1.0, 3.0], 'svm__degree': [2, 3]}  # poly kernel 
+    ]
 
     grid_search_ksi = GridSearchCV(estimator=pipe_svm_ksi, param_grid=param_grid_svm, scoring='accuracy', refit=True, verbose=3)
 
