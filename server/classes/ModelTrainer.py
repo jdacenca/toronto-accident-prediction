@@ -26,6 +26,8 @@ class ModelTrainer:
         grid_search.fit(self.data_processor.X_train, self.data_processor.y_train)
 
         self.model = grid_search.best_estimator_
+        
+        return self.model
 
     def predict(self):
         return self.model.predict(self.data_processor.X_test)
