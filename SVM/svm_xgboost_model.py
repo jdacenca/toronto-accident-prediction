@@ -141,7 +141,7 @@ try:
     ])
 
     param_grid_combined = {
-    'svm__svm__kernel': ['linear', 'rbf', 'poly'],
+    'svm__svm__kernel': ['rbf', 'poly'],
     'svm__svm__C': [0.1,1,100],
     'svm__svm__gamma': [0.03,3.0],
     'svm__svm__degree': [3],
