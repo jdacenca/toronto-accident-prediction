@@ -15,6 +15,14 @@ class DataProcessor:
         self.y = self.data_ksi["ACCLASS"]
         self.X = self.data_ksi.drop(columns=["ACCLASS"])
 
+        # Isolate last 10 records for unseen data
+        self.unseen_features = self.X.iloc[-10:]
+        self.unseen_labels = self.y.iloc[-10:]
+        
+        # Remove last 10 records from main dataset
+        self.X = self.X.iloc[:-10]
+        self.y = self.y.iloc[:-10]
+
         # Encode target variable
         self.label_encoder = LabelEncoder()
         self.y = self.label_encoder.fit_transform(self.y)

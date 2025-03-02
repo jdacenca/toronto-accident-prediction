@@ -26,7 +26,7 @@ const App = () => {
       <div id="app-container-id" className="flex h-screen">
         {/* Sidebar (Left) */}
         <div className="w-64 bg-gray-100 border-r ">
-          <Sidebar />
+          <Navbar />
         </div>
     
         {/* Main Content (Right) */}

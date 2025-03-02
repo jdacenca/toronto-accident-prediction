@@ -19,7 +19,7 @@ const Navbar = () => {
     <div className="h-screen w-64 bg-gray-50 border-r p-5 flex flex-col">
       <div className="flex items-center space-x-2 mb-8">
         <div className="w-6 h-6 bg-violet-500 text-white flex items-center justify-center rounded-full">
-          <span className="text-sm font-bold">⚙</span>
+          <span className="text-sm font-bold"></span>
         </div>
         <h1 className="text-lg font-semibold text-violet-600">Fatality Predictor</h1>
       </div>
