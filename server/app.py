@@ -23,7 +23,6 @@ if __name__ == '__main__':
     data_processor = DataProcessor('./data/Total_KSI.csv')
     visualizer = Visualizer(data_processor.data_ksi)
     model_trainer = ModelTrainer(data_processor)
-    performance = ModelPerformance(model_trainer.model,data_processor.X_test, data_processor.y_test)
 
     # Visualizations
     visualizer.scatter_plot('../client/public/images/scatterplot.png')
@@ -31,9 +30,10 @@ if __name__ == '__main__':
     visualizer.bar_chart('../client/public/images/barchart.png')
 
     # Train the model
-    model_trainer.train_model()
+    model = model_trainer.train_model()
+    performance = ModelPerformance(model,data_processor.X_test, data_processor.y_test)
 
-    performance.conf_matrix(cm, '../client/public/images/confusion_matrix_svm.png')
+    performance.conf_matrix('../client/public/images/confusion_matrix_svm.png')
     performance.plot_classification_report_radial('../client/public/images/classification_report_svm.png')
 
     app.run(debug=True)
