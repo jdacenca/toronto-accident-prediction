@@ -8,7 +8,7 @@ class Visualizer:
         self.data_ksi = data_ksi
 
     def scatter_plot(self, save_path):
-        custom_palette = ["#E16540", "#9999FF", "#FAC666"]
+        custom_palette = ["#E16540", "#9999FF"]
         plt.figure(figsize=(12, 6))
         sns.scatterplot(x='LATITUDE', y='LONGITUDE', data=self.data_ksi, hue='ACCLASS', palette=custom_palette)
         plt.title("Scatterplot of Latitude & Longitude", fontsize=14, fontweight='bold')
@@ -19,7 +19,7 @@ class Visualizer:
 
     def pie_chart(self, save_path):
         target_counts = self.data_ksi["ACCLASS"].value_counts()
-        custom_colors = ["#95D1FF", "#FAC666", "#7661E2"]
+        custom_colors = ["#95D1FF", "#FAC666"]
         plt.figure(figsize=(7, 7))
         wedges, texts, autotexts = plt.pie(target_counts, labels=target_counts.index, autopct='%1.1f%%', colors=custom_colors, wedgeprops={'edgecolor': 'white'}, startangle=140)
         centre_circle = plt.Circle((0, 0), 0.60, fc='white')
@@ -59,7 +59,7 @@ class Visualizer:
         plt.show()
 
     def pair_plot(self, save_path):
-        custom_bar_colors = ["#FAC666", "#7661E2", "#95D1FF"]
+        custom_bar_colors = ["#FAC666", "#7661E2"]
         sns.pairplot(self.data_ksi, hue="ACCLASS", palette=custom_bar_colors)
         plt.title("Pairplot of Features")
         plt.savefig(save_path)
@@ -81,8 +81,8 @@ class Visualizer:
         # Define colors for each accident type
         colors = {
             'Fatal': '#F5866A',
-            'Non-Fatal Injury': '#6956E5',
-            'Property Damage O': '#59E6F6'
+            'Non-Fatal Injury': '#6956E5'
+            #'Property Damage O': '#59E6F6'
         }
 
         # Plot Spline Chart for each accident class
