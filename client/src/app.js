@@ -1,7 +1,7 @@
 import React, { use, useEffect, useState } from "react";
 import axios from "axios";
 import { Chart, registerables } from "chart.js";
-import Sidebar from "./components/Navbar";
+import Navbar from "./components/Navbar";
 
 Chart.register(...registerables);
 
@@ -37,9 +37,12 @@ const App = () => {
           <div className="mt-6 text-center">
             <h2 className="text-xl font-semibold">Confusion Matrix</h2>
             <img src={data.conf_matrix} alt="Confusion Matrix" className="mt-4 w-auto max-w-full" />
+          </div>
+          <div className="mt-6 text-center">
             <img src={data.scatter_plot} alt="Scatter Plot" className="mt-4 w-auto max-w-full" />
-            <img src={data.pie_chart} alt="Scatter Plot" className="mt-4 w-auto max-w-full" />
-
+          </div>
+          <div className="mt-6 text-center">
+          <img src={data.pie_chart} alt="Scatter Plot" className="mt-4 w-auto max-w-full" />
           </div>
         </div>
       </div>
