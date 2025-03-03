@@ -31,17 +31,72 @@ try:
         # Drop unnecessary columns
         columns_to_drop = ['INDEX', 'ACCNUM', 'OBJECTID', 'HOOD_158', 'NEIGHBOURHOOD_158', 
                            'HOOD_140', 'NEIGHBOURHOOD_140', 'STREET1', 'STREET2', 'OFFSET', 
-                           'FATAL_NO', 'DISTRICT', 'DIVISION']
-        data_ksi.drop(columns=columns_to_drop, inplace=True)
+                           'FATAL_NO', 'DISTRICT', 'DIVISION','x','y','INJURY','INVTYPE','INVAGE','INITDIR','VEHTYPE',
+                           'MANOEUVER','DRIVACT','PEDTYPE','PEDACT','CYCLISTYPE','CYCACT',]
         
+        print("\n===================== UNIQUE VALUES =====================")
+        print("\nUnique values in DATE:", data_ksi["DATE"].unique())
+        print("\nUnique values in TIME:", data_ksi["TIME"].unique())
+        print("\nUnique values in ROAD_CLASS:", data_ksi["ROAD_CLASS"].unique())
+        print("\nUnique values in ACCLOC:",data_ksi["ACCLOC"].unique())
+        print("\nUnique values in TRAFFCTL:", data_ksi["TRAFFCTL"].unique())
+        print("\nUnique values in VISIBILITY:", data_ksi["VISIBILITY"].unique())
+        print("\nUnique values in LIGHT:", data_ksi["LIGHT"].unique())
+        print("\nUnique values in RDSFCOND:", data_ksi["RDSFCOND"].unique())
+        print("\nUnique values in IMPACTYPE:", data_ksi["IMPACTYPE"].unique())
+        print("\nUnique values in INVTYPE:", data_ksi["INVTYPE"].unique())
+        print("\nUnique values in INVAGE:", data_ksi["INVAGE"].unique())
+        print("\nUnique values in INJURY:", data_ksi["INJURY"].unique())
+        print("\nUnique values in INITDIR:", data_ksi["INITDIR"].unique())
+        print("\nUnique values in VEHTYPE:", data_ksi["VEHTYPE"].unique())
+        print("\nUnique values in MANOEUVER:", data_ksi["MANOEUVER"].unique())
+        print("\nUnique values in DRIVACT:", data_ksi["DRIVACT"].unique())
+        print("\nUnique values in DRIVCOND:", data_ksi["DRIVCOND"].unique())
+        print("\nUnique values in PEDTYPE:", data_ksi["PEDTYPE"].unique())
+        print("\nUnique values in PEDACT:", data_ksi["PEDACT"].unique())
+        print("\nUnique values in PEDCOND:", data_ksi["PEDCOND"].unique())
+        print("\nUnique values in CYCLISTYPE:", data_ksi["CYCLISTYPE"].unique())
+        print("\nUnique values in CYCACT:", data_ksi["CYCACT"].unique())
+        print("\nUnique values in CYCCOND:", data_ksi["CYCCOND"].unique())
+        print("\nUnique values in PEDESTRIAN:", data_ksi["PEDESTRIAN"].unique())
+        print("\nUnique values in CYCLIST:", data_ksi["CYCLIST"].unique())
+        print("\nUnique values in AUTOMOBILE:",data_ksi["AUTOMOBILE"].unique())
+        print("\nUnique values in MOTORCYCLE:", data_ksi["MOTORCYCLE"].unique())
+        print("\nUnique values in TRUCK:", data_ksi["TRUCK"].unique())
+        print("\nUnique values in TRSN_CITY_VEH:", data_ksi["TRSN_CITY_VEH"].unique())
+        print("\nUnique values in EMERG_VEH:", data_ksi["EMERG_VEH"].unique())
+        print("\nUnique values in PASSENGER:", data_ksi["PASSENGER"].unique())
+        print("\nUnique values in SPEEDING:", data_ksi["SPEEDING"].unique())
+        print("\nUnique values in AG_DRIV:", data_ksi["AG_DRIV"].unique())
+        print("\nUnique values in REDLIGHT:", data_ksi["REDLIGHT"].unique())
+        print("\nUnique values in ALCOHOL:", data_ksi["ALCOHOL"].unique())
+        print("\nUnique values in DISABILITY:", data_ksi["DISABILITY"].unique())
+        print("\nUnique values in ACCLASS:", data_ksi["ACCLASS"].unique())
+
+        # Drop unnecessary columns
+        data_ksi.drop(columns=columns_to_drop, inplace=True)
+
+        data_ksi = data_ksi.dropna(subset=["ACCLASS"])
+
+        data_ksi["PEDESTRIAN"] = data_ksi["PEDESTRIAN"].fillna("No")
+        data_ksi["CYCLIST"] = data_ksi["CYCLIST"].fillna("No")
+        data_ksi["AUTOMOBILE"] = data_ksi["AUTOMOBILE"].fillna("No")
+        data_ksi["MOTORCYCLE"] = data_ksi["MOTORCYCLE"].fillna("No")
+        data_ksi["TRUCK"] = data_ksi["TRUCK"].fillna("No")
+        data_ksi["TRSN_CITY_VEH"] = data_ksi["TRSN_CITY_VEH"].fillna("No")
+        data_ksi["EMERG_VEH"] = data_ksi["EMERG_VEH"].fillna("No")
+        data_ksi["PASSENGER"] = data_ksi["PASSENGER"].fillna("No")
+        data_ksi["SPEEDING"] = data_ksi["SPEEDING"].fillna("No")
+        data_ksi["AG_DRIV"] = data_ksi["AG_DRIV"].fillna("No")
+        data_ksi["REDLIGHT"] = data_ksi["REDLIGHT"].fillna("No")
+        data_ksi["ALCOHOL"] = data_ksi["ALCOHOL"].fillna("No")
+        data_ksi["DISABILITY"] = data_ksi["DISABILITY"].fillna("No")
+        data_ksi["ACCLASS"] = data_ksi["ACCLASS"].replace("Property Damage O", "Non-Fatal Injury")
+
         # Separate features & target
         target = data_ksi["ACCLASS"]
         features = data_ksi.drop(columns=["ACCLASS"])
-        
-        print("\n===================== UNIQUE VALUES =====================")
-        print("\nUnique values in ROAD_CLASS:", features["ROAD_CLASS"].unique())
-        print("\nUnique values in ACCLASS:", target.unique())
-        
+
         # Isolate last 10 records for unseen data
         unseen_features = features.iloc[-10:]
         unseen_labels = target.iloc[-10:]
