@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Navbar Container */
+.navbar {
+    width: 16rem; /* 64px */
+    height: 100vh;
+    background-color: #f5f5f5; /* Light Gray */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    height: 100vh;
+    position: fixed;
+    flex-direction: column;
+    padding: 24px;
+  }
+  
+  /* Navbar Header */
+  .navbar-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+  
+  /* Navbar Logo */
+  .navbar-logo {
+    background-color: #6956E5; /* Purple */
+    padding: 8px;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.25rem;
+  }
+  
+  /* Navbar Title */
+  .navbar-title {
+    font-size: 1.125rem;
+    font-weight: bold;
+    color: #6956E5; /* Purple */
+  }
+  
+  /* Navbar Navigation */
+  .navbar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  /* Navbar Links */
+  .navbar-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #878787; /* Gray */
+    text-decoration: none;
+    transition: color 0.2s;
+    font-size: 1rem;
+  }
+  
+  .navbar-link:hover {
+    color: #6956E5; /* Purple */
+    font-weight: bold;
+  }
+  
+  /* Active Link */
+  .navbar-link.active {
+    color: #6956E5; /* Purple */
+    font-weight: bold;
+  }
+  
