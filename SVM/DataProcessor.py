@@ -42,7 +42,7 @@ def data_overview(df):
         for column in df.columns:
             print(f"\nUnique values in {column}:", df[column].unique())
 
-def data_cleaning(df, columns_to_drop):
+def data_cleaning(df, columns_to_drop, class_imb= 'none'):
     
     df2 = df.copy()
 
@@ -83,19 +83,23 @@ def data_cleaning(df, columns_to_drop):
 
     df2["TRAFFCTL"] = df2["TRAFFCTL"].fillna("No_Control")
 
+    if class_imb == 'oversampling':
+        # oversampling based on equal amount of acclass values
+        rus = RandomOverSampler(sampling_strategy='auto', random_state=17)
+        X_res, y_res = rus.fit_resample(df2.drop(columns=['ACCLASS']), df2['ACCLASS'])
 
-    # undersampling based on equal amount of acclass values
-    # rus = RandomUnderSampler(sampling_strategy='auto', random_state=17)
-    # X_res, y_res = rus.fit_resample(df2.drop(columns=['ACCLASS']), df2['ACCLASS'])
+        # combine resampled features and labels into a single DataFrame
+        df2 = pd.concat([X_res, y_res], axis=1)
+        df2 = df2.sample(frac=1, random_state=17).reset_index(drop=True)  # Shuffle the data
+    
+    elif class_imb == 'undersampling':
+        # undersampling based on equal amount of acclass values
+        rus = RandomUnderSampler(sampling_strategy='auto', random_state=17)
+        X_res, y_res = rus.fit_resample(df2.drop(columns=['ACCLASS']), df2['ACCLASS'])
 
-    # oversampling based on equal amount of acclass values
-    rus = RandomOverSampler(sampling_strategy='auto', random_state=17)
-    X_res, y_res = rus.fit_resample(df2.drop(columns=['ACCLASS']), df2['ACCLASS'])
-
-    # combine resampled features and labels into a single DataFrame
-    df2 = pd.concat([X_res, y_res], axis=1)
-    df2 = df2.sample(frac=1, random_state=17).reset_index(drop=True)  # Shuffle the data
-
+        # combine resampled features and labels into a single DataFrame
+        df2 = pd.concat([X_res, y_res], axis=1)
+        df2 = df2.sample(frac=1, random_state=17).reset_index(drop=True)  # Shuffle the data
 
     print("\n===================== DATA CLEANING DONE =====================")
     print("\nShape of the dataframe after cleaning:", df2.shape)
@@ -142,7 +146,7 @@ def sample_and_update_data(cleaned_df, class_1_label='Fatal', class_2_label='Non
     else:
         raise ValueError("Error: One or both classes have fewer than the required number of records.")
 
-def data_preprocessing_svm(features):
+def data_preprocessing_svm(features ,smote=False):
     # Identifying numerical and categorical features
     num_features = features.select_dtypes(include=['int64', 'float64']).columns.tolist()
     cat_features = features.select_dtypes(include=['object']).columns.tolist()
@@ -174,87 +178,81 @@ def data_preprocessing_svm(features):
         ('cat', cat_transformer, cat_features)
     ])
 
-    # Defining the pipeline with SVM classifier
-    pipe_svm_ksi = Pipeline([
+    if smote == True:
+        #Using SMOTE to handle class imbalance
+        pipe_svm_ksi = imPipeline([  # Use imPipeline to handle SMOTE
         ('preprocessor', preprocessor),
-        ('svm', SVC(random_state=17))
-    ])
+        ('smote', SMOTE(random_state=17)),  # Apply SMOTE to balance classes
+        ('svm', SVC(random_state=17))  # SVM classifier
+        ])
+    else:
+        # Defining the pipeline with SVM classifier
+        pipe_svm_ksi = Pipeline([
+            ('preprocessor', preprocessor),
+            ('svm', SVC(random_state=17))
+        ])
 
-    # Using SMOTE to handle class imbalance
-    # pipe_svm_ksi = imPipeline([  # Use imPipeline to handle SMOTE
-    # ('preprocessor', preprocessor),
-    # ('smote', SMOTE(random_state=17)),  # Apply SMOTE to balance classes
-    # ('svm', SVC(random_state=17))  # SVM classifier
-    # ])
+    return pipe_svm_ksi
 
-
-    # SVM hyperparameter grid 
-    param_grid_svm = [
-        {'svm__kernel': ['linear'], 'svm__C': [1, 10, 100]},  # linear kernel    
-        {'svm__kernel': ['rbf'], 'svm__C': [1, 10, 100], 'svm__gamma': [0.3, 1.0, 3.0]},  # rbf kernel rank#1 C=100, gamma=3.0
-        {'svm__kernel': ['poly'], 'svm__C': [1, 10, 100], 'svm__gamma': [0.3, 1.0, 3.0], 'svm__degree': [2, 3]}  # poly kernel 
-    ]
-
-
+def grid_search_svm(pipe_svm_ksi,param_grid_svm):
     # Performing Grid Search with cross-validation
-    grid_search_ksi = GridSearchCV(estimator=pipe_svm_ksi, param_grid=param_grid_svm, scoring='accuracy', refit=True, verbose=3)
+    grid_search = GridSearchCV(estimator=pipe_svm_ksi, param_grid=param_grid_svm, scoring='accuracy', refit=True, verbose=3)
 
-    return grid_search_ksi
+    return grid_search
 
 def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, y_test, unseen_features, unseen_labels):
-    try:
-        # Fit the model
-        print(f"\n===================== {model_name.upper()} GRID SEARCH FIT =====================")
-        grid_search.fit(X_train, y_train)
+  
+    # Fit the model
+    print(f"\n===================== {model_name.upper()} GRID SEARCH FIT =====================")
+    grid_search.fit(X_train, y_train)
 
-        best_model = grid_search.best_estimator_
+    best_model = grid_search.best_estimator_
 
-        # Predict using the best model
-        y_pred = best_model.predict(X_test)
+    # Predict using the best model
+    y_pred = best_model.predict(X_test)
 
-        # Compute the confusion matrix
-        cm = confusion_matrix(y_test, y_pred)
+    # Compute the confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
 
-        # Assuming ModelPerformance is a custom class you've defined to handle the confusion matrix
-        modelPerformance = ModelPerformance(best_model, X_test, y_test)
-        modelPerformance.conf_matrix("./images/confusion_matrix.png")
+    modelPerformance = ModelPerformance(best_model, X_test, y_test)
+    modelPerformance.conf_matrix("./images/confusion_matrix.png")
 
-        print("\n===================== CONFUSION MATRIX =====================")
-        print("\nConfusion Matrix:\n", cm)
+    print("\n===================== CONFUSION MATRIX =====================")
+    print("\nConfusion Matrix:\n", cm)
 
-        # Print classification report for detailed performance metrics
-        print("\n===================== CLASSIFICATION REPORT =====================")
-        print("\nClassification Report:\n", classification_report(y_test, y_pred, zero_division=1))
+    # Print classification report for detailed performance metrics
+    print("\n===================== CLASSIFICATION REPORT =====================")
+    print("\nClassification Report:\n", classification_report(y_test, y_pred, zero_division=1))
 
-        #Precison, Recall, F1-Score
-        print("\n===================== PRECISION, RECALL, F1-SCORE =====================")
-        print("\nPrecision:", precision_score(y_test, y_pred, average='weighted'))
-        print("Recall:", recall_score(y_test, y_pred, average='weighted'))
-        print("F1-Score:", f1_score(y_test, y_pred, average='weighted'))
-        print("ROC-AUC Score:", roc_auc_score(y_test, y_pred, average='weighted'))
+    #Precison, Recall, F1-Score
+    print("\n===================== PRECISION, RECALL, F1-SCORE =====================")
+    print("\nPrecision:", precision_score(y_test, y_pred, average='weighted'))
+    print("Recall:", recall_score(y_test, y_pred, average='weighted'))
+    print("F1-Score:", f1_score(y_test, y_pred, average='weighted'))
+    print("ROC-AUC Score:", roc_auc_score(y_test, y_pred, average='weighted'))
 
-        # Save the best model
-        print("\n===================== BEST MODEL METRICS =====================")
-        print("\nBest Parameters:", grid_search.best_params_)
-        print("Best Estimator:", grid_search.best_estimator_)
-        print("Best Training Accuracy:", grid_search.best_score_)
+    # Save the best model
+    print("\n===================== BEST MODEL METRICS =====================")
+    print("\nBest Parameters:", grid_search.best_params_)
+    print("Best Estimator:", grid_search.best_estimator_)
+    print("Best Training Accuracy:", grid_search.best_score_)
 
-        accuracy = best_model.score(X_test, y_test)
-        print(f"Test Accuracy: {accuracy:.4f}")
+    accuracy = best_model.score(X_test, y_test)
+    print(f"Test Accuracy: {accuracy:.4f}")
 
-        # Handling unseen data
-        label_map = {'Fatal': 0, 'Non-Fatal Injury': 1}
-        unseen_labels_numeric = unseen_labels.map(label_map)
+    # Handling unseen data
+    label_map = {'Fatal': 0, 'Non-Fatal Injury': 1}
+    unseen_labels_numeric = unseen_labels.map(label_map)
 
-        # Fit the model on unseen data and make predictions
-        best_model.fit(unseen_features, unseen_labels_numeric)
-        unseen_predictions = best_model.predict(unseen_features)
-        unseen_accuracy = best_model.score(unseen_features, unseen_labels_numeric)
+    # Fit the model on unseen data and make predictions
+    best_model.fit(unseen_features, unseen_labels_numeric)
+    unseen_predictions = best_model.predict(unseen_features)
+    unseen_accuracy = best_model.score(unseen_features, unseen_labels_numeric)
 
-        print("\n===================== UNSEEN DATA METRICS =====================")
-        print("\nUnseen Predictions:", unseen_predictions)
-        for i in range(len(unseen_features)):
-            print(f"Predicted: {unseen_predictions[i]} Actual: {unseen_labels_numeric.iloc[i]}")
+    print("\n===================== UNSEEN DATA METRICS =====================")
+    print("\nUnseen Predictions:", unseen_predictions)
+    for i in range(len(unseen_features)):
+        print(f"Predicted: {unseen_predictions[i]} Actual: {unseen_labels_numeric.iloc[i]}")
 
         print(f"Unseen Data Accuracy: {unseen_accuracy:.4f}")
 
@@ -263,6 +261,3 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
         joblib.dump(grid_search, f"./model pickel/pipe_{model_name.lower()}_grid_search.pkl")
         print("\n===================== BEST MODEL SAVED =====================")
 
-    except Exception as e:
-        print("\n===================== ERROR =====================")
-        print(f"An error occurred in training the model: {e}")
