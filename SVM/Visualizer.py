@@ -12,7 +12,7 @@ def scatter_plot(df, save_path):
     sns.scatterplot(
         x="LATITUDE",
         y="LONGITUDE",
-        data=df.data_ksi,
+        data=df,
         hue="ACCLASS",
         palette=custom_palette,
     )
