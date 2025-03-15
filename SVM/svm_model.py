@@ -51,26 +51,15 @@ try:
     pipeline_svm = data_preprocessing_svm(features, smote=False)
 
     # list of dictionaries containing the parameters to be tested
-    # param_grid_svm_linear = [
-    #     {'svm__kernel': ['linear'], 'svm__C': [1, 10, 100]}]
-
-    # param_grid_svm_rbf = [        
-    #     {'svm__kernel': ['rbf'], 'svm__C': [0.1, 1, 10, 100], 'svm__gamma': [0.03, 0.3, 1.0, 3.0]} # rbf kernel rank#1 C=1, gamma=3.0
-    # ]
-
-    # param_grid_svm_poly= [
-    #     {'svm__kernel': ['poly'], 'svm__C': [0.1, 1, 10], 'svm__gamma': [0.1, 0.3, 1.0, 3.0], 'svm__degree': [2, 3]}  # poly kernel 
-    # ]
-    
     param_grid_svm_linear = [
-        {'svm__kernel': ['linear'], 'svm__C': [1]}]
+        {'svm__kernel': ['linear'], 'svm__C': [1, 10, 100]}]
 
     param_grid_svm_rbf = [        
-        {'svm__kernel': ['rbf'], 'svm__C': [ 1], 'svm__gamma': [3.0]} # rbf kernel rank#1 C=1, gamma=3.0
+        {'svm__kernel': ['rbf'], 'svm__C': [0.1, 1, 10, 100], 'svm__gamma': [0.03, 0.3, 1.0, 3.0]} # rbf kernel rank#1 C=1, gamma=3.0
     ]
 
     param_grid_svm_poly= [
-        {'svm__kernel': ['poly'], 'svm__C': [10], 'svm__gamma': [1.0], 'svm__degree': [3]}  # poly kernel 
+        {'svm__kernel': ['poly'], 'svm__C': [0.1, 1, 10], 'svm__gamma': [0.1, 0.3, 1.0, 3.0], 'svm__degree': [2, 3]}  # poly kernel 
     ]
     
 
