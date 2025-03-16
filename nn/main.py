@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from helper import clean_dataset, data_description, unique_values
-from undersampling_helper import random_sampling
+from undersampling_helper import random_sampling, tomek_links, near_miss
 from sklearn.model_selection import train_test_split
 from mlp_classifier import mlp_classifier
+from sklearn.preprocessing import LabelEncoder
 
 np.random.seed(1)
 
@@ -37,6 +38,7 @@ dropped_fields = [
     'INJURY',
     'OFFSET',
     'FATAL_NO',
+    #'VEHTYPE',
     'INITDIR',
     'MANOEUVER',
     'DRIVACT',
@@ -66,8 +68,6 @@ cleaned_df = cleaned_df.drop_duplicates()
 print("Cleaned data:")
 data_description(cleaned_df)
 ########################################################################################
-# Create a pipeline
-
 
 # Binary mapping
 binary_mapping = {'YES': 1, 'NO': 0}
@@ -87,16 +87,53 @@ column_binary = [
     'ALCOHOL',
     'DISABILITY'
 ]
+column_le = [
+    'DATE',
+    'ROAD_CLASS',
+    'TRAFFCTL',
+    'VISIBILITY',
+    'LIGHT',
+    'RDSFCOND',
+    'IMPACTYPE',
+    'VEHTYPE',
+    'NEIGHBOURHOOD_158'
+]
 
-cleaned_df[column_binary] = cleaned_df[column_binary].map(lambda x: binary_mapping[x.upper()])
+# Apply binary mapping using .loc
+for column in column_binary:
+    cleaned_df[column] = cleaned_df[column].map(lambda x: binary_mapping[x.upper()])
+
 cleaned_df["ACCLASS"] = cleaned_df["ACCLASS"].replace(target_mapping)
+
+le = LabelEncoder()
+
+for column in column_le:
+    cleaned_df[column] = le.fit_transform(cleaned_df[column])
+
+# Remove 5 entries for each classification
+unseen_fatal = cleaned_df[cleaned_df["ACCLASS"] == 1].head(5)
+unseen_notfatal = cleaned_df[cleaned_df["ACCLASS"] == 0].head(5)
+print(unseen_fatal)
+print(unseen_notfatal)
+
+# Remove unseen data from set
+cleaned_df = cleaned_df.drop(unseen_fatal.index)
+cleaned_df = cleaned_df.drop(unseen_notfatal.index)
 
 features = cleaned_df.drop(columns=["ACCLASS"], axis=1)
 target = cleaned_df["ACCLASS"]
 
-print(cleaned_df.head(5))
-
+# Random Sampling
 x_random_sampling, y_random_sampling = random_sampling(features, target)
 X_train, X_test, y_train, y_test = train_test_split(x_random_sampling, y_random_sampling, test_size=0.2, random_state=17)
+mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
 
-mlp_classifier(X_train, X_test, y_train, y_test)
+# Tomek Links
+x_tomek_links, y_tomek_links = tomek_links(features, target)
+X_train, X_test, y_train, y_test = train_test_split(x_tomek_links, y_tomek_links, test_size=0.2, random_state=17)
+mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+
+# Near Miss
+x_near_miss, y_near_miss = near_miss(features, target)
+X_train, X_test, y_train, y_test = train_test_split(x_near_miss, y_near_miss, test_size=0.2, random_state=17)
+mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
