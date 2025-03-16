@@ -20,53 +20,34 @@
 
 ## Feature Selection Based on Correlation Analysis
 
-### Retained Features (|correlation| ≥ 0.05)
-
-1. Strong Correlations:
-
-   - INVTYPE (|corr| = 0.156)
-   - IMPACTYPE (|corr| = 0.142)
-   - INVAGE (|corr| = 0.128)
-   - PEDESTRIAN (|corr| = 0.112)
-   - SPEEDING (|corr| = 0.095)
-
-2. Moderate Correlations:
-   - LATITUDE (|corr| = 0.087)
-   - LONGITUDE (|corr| = 0.083)
-   - Hour (|corr| = 0.082)
-   - TimePeriod (|corr| = 0.076)
-   - AGGRESSIVE (|corr| = 0.068)
-
-### Removed Features (|correlation| < 0.05)
+### Removed Features
 
 1. Traffic-related:
 
-   - MANOEUVER (|corr| = -0.037)
-   - ROAD_CLASS (|corr| = -0.013)
-   - TRAFFCTL (|corr| = -0.044)
+   - REDLIGHT (|corr| = -0.006)
 
 2. Environmental:
 
-   - VISIBILITY (|corr| = -0.016)
-   - RDSFCOND (|corr| = -0.005)
+   - EMERG_VEH (|corr| = -0.015)
 
 3. Driver-related:
 
-   - INITDIR (|corr| = 0.021)
-   - DRIVACT (|corr| = -0.013)
-   - DRIVCOND (|corr| = -0.011)
+   - DISABILITY (|corr| = -0.007)
 
-4. Vehicle-related:
-   - MOTORCYCLE (|corr| = -0.006)
-   - TRSN_CITY_VEH (|corr| = 0.048)
-   - PASSENGER (|corr| = -0.004)
+4. Deprecated neighborhood columns:
+
+   - HOOD_140
+   - NEIGHBOURHOOD_140
+
+5. Strong correlation with deprecated neighborhood columns:
+
+   - HOOD_148
 
 ## Data Preprocessing Steps
 
 1. Removal of irrelevant records:
 
    - 'Property Damage O' accidents excluded
-   - Zero-importance cyclist features removed
 
 2. Handling missing values:
 
@@ -78,11 +59,3 @@
    - Binary columns: Converted to 0/1
    - Categorical columns: Label encoded
    - Time features: Custom encoding for periods
-
-## Model Performance Impact
-
-- Overall accuracy: 92%
-- Macro-average metrics:
-  - Precision: 84%
-  - Recall: 85%
-  - F1-score: 85%

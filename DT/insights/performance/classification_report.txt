@@ -3,7 +3,7 @@ Model Performance Metrics:
 
 Accuracy Metrics:
 --------------------
-Testing Accuracy:  0.944
+Testing Accuracy:  0.943
 
 Best Parameters:
 --------------------
@@ -15,18 +15,18 @@ min_samples_split: 2
 
 Cross-Validation Scores:
 --------------------
-f1: 0.701
-precision: 0.708
-recall: 0.694
-accuracy: 0.916
+f1: 0.725
+precision: 0.731
+recall: 0.720
+accuracy: 0.923
 
 Detailed Classification Report:
 --------------------
               precision    recall  f1-score   support
 
            0       0.97      0.97      0.97      3254
-           1       0.80      0.79      0.80       534
+           1       0.80      0.80      0.80       534
 
     accuracy                           0.94      3788
-   macro avg       0.89      0.88      0.88      3788
+   macro avg       0.88      0.88      0.88      3788
 weighted avg       0.94      0.94      0.94      3788
