@@ -18,17 +18,6 @@ class DataCleaner(BaseEstimator, TransformerMixin):
 
         # Strong correlation with deprecated neighborhood columns
         'HOOD_158',
-        
-        # Features with very weak correlations
-        'REDLIGHT',          # corr: -0.006
-        'EMERG_VEH',         # corr: -0.015
-        'DISABILITY',        # corr: -0.007
-        'ALCOHOL',           # corr: -0.006
-        
-        # Text fields with low predictive value
-        'STREET1',           # Text data
-        'STREET2',           # Text data
-        'OFFSET',            # Text data
     ]
     
     def __init__(self):

@@ -4,11 +4,11 @@ Classification Report for DT_weighted_SMOTE
               precision    recall  f1-score   support
 
            0       0.95      0.93      0.94      3252
-           1       0.64      0.70      0.67       534
+           1       0.64      0.73      0.68       534
 
     accuracy                           0.90      3786
-   macro avg       0.79      0.82      0.81      3786
-weighted avg       0.91      0.90      0.90      3786
+   macro avg       0.80      0.83      0.81      3786
+weighted avg       0.91      0.90      0.91      3786
 
 
 Model Parameters:

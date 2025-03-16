@@ -4,7 +4,7 @@ Classification Report for DT_entropy_original
               precision    recall  f1-score   support
 
            0       0.96      0.96      0.96      3252
-           1       0.76      0.75      0.76       534
+           1       0.76      0.77      0.76       534
 
     accuracy                           0.93      3786
    macro avg       0.86      0.86      0.86      3786

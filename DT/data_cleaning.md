@@ -15,42 +15,58 @@ Dataset Statistics:
 
 ### Feature Removal Strategy
 
-1. **Correlation-Based Removal**
-
-   - Features with |correlation| < 0.05 with target
-   - Total features removed: 15
-   - Memory reduction: ~28%
-   - No significant impact on model performance
-
-2. **Redundant Identifiers**
+1. **Redundant Identifiers**
 
    - INDEX
    - OBJECTID
    - FATAL_NO
-   - ACCNUM
 
-3. **Deprecated Location Data**
+2. **Deprecated Location Data**
+
    - HOOD_140
    - NEIGHBOURHOOD_140
+
+3. **Strong Correlation with Deprecated Location Data**
    - HOOD_158
 
 ### Categorical Variables Analysis
 
-1. **High-Impact Features** (|correlation| ≥ 0.05)
+1. **High-Impact Features**
 
    ```
    Feature      Unique Values    Correlation
    INVTYPE         8              0.156
    IMPACTYPE       12             0.142
-   TimePeriod      5              0.076
+   MANOEUVER       10             -0.037
+   TRAFFCTL         8             -0.044
    ```
 
-2. **Low-Impact Features** (removed)
+2. **Low-Impact Features**
    ```
    Feature      Unique Values    Correlation
    ROAD_CLASS       7             -0.013
-   TRAFFCTL         8             -0.044
-   MANOEUVER       10             -0.037
+   VISIBILITY       5             -0.016
+   DRIVCOND         5             -0.008
+   ```
+
+### Accident-Level Feature Engineering
+
+1. **Severity Aggregations**
+
+   ```
+   Feature                  Description
+   total_casualties        Count of people per accident
+   fatality_count         Count of fatalities
+   injury_severity_ratio  Severe injuries / total
+   ```
+
+2. **Participant Analysis**
+   ```
+   Feature              Description
+   driver_count        Number of drivers
+   passenger_count     Number of passengers
+   vehicle_count       Total vehicles
+   age_range          Age span of participants
    ```
 
 ## Data Quality Improvements
@@ -91,4 +107,5 @@ Data Types:
 - Categorical: 12 columns
 - Binary: 6 columns
 - DateTime: 2 columns
+- Accident-level: 14 new features
 ```

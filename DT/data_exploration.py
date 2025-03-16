@@ -85,28 +85,11 @@ def create_full_correlation_matrices(df):
     # Dictionary to store original categories for each column
     category_mappings = {}
     
-    # Handle datetime and special columns first
-    df_encoded['Month'] = df_encoded['DATE'].dt.month
-    df_encoded['DayOfWeek'] = df_encoded['DATE'].dt.dayofweek
-    df_encoded = df_encoded.drop('DATE', axis=1)
-    
-    # Convert TimePeriod to numeric (use the order of periods as numeric values)
-    time_periods = ['Night (0-5)', 'Morning (6-11)', 
-                   'Afternoon (12-16)', 'Evening (17-20)', 
-                   'Night (21-23)']
-    df_encoded['TimePeriod'] = pd.Categorical(
-        df_encoded['TimePeriod'], 
-        categories=time_periods, 
-        ordered=True
-    ).codes
+    df_encoded = df_encoded.drop(columns=['TimePeriod', 'Season', 'Hour'], axis=1, inplace=False)
     
     # Add target column first (before encoding other categoricals)
     df_encoded['ACCLASS'] = (df_encoded['ACCLASS'] == 'Fatal').astype(float)
-    
-    # Drop string columns that shouldn't be part of correlation
-    columns_to_drop = ['STREET1', 'STREET2', 'OFFSET']
-    df_encoded = df_encoded.drop(columns=columns_to_drop, errors='ignore')
-    
+
     # Encode all remaining categorical columns while preserving original names
     for column in df_encoded.select_dtypes(include=['object']).columns:
         # For binary columns (Yes/No)
