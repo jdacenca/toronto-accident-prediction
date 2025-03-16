@@ -2,19 +2,19 @@
 
 | Model | Train Acc. | Test Acc. | Precision | Recall | F1-Score | Sampling |
 |-------|------------|-----------|-----------|---------|-----------|----------|
-| DT_basic_original | 90.27 | 93.74 | 0.7735 | 0.7865 | 0.7799 | original |
-| DT_gini_original | 90.16 | 91.50 | 0.6710 | 0.7790 | 0.7210 | original |
-| DT_entropy_original | 90.69 | 93.72 | 0.7824 | 0.7678 | 0.7750 | original |
-| DT_weighted_original | 91.15 | 92.93 | 0.7401 | 0.7678 | 0.7537 | original |
-| DT_basic_oversampling | 78.46 | 79.86 | 0.3998 | 0.8558 | 0.5450 | oversampling |
-| DT_gini_oversampling | 77.60 | 79.22 | 0.3920 | 0.8596 | 0.5384 | oversampling |
-| DT_entropy_oversampling | 79.35 | 79.91 | 0.4014 | 0.8652 | 0.5484 | oversampling |
-| DT_weighted_oversampling | 78.25 | 79.86 | 0.3998 | 0.8558 | 0.5450 | oversampling |
-| DT_basic_undersampling | 78.46 | 79.86 | 0.3998 | 0.8558 | 0.5450 | undersampling |
-| DT_gini_undersampling | 77.60 | 79.22 | 0.3920 | 0.8596 | 0.5384 | undersampling |
-| DT_entropy_undersampling | 79.35 | 79.91 | 0.4014 | 0.8652 | 0.5484 | undersampling |
-| DT_weighted_undersampling | 78.25 | 79.86 | 0.3998 | 0.8558 | 0.5450 | undersampling |
-| DT_basic_SMOTE | 91.99 | 89.07 | 0.5946 | 0.7060 | 0.6455 | SMOTE |
-| DT_gini_SMOTE | 91.64 | 89.23 | 0.6050 | 0.6798 | 0.6402 | SMOTE |
-| DT_entropy_SMOTE | 92.08 | 88.54 | 0.5812 | 0.6704 | 0.6226 | SMOTE |
-| DT_weighted_SMOTE | 91.99 | 89.07 | 0.5946 | 0.7060 | 0.6455 | SMOTE |
+| DT_basic_original | 89.83 | 91.87 | 0.6989 | 0.7434 | 0.7205 | original |
+| DT_gini_original | 89.90 | 92.61 | 0.7220 | 0.7734 | 0.7468 | original |
+| DT_entropy_original | 91.00 | 92.98 | 0.7384 | 0.7772 | 0.7573 | original |
+| DT_weighted_original | 90.84 | 93.32 | 0.7656 | 0.7584 | 0.7620 | original |
+| DT_basic_oversampling | 79.17 | 77.80 | 0.3724 | 0.8390 | 0.5158 | oversampling |
+| DT_gini_oversampling | 78.82 | 77.69 | 0.3694 | 0.8240 | 0.5101 | oversampling |
+| DT_entropy_oversampling | 77.74 | 79.86 | 0.3988 | 0.8446 | 0.5417 | oversampling |
+| DT_weighted_oversampling | 78.98 | 77.80 | 0.3724 | 0.8390 | 0.5158 | oversampling |
+| DT_basic_undersampling | 79.17 | 77.80 | 0.3724 | 0.8390 | 0.5158 | undersampling |
+| DT_gini_undersampling | 78.82 | 77.69 | 0.3694 | 0.8240 | 0.5101 | undersampling |
+| DT_entropy_undersampling | 77.74 | 79.86 | 0.3988 | 0.8446 | 0.5417 | undersampling |
+| DT_weighted_undersampling | 78.98 | 77.80 | 0.3724 | 0.8390 | 0.5158 | undersampling |
+| DT_basic_SMOTE | 92.25 | 88.07 | 0.5659 | 0.6592 | 0.6090 | SMOTE |
+| DT_gini_SMOTE | 92.05 | 88.60 | 0.5870 | 0.6442 | 0.6143 | SMOTE |
+| DT_entropy_SMOTE | 92.43 | 88.89 | 0.5963 | 0.6554 | 0.6244 | SMOTE |
+| DT_weighted_SMOTE | 92.25 | 88.07 | 0.5659 | 0.6592 | 0.6090 | SMOTE |

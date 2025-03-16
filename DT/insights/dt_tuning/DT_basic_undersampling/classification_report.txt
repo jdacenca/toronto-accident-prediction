@@ -4,11 +4,11 @@ Classification Report for DT_basic_undersampling
               precision    recall  f1-score   support
 
            0       0.97      0.77      0.86      3252
-           1       0.38      0.86      0.52       534
+           1       0.37      0.84      0.52       534
 
     accuracy                           0.78      3786
-   macro avg       0.67      0.81      0.69      3786
-weighted avg       0.89      0.78      0.81      3786
+   macro avg       0.67      0.80      0.69      3786
+weighted avg       0.88      0.78      0.81      3786
 
 
 Model Parameters:

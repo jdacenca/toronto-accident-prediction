@@ -4,7 +4,7 @@ Classification Report for DT_basic_SMOTE
               precision    recall  f1-score   support
 
            0       0.95      0.93      0.94      3252
-           1       0.63      0.72      0.67       534
+           1       0.64      0.70      0.67       534
 
     accuracy                           0.90      3786
    macro avg       0.79      0.82      0.81      3786

@@ -15,30 +15,20 @@ class DataCleaner(BaseEstimator, TransformerMixin):
         
         # Deprecated neighborhood columns
         'HOOD_140', 'NEIGHBOURHOOD_140',
+
+        # Strong correlation with deprecated neighborhood columns
         'HOOD_158',
         
-        
-        # Features with very weak correlations (|correlation| < 0.05)
-        'MANOEUVER',          # corr: -0.037
-        'EMERG_VEH',         # corr: -0.015
+        # Features with very weak correlations
         'REDLIGHT',          # corr: -0.006
-        'ROAD_CLASS',        # corr: -0.013
-        'TRAFFCTL',          # corr: -0.044
-        'VISIBILITY',        # corr: -0.016
-        'RDSFCOND',          # corr: -0.005
-        'INITDIR',           # corr: 0.021
-        'DRIVACT',           # corr: -0.013
-        'DRIVCOND',          # corr: -0.011
+        'EMERG_VEH',         # corr: -0.015
         'DISABILITY',        # corr: -0.007
-        'STREET1',           # Text data, low importance
-        'STREET2',           # Text data, low importance
-        'OFFSET',            # Text data, low importance
-        'DIVISION',          # corr: 0.007
+        'ALCOHOL',           # corr: -0.006
         
-        # Vehicle-related features with weak correlations
-        'MOTORCYCLE',        # corr: -0.006
-        'TRSN_CITY_VEH',    # corr: 0.048
-        'PASSENGER',         # corr: -0.004
+        # Text fields with low predictive value
+        'STREET1',           # Text data
+        'STREET2',           # Text data
+        'OFFSET',            # Text data
     ]
     
     def __init__(self):
