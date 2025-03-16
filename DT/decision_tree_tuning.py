@@ -76,17 +76,25 @@ class HyperparameterTuning:
     
     def evaluate_model(self, model, X_train, X_test, y_train, y_test, model_name):
         """Evaluate a model and store results"""
-        # Train the model
+        # Perform cross-validation
+        cv_scores = cross_val_score(
+            model, X_train, y_train, 
+            cv=5,  # 5-fold cross-validation
+            scoring='accuracy',
+            n_jobs=-1,
+            verbose=1
+        )
+        
+        # Train the model on the full training set
         model.fit(X_train, y_train)
         
         # Get predictions
-        y_train_pred = model.predict(X_train)
         y_test_pred = model.predict(X_test)
         
         # Calculate metrics
         results = {
             'Model': model_name,
-            'Train Acc.': accuracy_score(y_train, y_train_pred) * 100,
+            'Train Acc.': cv_scores.mean() * 100,
             'Test Acc.': accuracy_score(y_test, y_test_pred) * 100,
             'Precision': precision_score(y_test, y_test_pred),
             'Recall': recall_score(y_test, y_test_pred),
@@ -139,7 +147,6 @@ class HyperparameterTuning:
             # Decision Tree with Entropy
             dt_entropy = DecisionTreeClassifier(
                 criterion='entropy',
-                max_depth=10,
                 min_samples_split=5,
                 random_state=48
             )
@@ -166,7 +173,7 @@ class HyperparameterTuning:
         # Save to CSV
         results_df.to_csv(f'insights/dt_tuning/{dataset_name}_results.csv', index=False)
         logging.info(f"\nResults saved to insights/dt_tuning/{dataset_name}_results.csv")
-        
+
         # Create a formatted markdown table
         markdown_table = f"# Decision Tree Tuning Results ({dataset_name})\n\n"
         markdown_table += "| Model | Train Acc. | Test Acc. | Precision | Recall | F1-Score | Sampling |\n"
@@ -208,7 +215,7 @@ def main():
     y_main = (df_processed_main['ACCLASS'] == 'Fatal').astype(int)
     
     # Process main dataset
-    X_main = pipeline.fit_transform(df)
+    X_main = pipeline.fit_transform(df_processed_main)
     
     # Convert X_main to DataFrame with proper column names
     feature_names = pipeline.named_steps['engineer'].feature_names_
@@ -218,15 +225,19 @@ def main():
     logging.info("Running comparison on main dataset...")
     comparison_main = HyperparameterTuning(X_main, y_main)
     comparison_main.run_comparison()
-    comparison_main.save_results("Main dataset")
+    comparison_main.save_results("main_dataset")
     
     # Process unseen dataset
+    pipeline = create_preprocessing_pipeline()
     X_unseen = pipeline.fit_transform(unseen_data)
     
     # Create target variable for unseen dataset
     mask_unseen = unseen_data['ACCLASS'] != 'Property Damage O'
     df_processed_unseen = unseen_data[mask_unseen]
     y_unseen = (df_processed_unseen['ACCLASS'] == 'Fatal').astype(int)
+    
+    # Process unseen dataset
+    X_unseen = pipeline.fit_transform(df_processed_unseen)
     
     # Convert X_unseen to DataFrame with proper column names
     X_unseen = pd.DataFrame(X_unseen, columns=feature_names)
@@ -235,7 +246,7 @@ def main():
     logging.info("Running comparison on unseen dataset...")
     comparison_unseen = HyperparameterTuning(X_unseen, y_unseen)
     comparison_unseen.run_comparison()
-    comparison_unseen.save_results("Unseen dataset")
+    comparison_unseen.save_results("unseen_dataset")
 
 if __name__ == "__main__":
     main() 
