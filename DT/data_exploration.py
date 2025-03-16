@@ -165,13 +165,10 @@ def create_full_correlation_matrices(df):
     plt.figure(figsize=(15, 10))
     target_corr = correlations['ACCLASS'].sort_values(ascending=False)
     target_corr = target_corr.drop('ACCLASS')
-    
-    # Plot top 30 correlations
-    top_30_corr = target_corr.head(30)
-    
+
     plt.figure(figsize=(12, 8))
-    sns.barplot(x=top_30_corr.values, y=top_30_corr.index)
-    plt.title('Top 30 Feature Correlations with Accidents')
+    sns.barplot(x=target_corr.values, y=target_corr.index)
+    plt.title('Feature Correlations with Accidents')
     plt.xlabel('Correlation Coefficient')
     plt.tight_layout()
     plt.savefig('insights/correlation/full_target_correlations.png', 

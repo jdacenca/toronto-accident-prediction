@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
 import logging
 from pathlib import Path
@@ -11,9 +12,11 @@ from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 import warnings
 from preprocessing_pipeline import create_preprocessing_pipeline
-import pandas as pd
-    
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 warnings.filterwarnings('ignore')
+plt.style.use('default')
 
 # Set up logging
 logging.basicConfig(
@@ -88,8 +91,9 @@ class HyperparameterTuning:
         # Train the model on the full training set
         model.fit(X_train, y_train)
         
-        # Get predictions
+        # Get predictions and probabilities
         y_test_pred = model.predict(X_test)
+        y_test_prob = model.predict_proba(X_test)[:, 1]
         
         # Calculate metrics
         results = {
@@ -112,6 +116,75 @@ class HyperparameterTuning:
         logging.info(f"Precision: {results['Precision']:.4f}")
         logging.info(f"Recall: {results['Recall']:.4f}")
         logging.info(f"F1-Score: {results['F1-Score']:.4f}")
+        
+        # Create visualizations directory if it doesn't exist
+        viz_dir = Path(f'insights/dt_tuning/{model_name}')
+        viz_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 1. Plot and save confusion matrix
+        plt.figure(figsize=(8, 6))
+        cm = confusion_matrix(y_test, y_test_pred)
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        plt.title(f'Confusion Matrix - {model_name}')
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
+        plt.tight_layout()
+        plt.savefig(f'{viz_dir}/confusion_matrix.png')
+        plt.close()
+        
+        # 2. Plot and save ROC curve
+        fpr, tpr, _ = roc_curve(y_test, y_test_prob)
+        roc_auc = auc(fpr, tpr)
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(fpr, tpr, color='darkorange', lw=2,
+                 label=f'ROC curve (AUC = {roc_auc:.2f})')
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(f'ROC Curve - {model_name}')
+        plt.legend(loc="lower right")
+        plt.tight_layout()
+        plt.savefig(f'{viz_dir}/roc_curve.png')
+        plt.close()
+        
+        # 3. Create and save classification report visualization
+        plt.figure(figsize=(8, 6))
+        
+        # Get classification report as dict
+        cr_dict = classification_report(y_test, y_test_pred, output_dict=True)
+        
+        # Convert to DataFrame for easier plotting
+        cr_df = pd.DataFrame({
+            'precision': [cr_dict['0']['precision'], cr_dict['1']['precision'], 
+                        cr_dict['accuracy'], cr_dict['macro avg']['precision'], 
+                        cr_dict['weighted avg']['precision']],
+            'recall': [cr_dict['0']['recall'], cr_dict['1']['recall'], 
+                      cr_dict['accuracy'], cr_dict['macro avg']['recall'], 
+                      cr_dict['weighted avg']['recall']],
+            'f1-score': [cr_dict['0']['f1-score'], cr_dict['1']['f1-score'], 
+                        cr_dict['accuracy'], cr_dict['macro avg']['f1-score'], 
+                        cr_dict['weighted avg']['f1-score']]
+        }, index=['0', '1', 'accuracy', 'macro avg', 'weighted avg'])
+        
+        # Create heatmap
+        sns.heatmap(cr_df.round(2), annot=True, cmap='RdPu', fmt='.2f', cbar=True)
+        plt.title(f'Classification Report - {model_name}')
+        plt.tight_layout()
+        plt.savefig(f'{viz_dir}/classification_report.png')
+        plt.close()
+        
+        # 4. Save classification report as text
+        report = classification_report(y_test, y_test_pred)
+        with open(f'{viz_dir}/classification_report.txt', 'w') as f:
+            f.write(f"Classification Report for {model_name}\n")
+            f.write("="*50 + "\n\n")
+            f.write(report)
+            f.write("\n\nModel Parameters:\n")
+            f.write("-"*20 + "\n")
+            f.write(str(model.get_params()))
         
         return model
     
