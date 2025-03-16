@@ -1,8 +1,21 @@
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, ConfusionMatrixDisplay
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.model_selection import GridSearchCV, KFold
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime
 import pandas as pd
 import numpy as np
+
+def timer(start_time=None):
+    if not start_time:
+        start_time=datetime.now()
+        return start_time
+    elif start_time:
+        thour,temp_sec=divmod((datetime.now()-start_time).total_seconds(),3600)
+        tmin,tsec=divmod(temp_sec,60)
+        print('\n Time taken: %i hours %i minutes and %s seconds.'%(thour,tmin,round(tsec,2)))
 
 def data_description(df):
     # Understand the data 
@@ -88,35 +101,6 @@ def clean_dataset(df, drop_fields):
 
     return df
 
-def generateMetrics(desc, y_train, train_normalized_predictions, y_test, test_normalized_predictions):
-
-    print("\n")
-    print("="*70)
-    print(desc)
-
-    print("Metrics for Train Data:")
-    mse = mean_squared_error(y_train, train_normalized_predictions)
-    print(f'Mean Squared Error: {mse}')
-
-    mae = mean_absolute_error(y_train, train_normalized_predictions)
-    print(f'Mean Absolute Error: {mae}')
-
-    r2 = r2_score(y_train, train_normalized_predictions)
-    print(f'R-squared: {r2}')
-
-    print("-"*30)
-    #-------------------------------------------------------------
-    print("Metrics for Test")
-    mse = mean_squared_error(y_test, test_normalized_predictions)
-    print(f'Mean Squared Error: {mse}')
-
-    mae = mean_absolute_error(y_test, test_normalized_predictions)
-    print(f'Mean Absolute Error: {mae}')
-
-    r2 = r2_score(y_test, test_normalized_predictions)
-    print(f'R-squared: {r2}')
-    print("="*70)
-
 def timer(start_time=None):
     if not start_time:
         start_time=datetime.now()
@@ -130,7 +114,7 @@ def timer(start_time=None):
 def runGridSearchCV(model, param_grid, X_train, y_train, X_test, y_test):
 
     # Using 5 fold
-    tuning_model = GridSearchCV(model, param_grid=param_grid, cv=5)
+    tuning_model = GridSearchCV(model, param_grid=param_grid, cv=5, error_score='raise', verbose=3)
 
     start_time = timer(None)
     tuning_model.fit(X_train, y_train)
@@ -141,31 +125,63 @@ def runGridSearchCV(model, param_grid, X_train, y_train, X_test, y_test):
 
     return tuning_model
 
-def generateMetrics(desc, y_train, train_normalized_predictions, y_test, test_normalized_predictions):
+def analysis(model, model_name, X_train, y_train, X_test, y_test):
 
     print("\n")
     print("="*70)
-    print(desc)
+    print(model_name)
 
-    print("Metrics for Train Data:")
-    mse = mean_squared_error(y_train, train_normalized_predictions)
-    print(f'Mean Squared Error: {mse}')
+    train_predictions = model.predict(X_train)
+    test_predictions = model.predict(X_test)
 
-    mae = mean_absolute_error(y_train, train_normalized_predictions)
-    print(f'Mean Absolute Error: {mae}')
+    print("Train Data:")
+    generateMetrics(model, X_train, y_train, train_predictions)
 
-    r2 = r2_score(y_train, train_normalized_predictions)
-    print(f'R-squared: {r2}')
+    print("Test Data:")
+    generateMetrics(model, X_test, y_test, test_predictions)
 
-    print("-"*30)
-    #-------------------------------------------------------------
-    print("Metrics for Test")
-    mse = mean_squared_error(y_test, test_normalized_predictions)
-    print(f'Mean Squared Error: {mse}')
-
-    mae = mean_absolute_error(y_test, test_normalized_predictions)
-    print(f'Mean Absolute Error: {mae}')
-
-    r2 = r2_score(y_test, test_normalized_predictions)
-    print(f'R-squared: {r2}')
+    print("\n")
     print("="*70)
+
+def generateMetrics(model, x, y, predictions):
+    fold = KFold(n_splits=3, shuffle=True, random_state=1)
+    scores1 = cross_val_score(model, x, y, cv=fold, scoring="accuracy")
+    accuracy1 = accuracy_score(y, predictions)
+    cm1 = confusion_matrix(y, predictions)
+
+    y_train_pred = cross_val_predict(model, x, y, cv=fold)
+    ConfusionMatrixDisplay.from_predictions(y, y_train_pred, normalize="true", values_format=".0%")
+    plt.show()
+    
+    target = ['0', '1']
+    labels = np.arange(2)
+    report = classification_report(y, y_train_pred, labels=labels, target_names=target, output_dict=True)
+    sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
+    plt.show()
+
+    # Get the ROC
+    y_probability = model.predict_proba(x)[:, 1]
+
+    fpr, tpr, threshold = roc_curve(y, y_probability)
+    roc_auc = roc_auc_score(y, y_probability)
+
+    # Plot for the ROC Score
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC Curve (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
+    print('\n' + '-'*50)
+    print(f"Accuracy: {accuracy1}")
+    print(f"Scores: {scores1}")
+    print(f"Mean Score: {str(scores1.mean())}")
+    print(f"Max Score: {str(scores1.max())}")
+    print(f"Confusion Matrix:\n{cm1}")
+    print(f"\nClassification report:\n")
+    print(classification_report(y, y_train_pred))
