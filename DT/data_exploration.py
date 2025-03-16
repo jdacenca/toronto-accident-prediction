@@ -13,12 +13,11 @@ def create_output_dirs():
     """Create necessary output directories if they don't exist"""
     dirs = [
         'insights/correlation',
-        'insights/feature_importance',
         'insights/time_analysis',
         'insights/severity_analysis',
         'insights/seasonal_analysis',
         'insights/geographic_analysis',
-        'insights/model_performance',
+        'insights/performance',
         'insights/dt_tuning'
     ]
     for dir_path in dirs:
