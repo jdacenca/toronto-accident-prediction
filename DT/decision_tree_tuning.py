@@ -53,6 +53,12 @@ class HyperparameterTuning:
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
         
+        # Print original class distribution
+        if sampling_strategy is None:
+            logging.info("\nOriginal Class Distribution:")
+            logging.info(f"Fatal: {sum(y_train == 1)}")
+            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
+        
         # Apply sampling strategy if specified
         if sampling_strategy == 'oversampling':
             # Random oversampling
@@ -61,6 +67,9 @@ class HyperparameterTuning:
                 random_state=48
             )
             X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            logging.info("\nOversampling Class Distribution:")
+            logging.info(f"Fatal: {sum(y_train == 1)}")
+            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
         
         elif sampling_strategy == 'undersampling':
             # Random undersampling
@@ -69,11 +78,17 @@ class HyperparameterTuning:
                 random_state=48
             )
             X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            logging.info("\nUndersampling Class Distribution:")
+            logging.info(f"Fatal: {sum(y_train == 1)}")
+            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
         
         elif sampling_strategy == 'SMOTE':
             # SMOTE
             smote = SMOTE(random_state=48)
             X_train_scaled, y_train = smote.fit_resample(X_train_scaled, y_train)
+            logging.info("\nSMOTE Class Distribution:")
+            logging.info(f"Fatal: {sum(y_train == 1)}")
+            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
         
         return X_train_scaled, X_test_scaled, y_train, y_test
     
