@@ -58,6 +58,7 @@ class HyperparameterTuning:
             logging.info("\nOriginal Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
+            logging.info(f"Total samples: {len(y_train)}")
         
         # Apply sampling strategy if specified
         if sampling_strategy == 'oversampling':
@@ -70,6 +71,7 @@ class HyperparameterTuning:
             logging.info("\nOversampling Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
+            logging.info(f"Total samples: {len(y_train)}")
         
         elif sampling_strategy == 'undersampling':
             # Random undersampling
@@ -81,6 +83,7 @@ class HyperparameterTuning:
             logging.info("\nUndersampling Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
+            logging.info(f"Total samples: {len(y_train)}")
         
         elif sampling_strategy == 'SMOTE':
             # SMOTE
@@ -89,6 +92,7 @@ class HyperparameterTuning:
             logging.info("\nSMOTE Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
+            logging.info(f"Total samples: {len(y_train)}")
         
         return X_train_scaled, X_test_scaled, y_train, y_test
     
@@ -115,9 +119,9 @@ class HyperparameterTuning:
             'Model': model_name,
             'Train Acc.': cv_scores.mean() * 100,
             'Test Acc.': accuracy_score(y_test, y_test_pred) * 100,
-            'Precision': precision_score(y_test, y_test_pred),
-            'Recall': recall_score(y_test, y_test_pred),
-            'F1-Score': f1_score(y_test, y_test_pred),
+            'Precision': precision_score(y_test, y_test_pred, zero_division=0),
+            'Recall': recall_score(y_test, y_test_pred, zero_division=0),
+            'F1-Score': f1_score(y_test, y_test_pred, zero_division=0),
             'Parameters': str(model.get_params())
         }
         
@@ -173,14 +177,14 @@ class HyperparameterTuning:
         
         # Convert to DataFrame for easier plotting
         cr_df = pd.DataFrame({
-            'precision': [cr_dict['0']['precision'], cr_dict['1']['precision'], 
-                        cr_dict['accuracy'], cr_dict['macro avg']['precision'], 
+            'precision': [cr_dict['0']['precision'], cr_dict['1']['precision'],
+                        cr_dict['accuracy'], cr_dict['macro avg']['precision'],
                         cr_dict['weighted avg']['precision']],
-            'recall': [cr_dict['0']['recall'], cr_dict['1']['recall'], 
-                      cr_dict['accuracy'], cr_dict['macro avg']['recall'], 
+            'recall': [cr_dict['0']['recall'], cr_dict['1']['recall'],
+                      cr_dict['accuracy'], cr_dict['macro avg']['recall'],
                       cr_dict['weighted avg']['recall']],
-            'f1-score': [cr_dict['0']['f1-score'], cr_dict['1']['f1-score'], 
-                        cr_dict['accuracy'], cr_dict['macro avg']['f1-score'], 
+            'f1-score': [cr_dict['0']['f1-score'], cr_dict['1']['f1-score'],
+                        cr_dict['accuracy'], cr_dict['macro avg']['f1-score'],
                         cr_dict['weighted avg']['f1-score']]
         }, index=['0', '1', 'accuracy', 'macro avg', 'weighted avg'])
         
@@ -214,7 +218,7 @@ class HyperparameterTuning:
             X_train, X_test, y_train, y_test = self.prepare_data(sampling)
             
             # Basic Decision Tree
-            dt_basic = DecisionTreeClassifier(random_state=48)
+            dt_basic = DecisionTreeClassifier(min_samples_split=2, random_state=48)
             self.evaluate_model(
                 dt_basic, X_train, X_test, y_train, y_test,
                 f"DT_basic_{sampling if sampling else 'original'}"
@@ -223,8 +227,7 @@ class HyperparameterTuning:
             # Decision Tree with Gini
             dt_gini = DecisionTreeClassifier(
                 criterion='gini',
-                min_samples_split=5,
-                class_weight='balanced',
+                min_samples_split=2,
                 random_state=48
             )
             self.evaluate_model(
@@ -235,7 +238,7 @@ class HyperparameterTuning:
             # Decision Tree with Entropy
             dt_entropy = DecisionTreeClassifier(
                 criterion='entropy',
-                min_samples_split=5,
+                min_samples_split=2,
                 random_state=48
             )
             self.evaluate_model(
@@ -246,6 +249,7 @@ class HyperparameterTuning:
             # Decision Tree with Class Weights
             dt_weighted = DecisionTreeClassifier(
                 class_weight='balanced',
+                min_samples_split=2,
                 random_state=48
             )
             self.evaluate_model(
@@ -253,17 +257,17 @@ class HyperparameterTuning:
                 f"DT_weighted_{sampling if sampling else 'original'}"
             )
     
-    def save_results(self, dataset_name):
+    def save_results(self):
         """Save results to CSV and markdown"""
         # Convert results to DataFrame
         results_df = pd.DataFrame(self.results)
         
         # Save to CSV
-        results_df.to_csv(f'insights/dt_tuning/{dataset_name}_results.csv', index=False)
-        logging.info(f"\nResults saved to insights/dt_tuning/{dataset_name}_results.csv")
+        results_df.to_csv(f'insights/dt_tuning/results.csv', index=False)
+        logging.info(f"\nResults saved to insights/dt_tuning/results.csv")
 
         # Create a formatted markdown table
-        markdown_table = f"# Decision Tree Tuning Results ({dataset_name})\n\n"
+        markdown_table = f"# Decision Tree Tuning Results \n\n"
         markdown_table += "| Model | Train Acc. | Test Acc. | Precision | Recall | F1-Score | Sampling |\n"
         markdown_table += "|-------|------------|-----------|-----------|---------|-----------|----------|\n"
         
@@ -279,10 +283,10 @@ class HyperparameterTuning:
             markdown_table += f"{sampling} |\n"
         
         # Save markdown table
-        with open(f'insights/dt_tuning/{dataset_name}_results.md', 'w') as f:
+        with open(f'insights/dt_tuning/results.md', 'w') as f:
             f.write(markdown_table)
         
-        logging.info(f"Markdown results saved to insights/dt_tuning/{dataset_name}_results.md")
+        logging.info(f"Markdown results saved to insights/dt_tuning/results.md")
 
 def main():
     """Main execution function"""
@@ -290,21 +294,18 @@ def main():
     # Load and preprocess data
     logging.info("Loading and preprocessing data...")
     df = pd.read_csv('data/TOTAL_KSI_6386614326836635957.csv')
-    
-    # Extract last 10 rows as unseen data
-    unseen_data = df.iloc[:-10]  # Removes the last 10 rows from df
+
     # Save unseen data for reference
-    unseen_data.to_csv('data/unseen_data.csv', index=False)
     pipeline = create_preprocessing_pipeline()
-    
+
     # Create target variable for main dataset
     mask_main = df['ACCLASS'] != 'Property Damage O'
     df_processed_main = df[mask_main]
     y_main = (df_processed_main['ACCLASS'] == 'Fatal').astype(int)
-    
+
     # Process main dataset
     X_main = pipeline.fit_transform(df_processed_main)
-    
+
     # Convert X_main to DataFrame with proper column names
     feature_names = pipeline.named_steps['engineer'].feature_names_
     X_main = pd.DataFrame(X_main, columns=feature_names)
@@ -313,28 +314,7 @@ def main():
     logging.info("Running comparison on main dataset...")
     comparison_main = HyperparameterTuning(X_main, y_main)
     comparison_main.run_comparison()
-    comparison_main.save_results("main_dataset")
-    
-    # Process unseen dataset
-    pipeline = create_preprocessing_pipeline()
-    X_unseen = pipeline.fit_transform(unseen_data)
-    
-    # Create target variable for unseen dataset
-    mask_unseen = unseen_data['ACCLASS'] != 'Property Damage O'
-    df_processed_unseen = unseen_data[mask_unseen]
-    y_unseen = (df_processed_unseen['ACCLASS'] == 'Fatal').astype(int)
-    
-    # Process unseen dataset
-    X_unseen = pipeline.fit_transform(df_processed_unseen)
-    
-    # Convert X_unseen to DataFrame with proper column names
-    X_unseen = pd.DataFrame(X_unseen, columns=feature_names)
-
-    # Run comparison on unseen dataset
-    logging.info("Running comparison on unseen dataset...")
-    comparison_unseen = HyperparameterTuning(X_unseen, y_unseen)
-    comparison_unseen.run_comparison()
-    comparison_unseen.save_results("unseen_dataset")
+    comparison_main.save_results()
 
 if __name__ == "__main__":
     main() 

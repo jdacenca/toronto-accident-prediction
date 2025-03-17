@@ -81,48 +81,6 @@ def calculate_feature_importance_features(X, y):
     # Save feature importance to CSV
     feature_importance.to_csv('insights/performance/feature_importance.csv', index=False)
 
-def perform_grid_search(X_train, y_train):
-    """Perform grid search to find the best hyperparameters"""
-    logging.info("Performing grid search for hyperparameter tuning...")
-    
-    # Define parameter grid
-    param_grid = {
-        'max_depth': [5, 10, 15, 20, None],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4],
-        'criterion': ['gini', 'entropy'],
-        'class_weight': [None, 'balanced'],
-        'max_features': ['sqrt', 'log2', None]
-    }
-    
-    # Create base model
-    dt = DecisionTreeClassifier(random_state=48)
-    
-    # Create grid search object
-    grid_search = GridSearchCV(
-        estimator=dt,
-        param_grid=param_grid,
-        cv=5,
-        scoring='f1',
-        n_jobs=-1,
-        verbose=1
-    )
-    
-    # Perform grid search
-    grid_search.fit(X_train, y_train)
-    
-    # Log results
-    logging.info("Best parameters found:")
-    for param, value in grid_search.best_params_.items():
-        logging.info(f"{param}: {value}")
-    logging.info(f"Best cross-validation score: {grid_search.best_score_:.3f}")
-    
-    # Save grid search results
-    cv_results = pd.DataFrame(grid_search.cv_results_)
-    cv_results.to_csv('insights/grid_search_results.csv', index=False)
-    
-    return grid_search.best_estimator_, grid_search.best_params_
-
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
     plt.figure(figsize=(20, 10))
