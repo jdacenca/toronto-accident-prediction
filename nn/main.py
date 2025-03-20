@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from helper import clean_dataset, data_description, unique_values
-from undersampling_helper import random_sampling, tomek_links, near_miss
+from sampling_helper import random_sampling, tomek_links, near_miss
 from sklearn.model_selection import train_test_split
 from mlp_classifier import mlp_classifier
 from sklearn.preprocessing import LabelEncoder
