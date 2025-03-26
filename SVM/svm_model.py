@@ -61,7 +61,7 @@ visualizations = [
     (hist_plot, "./insights/data_exploration/hist_plot.png"),
     (pair_plot, "./insights/data_exploration/pair_plot.png"),
     (cat_distribution, "./insights/data_exploration/cat_distribution.png"),
-    (spline_plot, "./images/spline_plot.png"),
+    (spline_plot, "./insights/data_exploration/spline_plot.png"),
 ]
 
 for viz_func, save_path in visualizations:
