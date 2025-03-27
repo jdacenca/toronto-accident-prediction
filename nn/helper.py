@@ -2,6 +2,10 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, ConfusionMatrixDisplay
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.model_selection import GridSearchCV, KFold
+from sklearn.inspection import permutation_importance
+from sklearn.feature_selection import SelectKBest, f_classif, RFE, VarianceThreshold
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import OrdinalEncoder
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
@@ -17,6 +21,8 @@ def data_description(df):
 
     print("\nMissing Data:")
     print(df.isnull().sum())
+
+    print("Number of Unique Counts", df.nunique())
 
 def unique_values(df):
     categorical_columns = df.select_dtypes(include=[object, 'category']).columns.tolist()
@@ -35,11 +41,15 @@ def clean_dataset(df, drop_fields):
     categorical_columns = df.select_dtypes(include=[object, 'category']).columns.tolist()
     numerical_columns = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
+    # Temporary place median values for the ACCNUM and FATALNO
+    df['ACCNUM'] = df['ACCNUM'].fillna(df['ACCNUM'].median())
+    df['FATAL_NO'] = df['FATAL_NO'].fillna(df['FATAL_NO'].median())
+
+    # Change the other Float64 columns to Integer
+    df['ACCNUM'] = df['ACCNUM'].astype(int)
+
     # Change all values to UpperCase
     df[categorical_columns] = df[categorical_columns].apply(lambda col: col.str.upper())
-
-    # Fields to be dropped depending on the dataset
-    df.drop(drop_fields, axis=1, inplace=True)
 
     # Team agreed to drop the entry with missing label
     df.dropna(subset=['ACCLASS'], inplace=True)
@@ -47,8 +57,8 @@ def clean_dataset(df, drop_fields):
     # Dropped ACCLASS with Property Damage : 10 Entries in the dataset 
     df.drop(df[df['ACCLASS'] == 'PROPERTY DAMAGE O'].index, inplace=True)
 
-    df['DATE'] = pd.to_datetime(df['DATE']).dt.strftime('%Y-%m') # Update date to per month
-    df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m')
+    df['DATE'] = pd.to_datetime(df['DATE']).dt.month # Update date to per month
+    #df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m')
     df['TIME'] = df['TIME'].apply(convert_to_time)
     df['TIME'] = pd.to_datetime(df['TIME']).dt.hour # Update time to per hour
     df['ROAD_CLASS'] = df['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False) # Update the incorrect Road Class with space
@@ -85,12 +95,14 @@ def clean_dataset(df, drop_fields):
         'IMPACTYPE'
     ]
 
-    df[unknown_column] = df[unknown_column].fillna("Unknown")
     df[other_column] = df[other_column].fillna("Other")
     df[boolean_columns] = df[boolean_columns].fillna("No")
+    df = df.fillna("Unknown")
 
+    # Fields to be dropped depending on the dataset
+    df_drop = df.drop(drop_fields, axis=1)
 
-    return df
+    return df, df_drop
 
 def timer(start_time=None):
     if not start_time:
@@ -176,3 +188,81 @@ def generateMetrics(model, x, y, predictions):
     print(f"Confusion Matrix:\n{cm1}")
     print(f"\nClassification report:\n")
     print(classification_report(y, y_train_pred))
+
+
+def custom_permutation_importance(model, X_train, y_train):
+    # Compute for the permutation importance for feature ranking
+    perm_importance = permutation_importance(model, X_train, y_train, n_repeats=10, random_state=32)
+    print(f"Permutation Importance: {perm_importance.importances_mean}")
+
+    importance_mean = perm_importance.importances_mean
+    importance_std = perm_importance.importances_std
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(len(importance_mean)), importance_mean, yerr=importance_std)
+    plt.xticks(range(len(importance_mean)), X_train.columns, rotation=90)
+    plt.title("Permutation Importance")
+    plt.ylabel("Decrease in Acuracy")
+    plt.xlabel("Features")
+    plt.tight_layout()
+    plt.show()
+
+def select_best_features(X, y, col_names):
+    selector = SelectKBest(score_func=f_classif, k=30)
+    selected_features = selector.fit(X, y)
+
+    scores = selector.scores_
+    sorted_indices = np.argsort(scores)[::-1]
+
+    plt.figure(figsize=(20, 8))
+    plt.bar(range(len(scores)), scores[sorted_indices], color='skyblue')
+    plt.xticks(range(len(scores)), col_names[sorted_indices], rotation=90)
+    plt.title("Feature Importance")
+    plt.ylabel("Scores")
+    plt.xlabel("Features")
+    plt.tight_layout()
+    plt.show()
+
+def recursive_feature_elimination(X, y):
+    model = RandomForestClassifier()
+
+    rfe = RFE(model, n_features_to_select=30)
+    rfe.fit(X, y)
+
+    ranking = rfe.ranking_
+    selected_features = X.columns[rfe.support_]
+
+    print("Selected Features:", selected_features)
+
+    ranking_df = pd.DataFrame({'Feature': X.columns, 'Ranking': ranking})
+    ranking_df.sort_values(by='Ranking', inplace=True)
+
+    plt.figure(figsize=(12, 6))
+    plt.bar(ranking_df['Feature'], ranking_df['Ranking'], color='skyblue')
+    plt.title("Feature Rankings from RFE")
+    plt.xlabel("Features")
+    plt.ylabel("Ranking (Lower is better)")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()
+
+def variance_threshold(X, y):
+    selector = VarianceThreshold()
+    fit_selector = selector.fit_transform(X)
+
+    print("Reduced Dataset:")
+    print(fit_selector)
+
+    variances = selector.variances_
+    features = X.columns
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(features, variances, color='skyblue')
+    plt.axhline(y=0.5, color="red", linestyle="--", label="Threshold")
+    plt.title("Variance of Features")
+    plt.xlabel("Features")
+    plt.ylabel("Variance")
+    plt.legend()
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.show()

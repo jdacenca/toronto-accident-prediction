@@ -1,5 +1,6 @@
 from sklearn.neural_network import MLPClassifier
-from helper import runGridSearchCV, analysis
+from helper import runGridSearchCV, analysis, custom_permutation_importance
+import matplotlib.pyplot as plt
 import pandas as pd
 
 from collections import Counter
@@ -42,8 +43,14 @@ def mlp_classifier(desc, X_train, X_test, y_train, y_test, unseen_fatal, unseen_
         ]
     )
     '''
+
+    # Find the best hyperparameter
     tuning_model = runGridSearchCV(model, param_grid, X_train, y_train, X_test, y_test)
 
+    # Check the permutation importance
+    custom_permutation_importance(model, X_train, y_train)
+
+    # Metrics
     analysis(tuning_model.best_estimator_, "Metrics for Neural Networks", X_train, y_train, X_test, y_test)
 
     #------------------------------------------------------------------------------------

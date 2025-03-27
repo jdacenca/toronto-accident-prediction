@@ -3,11 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from helper import clean_dataset, data_description, unique_values
+from helper import clean_dataset, data_description, unique_values, select_best_features, recursive_feature_elimination, variance_threshold
 from sampling_helper import random_sampling, tomek_links, near_miss
 from sklearn.model_selection import train_test_split
-from mlp_classifier import mlp_classifier
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
 
 np.random.seed(1)
 
@@ -57,7 +56,23 @@ dropped_fields = [
     'y',
 ]
 
-cleaned_df = clean_dataset(ksi_df, dropped_fields)
+df, cleaned_df = clean_dataset(ksi_df, dropped_fields)# Checking the Feature scores
+
+print(df.isnull().sum())
+cat = df.select_dtypes(include=[object, 'category']).columns.tolist()
+df[cat] = df[cat].astype('category')
+encoder = OrdinalEncoder()
+df[cat] = encoder.fit_transform(df[cat])
+x = df.drop(columns=["ACCLASS"], axis=1)
+y = df["ACCLASS"]
+
+print("\nFeature Scores:")
+select_best_features(x, y, df.columns)
+
+recursive_feature_elimination(x, y)
+
+variance_threshold(x, y)
+
 categorical_columns = cleaned_df.select_dtypes(include=[object, 'category']).columns.tolist()
 print("Number of Unique Counts", cleaned_df.nunique())
 unique_values(cleaned_df)
@@ -126,14 +141,14 @@ target = cleaned_df["ACCLASS"]
 # Random Sampling
 x_random_sampling, y_random_sampling = random_sampling(features, target)
 X_train, X_test, y_train, y_test = train_test_split(x_random_sampling, y_random_sampling, test_size=0.2, random_state=17)
-mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+#mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
 
 # Tomek Links
 x_tomek_links, y_tomek_links = tomek_links(features, target)
 X_train, X_test, y_train, y_test = train_test_split(x_tomek_links, y_tomek_links, test_size=0.2, random_state=17)
-mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+#mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
 
 # Near Miss
 x_near_miss, y_near_miss = near_miss(features, target)
 X_train, X_test, y_train, y_test = train_test_split(x_near_miss, y_near_miss, test_size=0.2, random_state=17)
-mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+#mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
