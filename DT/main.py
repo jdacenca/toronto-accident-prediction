@@ -15,7 +15,6 @@ from imblearn.over_sampling import SMOTE
 from sklearn.inspection import permutation_importance
 import shap
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFECV
 
 # Set up logging
 logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
@@ -110,15 +109,9 @@ def calculate_feature_importance_features(X, y):
     # 3. SHAP Values for more detailed and accurate feature importance
     logging.info("Calculating SHAP values...")
 
-    # Sample the data if it's too large
-    sample_size = min(500, X_scaled.shape[0])  # Use at most 500 samples
-    sample_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
-    X_sample = X_scaled.iloc[sample_indices]
-    logging.info(f"Sample for SHAP: {X_sample.shape}")
-    
     # Convert to numpy array for compatibility with SHAP
-    X_sample_values = X_sample.values
-    feature_names = X_sample.columns.tolist()
+    X_sample_values = X.values
+    feature_names = X.columns.tolist()
     logging.info(f"X_sample_values shape: {X_sample_values.shape}")
     
     # Create the explainer with proper numpy array input
@@ -224,87 +217,81 @@ def calculate_feature_importance_features(X, y):
 
     # 5. Create a comparison of all methods
     logging.info("Creating comparison of all methods...")
-    try:
-        plt.figure(figsize=(14, 10))
+
+    plt.figure(figsize=(14, 10))
+    
+    methods = [
+        ('Native', native_importance),
+        ('Permutation', perm_importance_df),
+        ('SHAP', shap_importance),
+        ('RF MDI', rf_importance)
+    ]
         
-        methods = [
-            ('Native', native_importance),
-            ('Permutation', perm_importance_df),
-            ('SHAP', shap_importance),
-            ('RF MDI', rf_importance)
-        ]
-            
-        # Get top 30 features from each method
-        top_features = set()
-        for method_name, df in methods:
-            logging.info(f"Adding top features from {method_name} method")
-            top_features.update(df.head(30)['feature'].tolist())
+    # Get top 30 features from each method
+    top_features = set()
+    for method_name, df in methods:
+        logging.info(f"Adding top features from {method_name} method")
+        top_features.update(df.head(30)['feature'].tolist())
+    
+    logging.info(f"Total unique top features: {len(top_features)}")
+    
+    # Create DataFrame for comparison
+    comparison_df = pd.DataFrame(index=list(top_features))
+    
+    # Normalize importances for each method
+    for name, df in methods:
+        # Create a Series with index as feature and value as importance
+        importance_series = df.set_index('feature')['importance']
         
-        logging.info(f"Total unique top features: {len(top_features)}")
+        # Normalize to sum to 1
+        normalized = importance_series / importance_series.sum()
         
-        # Create DataFrame for comparison
-        comparison_df = pd.DataFrame(index=list(top_features))
-        
-        # Normalize importances for each method
-        for name, df in methods:
-            # Create a Series with index as feature and value as importance
-            importance_series = df.set_index('feature')['importance']
-            
-            # Normalize to sum to 1
-            normalized = importance_series / importance_series.sum()
-            
-            # Add to comparison DataFrame
-            comparison_df[f'{name} Importance'] = normalized
-        
-        # Fill NaN with 0 (features not in top 30 for a method)
-        comparison_df.fillna(0, inplace=True)
-        
-        # Sort by average importance across methods
-        comparison_df['Average'] = comparison_df.mean(axis=1)
-        comparison_df.sort_values('Average', ascending=False, inplace=True)
-        
-        # Save top 30 features to a separate file
-        top_30_features = comparison_df.head(30).index.tolist()
-        with open('insights/performance/top_30_features.txt', 'w') as f:
-            f.write("Top 30 Most Important Features (Averaged Across Methods):\n")
-            for i, feature in enumerate(top_30_features, 1):
-                f.write(f"{i}. {feature}\n")
-        
-        # Save comparison before dropping the average column
-        comparison_df.to_csv('insights/performance/importance_comparison_with_average.csv')
-        
-        # Drop the average column for the plot
-        plot_df = comparison_df.drop('Average', axis=1)
-        
-        # Plot comparison of top 30 features
-        plot_df.head(30).plot(kind='bar', figsize=(14, 10))
-        plt.title('Feature Importance Comparison Across Methods')
-        plt.xlabel('Features')
-        plt.ylabel('Normalized Importance')
-        plt.legend(title='Method')
-        plt.xticks(rotation=90)
-        plt.tight_layout()
-        plt.savefig('insights/performance/importance_comparison.png')
-        plt.close()
-        
-        # Create a heatmap for better visualization of differences between methods
-        plt.figure(figsize=(14, 12))
-        sns.heatmap(plot_df.head(20), cmap='viridis', annot=True, fmt='.2f')
-        plt.title('Feature Importance Heatmap Across Methods')
-        plt.tight_layout()
-        plt.savefig('insights/performance/importance_heatmap.png')
-        plt.close()
-        
-        logging.info("Feature importance comparison completed")
-        
-        # Return the top 20 features for potential use in the main model
-        return top_30_features
-        
-    except Exception as e:
-        logging.error(f"Error creating importance comparison: {e}")
-        import traceback
-        logging.error(f"Traceback: {traceback.format_exc()}")
-        return None
+        # Add to comparison DataFrame
+        comparison_df[f'{name} Importance'] = normalized
+    
+    # Fill NaN with 0 (features not in top 30 for a method)
+    comparison_df.fillna(0, inplace=True)
+    
+    # Sort by average importance across methods
+    comparison_df['Average'] = comparison_df.mean(axis=1)
+    comparison_df.sort_values('Average', ascending=False, inplace=True)
+    
+    # Save top features to a separate file
+    top_features = comparison_df.index.tolist()
+    with open('insights/performance/top_features.txt', 'w') as f:
+        f.write("Most Important Features (Averaged Across Methods):\n")
+        for i, feature in enumerate(top_features, 1):
+            f.write(f"{i}. {feature}\n")
+    
+    # Save comparison before dropping the average column
+    comparison_df.to_csv('insights/performance/importance_comparison_with_average.csv')
+    
+    # Drop the average column for the plot
+    plot_df = comparison_df.drop('Average', axis=1)
+    
+    # Plot comparison of features
+    plot_df.plot(kind='bar', figsize=(14, 10))
+    plt.title('Feature Importance Comparison Across Methods')
+    plt.xlabel('Features')
+    plt.ylabel('Normalized Importance')
+    plt.legend(title='Method')
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    plt.savefig('insights/performance/importance_comparison.png')
+    plt.close()
+    
+    # Create a heatmap for better visualization of differences between methods
+    plt.figure(figsize=(14, 12))
+    sns.heatmap(plot_df.head(20), cmap='viridis', annot=True, fmt='.2f')
+    plt.title('Feature Importance Heatmap Across Methods')
+    plt.tight_layout()
+    plt.savefig('insights/performance/importance_heatmap.png')
+    plt.close()
+    
+    logging.info("Feature importance comparison completed")
+    
+    # Return the top features for potential use in the main model
+    return top_features
 
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
