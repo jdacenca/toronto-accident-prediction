@@ -111,6 +111,101 @@ def calculate_feature_importance_features(X, y):
         logging.error(f"Error during permutation importance calculation: {e}")
         perm_importance_df = native_importance.copy()  # Fallback to native importance
     
+    # 3. SHAP Values for more detailed and accurate feature importance
+    logging.info("Calculating SHAP values...")
+    try:
+        # Sample the data if it's too large
+        sample_size = min(500, X_scaled.shape[0])  # Use at most 500 samples
+        sample_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
+        X_sample = X_scaled.iloc[sample_indices]
+        logging.info(f"Sample for SHAP: {X_sample.shape}")
+        
+        # Convert to numpy array for compatibility with SHAP
+        X_sample_values = X_sample.values
+        feature_names = X_sample.columns.tolist()
+        logging.info(f"X_sample_values shape: {X_sample_values.shape}")
+        
+        # Create the explainer with proper numpy array input
+        logging.info("Creating SHAP explainer...")
+        explainer = shap.TreeExplainer(dt)
+        logging.info("Explainer created, calculating SHAP values...")
+        shap_values = explainer(X_sample_values)
+        logging.info(f"SHAP values calculated, shape: {shap_values.shape}")
+        
+        # For binary classification, SHAP returns values for both classes
+        # Use the values for the positive class (fatal accidents, class 1)
+        # This is typically the second element in the values array (index 1)
+        
+        # Check if we have multi-dimensional SHAP values (for binary classification)
+        if len(shap_values.shape) == 3:
+            logging.info("Multi-dimensional SHAP values detected (binary classification)")
+            # Use class 1 (index 1) for binary classification
+            shap_values_for_plots = shap_values.values[:, :, 1]
+            logging.info(f"Using SHAP values for positive class, shape: {shap_values_for_plots.shape}")
+        else:
+            # If it's just samples x features, use as is
+            shap_values_for_plots = shap_values.values
+            logging.info(f"Using direct SHAP values, shape: {shap_values_for_plots.shape}")
+        
+        # SHAP Summary Plot
+        logging.info("Creating SHAP summary plot...")
+        plt.figure(figsize=(12, 8))
+        shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, show=False)
+        plt.title('SHAP Feature Importance')
+        plt.tight_layout()
+        plt.savefig('insights/performance/shap_summary.png')
+        plt.close()
+        
+        # SHAP Bar Plot
+        logging.info("Creating SHAP bar plot...")
+        plt.figure(figsize=(12, 6))
+        shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, plot_type="bar", show=False)
+        plt.title('SHAP Mean Absolute Feature Importance')
+        plt.tight_layout()
+        plt.savefig('insights/performance/shap_bar.png')
+        plt.close()
+        
+        # SHAP Dependence Plot for top feature
+        logging.info("Creating SHAP dependence plot for top feature...")
+        # First get the feature with highest mean absolute SHAP value
+        mean_abs_shap = np.abs(shap_values_for_plots).mean(0)
+        top_feature_idx = np.argmax(mean_abs_shap)
+        top_feature = feature_names[top_feature_idx]
+        
+        plt.figure(figsize=(10, 6))
+        shap.dependence_plot(
+            top_feature_idx, 
+            shap_values_for_plots, 
+            X_sample_values, 
+            feature_names=feature_names,
+            show=False
+        )
+        plt.title(f'SHAP Dependence Plot for {top_feature}')
+        plt.tight_layout()
+        plt.savefig(f'insights/performance/shap_dependence_{top_feature}.png')
+        plt.close()
+        
+        # Calculate and save SHAP importance values
+        # Create DataFrame with feature importance based on SHAP
+        shap_importance = pd.DataFrame({
+            'feature': feature_names,
+            'importance': mean_abs_shap
+        }).sort_values('importance', ascending=False)
+        
+        logging.info(f"Top 20 important features (SHAP): {shap_importance['feature'].head(20).tolist()}")
+        
+        # Save SHAP importance to CSV
+        shap_importance.to_csv('insights/performance/shap_importance.csv', index=False)
+        logging.info("SHAP importance saved")
+        
+    except Exception as e:
+        logging.error(f"Error calculating SHAP values: {str(e)}")
+        logging.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        logging.warning("Continuing without SHAP analysis")
+        shap_importance = None
+    
 
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
