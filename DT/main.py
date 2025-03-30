@@ -14,6 +14,8 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 from imblearn.over_sampling import SMOTE
 from sklearn.inspection import permutation_importance
+import shap
+from sklearn.ensemble import RandomForestClassifier
 
 # Set up logging
 logging.basicConfig(
@@ -206,6 +208,35 @@ def calculate_feature_importance_features(X, y):
         logging.warning("Continuing without SHAP analysis")
         shap_importance = None
     
+    # 4. Random Forest MDI (Mean Decrease in Impurity)
+    logging.info("Calculating Random Forest Mean Decrease in Impurity...")
+    try:
+        # Train a random forest model
+        rf = RandomForestClassifier(n_estimators=100, random_state=48, n_jobs=-1)
+        rf.fit(X_scaled, y)
+        
+        # Get MDI feature importance
+        rf_importance = pd.DataFrame({
+            'feature': X.columns,
+            'importance': rf.feature_importances_
+        }).sort_values('importance', ascending=False)
+        
+        logging.info(f"Top 20 important features (RF MDI): {rf_importance['feature'].head(20).tolist()}")
+        
+        # Save RF MDI importance to CSV
+        rf_importance.to_csv('insights/performance/rf_mdi_importance.csv', index=False)
+        
+        # Plot RF MDI importance
+        plt.figure(figsize=(12, 6))
+        sns.barplot(data=rf_importance.head(20), x='importance', y='feature')
+        plt.title('Random Forest MDI Feature Importance')
+        plt.tight_layout()
+        plt.savefig('insights/performance/rf_mdi_importance.png')
+        plt.close()
+        logging.info("Random Forest MDI importance saved")
+    except Exception as e:
+        logging.error(f"Error calculating Random Forest MDI: {e}")
+        rf_importance = native_importance.copy()  # Fallback to native importance
 
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
