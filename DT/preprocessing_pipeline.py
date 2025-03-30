@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler, LabelEncoder
 from sklearn.compose import ColumnTransformer
+from sklearn.cluster import KMeans
 
 class DataCleaner(BaseEstimator, TransformerMixin):
     """Custom transformer for cleaning the accident data"""
@@ -22,7 +23,7 @@ class DataCleaner(BaseEstimator, TransformerMixin):
     
     def __init__(self):
         self.binary_cols = None
-        self.label_encoders = {}
+        self.ordinal_encoders = {}
         self.numerical_medians = {}
         self.categorical_modes = {}
         self.feature_names_ = None
@@ -31,34 +32,37 @@ class DataCleaner(BaseEstimator, TransformerMixin):
         """
         Perform initial data cleaning by dropping unnecessary columns.
         """
-        df = df.copy()
+        # Keep only rows where ACCLASS is not 'Property Damage Only'
+        index_range_to_keep = df['ACCLASS'] != 'Property Damage O'
+        df = df[index_range_to_keep]
         columns_to_drop = [col for col in self.COLUMNS_TO_DROP]
         return df.drop(columns=columns_to_drop, errors='ignore', inplace=False)
     
-    def _identify_binary_columns(self, X):
+    def _identify_binary_columns(self, df_cleaned):
         """Identify columns with binary (Yes/No) values"""
-        binary_cols = X.select_dtypes(include=['object']).apply(
+        binary_cols = df_cleaned.select_dtypes(include=['object']).apply(
             lambda x: x.nunique() <= 2 and set(x.unique()).issubset({'Yes', 'No', np.nan})
         )
         return binary_cols[binary_cols].index
     
-    def _store_numerical_medians(self, X):
+    def _store_numerical_medians(self, df_cleaned):
         """Store median values for numerical columns"""
-        numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns
+        numerical_cols = df_cleaned.select_dtypes(include=['int64', 'float64']).columns
         for col in numerical_cols:
-            self.numerical_medians[col] = X[col].median()
+            self.numerical_medians[col] = df_cleaned[col].median()
     
-    def _initialize_categorical_encoders(self, X):
-        """Initialize label encoders and store modes for categorical columns"""
-        categorical_cols = X.select_dtypes(include=['object']).columns
+    def _initialize_categorical_encoders(self, df_cleaned):
+        """Initialize ordinal encoders and store modes for categorical columns"""
+        categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
         categorical_cols = [col for col in categorical_cols if col != 'ACCLASS']
         
         for col in categorical_cols:
             if col not in self.binary_cols:
-                self.categorical_modes[col] = X[col].mode()[0]
-                self.label_encoders[col] = LabelEncoder()
-                non_null_values = X[col].fillna(self.categorical_modes[col])
-                self.label_encoders[col].fit(non_null_values)
+                self.categorical_modes[col] = df_cleaned[col].mode()[0]
+                self.ordinal_encoders[col] = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
+                non_null_values = df_cleaned[col].fillna(self.categorical_modes[col])
+                # Reshape to 2D array for OrdinalEncoder
+                self.ordinal_encoders[col].fit(non_null_values.values.reshape(-1, 1))
     
     def _transform_binary_columns(self, X):
         """Transform binary columns to 0/1 values"""
@@ -76,42 +80,32 @@ class DataCleaner(BaseEstimator, TransformerMixin):
         return X
     
     def _transform_categorical_columns(self, X):
-        """Transform categorical columns using label encoding"""
-        for col, encoder in self.label_encoders.items():
+        """Transform categorical columns using ordinal encoding"""
+        for col, encoder in self.ordinal_encoders.items():
             if col in X.columns:
                 X[col] = X[col].fillna(self.categorical_modes[col])
-                X[col] = encoder.transform(X[col])
+                # Reshape to 2D array for OrdinalEncoder
+                encoded_values = encoder.transform(X[col].values.reshape(-1, 1))
+                X[col] = encoded_values.flatten()  # Flatten back to 1D for the DataFrame
         return X
     
-    def fit(self, X, y=None):
+    def fit(self, df):
         # Apply initial cleaning
-        X = self._clean_initial_data(X)
-        
+        #df_cleaned = self._clean_initial_data(df)        
         # Identify column types and store necessary values
-        self.binary_cols = self._identify_binary_columns(X)
-        self._store_numerical_medians(X)
-        self._initialize_categorical_encoders(X)
-        
+        self.binary_cols = self._identify_binary_columns(df)
+        self._store_numerical_medians(df)
+        self._initialize_categorical_encoders(df)        
         return self
     
-    def transform(self, X):
-        # Apply initial cleaning
-        X = self._clean_initial_data(X)
-        X = X.copy()
-        
-        # Remove property damage only accidents
-        if 'ACCLASS' in X.columns:
-            X = X[X['ACCLASS'] != 'Property Damage O']
-            X = X.drop('ACCLASS', axis=1)
-        
+    def transform(self, df_cleaned):
+        X = df_cleaned.drop('ACCLASS', axis=1)        
         # Apply transformations
         X = self._transform_binary_columns(X)
         X = self._transform_numerical_columns(X)
         X = self._transform_categorical_columns(X)
-        
         # Store feature names
         self.feature_names_ = X.columns.tolist()
-        
         return X
 
 class FeatureEngineer(BaseEstimator, TransformerMixin):
@@ -120,27 +114,26 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
     def __init__(self):
         self.feature_names_ = None
         self.location_clusters = None
-        self.time_period_encoder = LabelEncoder()
+        self.time_period_encoder = OrdinalEncoder(handle_unknown='use_encoded_value', unknown_value=-1)
+
     
-    def fit(self, X, y=None):
+    def fit(self, X):
         # Fit location clusters if latitude and longitude are available
         if all(col in X.columns for col in ['LATITUDE', 'LONGITUDE']):
-            from sklearn.cluster import KMeans
             coords = X[['LATITUDE', 'LONGITUDE']].copy()
             self.location_clusters = KMeans(n_clusters=10, random_state=48)
             self.location_clusters.fit(coords)
             
         # Fit encoders on the full set of possible values
-        self.time_period_encoder.fit([
-            'Night (0-5)', 'Morning (6-11)', 
-            'Afternoon (12-16)', 'Evening (17-20)', 
-            'Night (21-23)'
-        ])
+        time_periods = [
+            ['Night (0-5)'], ['Morning (6-11)'],
+            ['Afternoon (12-16)'], ['Evening (17-20)'],
+            ['Night (21-23)']
+        ]
+        self.time_period_encoder.fit(time_periods)
         return self
     
     def transform(self, X):
-        X = X.copy()
-        
         # Time-based features
         if 'TIME' in X.columns:
             # Extract hour as integer (0-23)
@@ -158,7 +151,10 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
                        'Night (21-23)']
             )
             # Encode TimePeriod
-            X['TimePeriod'] = self.time_period_encoder.transform(X['TimePeriod'])
+            encoded_values = self.time_period_encoder.transform(
+                X['TimePeriod'].values.reshape(-1, 1)
+            )
+            X['TimePeriod'] = encoded_values.flatten()
             
             # Drop intermediate columns
             X = X.drop(['DATE'], axis=1)
@@ -182,5 +178,5 @@ def create_preprocessing_pipeline():
     """Create the main preprocessing pipeline"""
     return Pipeline([
         ('cleaner', DataCleaner()),
-        ('engineer', FeatureEngineer()),
+        #('engineer', FeatureEngineer()),
     ])
