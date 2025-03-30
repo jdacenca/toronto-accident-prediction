@@ -13,6 +13,7 @@ import logging
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from imblearn.over_sampling import SMOTE
+from sklearn.inspection import permutation_importance
 
 # Set up logging
 logging.basicConfig(
@@ -81,8 +82,35 @@ def calculate_feature_importance_features(X, y):
     plt.savefig('insights/performance/native_feature_importance.png')
     plt.close()
     logging.info("Native feature importance saved")
-    # Save feature importance to CSV
-    feature_importance.to_csv('insights/performance/feature_importance.csv', index=False)
+    
+    # 2. Permutation Importance (more reliable than native importance)
+    logging.info("Calculating permutation importance...")
+    
+    try:
+        perm_importance = permutation_importance(dt, X_scaled, y, n_repeats=10, random_state=48)
+        
+        perm_importance_df = pd.DataFrame({
+            'feature': X.columns,
+            'importance': perm_importance.importances_mean
+        }).sort_values('importance', ascending=False)
+        
+        logging.info(f"Top 20 important features (permutation): {perm_importance_df['feature'].head(20).tolist()}")
+        
+        # Save permutation importance to CSV
+        perm_importance_df.to_csv('insights/performance/permutation_importance.csv', index=False)
+        
+        # Plot permutation importance
+        plt.figure(figsize=(12, 6))
+        sns.barplot(data=perm_importance_df.head(20), x='importance', y='feature')
+        plt.title('Permutation Feature Importance')
+        plt.tight_layout()
+        plt.savefig('insights/performance/permutation_importance.png')
+        plt.close()
+        logging.info("Permutation importance saved")
+    except Exception as e:
+        logging.error(f"Error during permutation importance calculation: {e}")
+        perm_importance_df = native_importance.copy()  # Fallback to native importance
+    
 
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
