@@ -1,4 +1,3 @@
-import os
 import time
 import joblib
 import pandas as pd
@@ -6,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, precision_recall_curve, average_precision_score, accuracy_score
 from preprocessing_pipeline import create_preprocessing_pipeline
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from pathlib import Path
 import logging
@@ -16,12 +15,10 @@ from imblearn.over_sampling import SMOTE
 from sklearn.inspection import permutation_importance
 import shap
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import RFECV
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
 
 def setup_directories():
     """Create necessary directories for outputs"""
@@ -71,7 +68,7 @@ def calculate_feature_importance_features(X, y):
         'importance': dt.feature_importances_
     }).sort_values('importance', ascending=False)
     
-    logging.info(f"Top 20 important features (native): {native_importance['feature'].head(20).tolist()}")
+    logging.info(f"Top 30 important features (native): {native_importance['feature'].head(30).tolist()}")
     
     # Save native feature importance to CSV
     native_importance.to_csv('insights/performance/native_feature_importance.csv', index=False)
@@ -88,155 +85,226 @@ def calculate_feature_importance_features(X, y):
     # 2. Permutation Importance (more reliable than native importance)
     logging.info("Calculating permutation importance...")
     
-    try:
-        perm_importance = permutation_importance(dt, X_scaled, y, n_repeats=10, random_state=48)
-        
-        perm_importance_df = pd.DataFrame({
-            'feature': X.columns,
-            'importance': perm_importance.importances_mean
-        }).sort_values('importance', ascending=False)
-        
-        logging.info(f"Top 20 important features (permutation): {perm_importance_df['feature'].head(20).tolist()}")
-        
-        # Save permutation importance to CSV
-        perm_importance_df.to_csv('insights/performance/permutation_importance.csv', index=False)
-        
-        # Plot permutation importance
-        plt.figure(figsize=(12, 6))
-        sns.barplot(data=perm_importance_df.head(20), x='importance', y='feature')
-        plt.title('Permutation Feature Importance')
-        plt.tight_layout()
-        plt.savefig('insights/performance/permutation_importance.png')
-        plt.close()
-        logging.info("Permutation importance saved")
-    except Exception as e:
-        logging.error(f"Error during permutation importance calculation: {e}")
-        perm_importance_df = native_importance.copy()  # Fallback to native importance
+    perm_importance = permutation_importance(dt, X_scaled, y, n_repeats=10, random_state=48)
+    
+    perm_importance_df = pd.DataFrame({
+        'feature': X.columns,
+        'importance': perm_importance.importances_mean
+    }).sort_values('importance', ascending=False)
+    
+    logging.info(f"Top 30 important features (permutation): {perm_importance_df['feature'].head(30).tolist()}")
+    
+    # Save permutation importance to CSV
+    perm_importance_df.to_csv('insights/performance/permutation_importance.csv', index=False)
+    
+    # Plot permutation importance
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=perm_importance_df.head(30), x='importance', y='feature')
+    plt.title('Permutation Feature Importance')
+    plt.tight_layout()
+    plt.savefig('insights/performance/permutation_importance.png')
+    plt.close()
+    logging.info("Permutation importance saved")
+
     
     # 3. SHAP Values for more detailed and accurate feature importance
     logging.info("Calculating SHAP values...")
-    try:
-        # Sample the data if it's too large
-        sample_size = min(500, X_scaled.shape[0])  # Use at most 500 samples
-        sample_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
-        X_sample = X_scaled.iloc[sample_indices]
-        logging.info(f"Sample for SHAP: {X_sample.shape}")
-        
-        # Convert to numpy array for compatibility with SHAP
-        X_sample_values = X_sample.values
-        feature_names = X_sample.columns.tolist()
-        logging.info(f"X_sample_values shape: {X_sample_values.shape}")
-        
-        # Create the explainer with proper numpy array input
-        logging.info("Creating SHAP explainer...")
-        explainer = shap.TreeExplainer(dt)
-        logging.info("Explainer created, calculating SHAP values...")
-        shap_values = explainer(X_sample_values)
-        logging.info(f"SHAP values calculated, shape: {shap_values.shape}")
-        
-        # For binary classification, SHAP returns values for both classes
-        # Use the values for the positive class (fatal accidents, class 1)
-        # This is typically the second element in the values array (index 1)
-        
-        # Check if we have multi-dimensional SHAP values (for binary classification)
-        if len(shap_values.shape) == 3:
-            logging.info("Multi-dimensional SHAP values detected (binary classification)")
-            # Use class 1 (index 1) for binary classification
-            shap_values_for_plots = shap_values.values[:, :, 1]
-            logging.info(f"Using SHAP values for positive class, shape: {shap_values_for_plots.shape}")
-        else:
-            # If it's just samples x features, use as is
-            shap_values_for_plots = shap_values.values
-            logging.info(f"Using direct SHAP values, shape: {shap_values_for_plots.shape}")
-        
-        # SHAP Summary Plot
-        logging.info("Creating SHAP summary plot...")
-        plt.figure(figsize=(12, 8))
-        shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, show=False)
-        plt.title('SHAP Feature Importance')
-        plt.tight_layout()
-        plt.savefig('insights/performance/shap_summary.png')
-        plt.close()
-        
-        # SHAP Bar Plot
-        logging.info("Creating SHAP bar plot...")
-        plt.figure(figsize=(12, 6))
-        shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, plot_type="bar", show=False)
-        plt.title('SHAP Mean Absolute Feature Importance')
-        plt.tight_layout()
-        plt.savefig('insights/performance/shap_bar.png')
-        plt.close()
-        
-        # SHAP Dependence Plot for top feature
-        logging.info("Creating SHAP dependence plot for top feature...")
-        # First get the feature with highest mean absolute SHAP value
-        mean_abs_shap = np.abs(shap_values_for_plots).mean(0)
-        top_feature_idx = np.argmax(mean_abs_shap)
-        top_feature = feature_names[top_feature_idx]
-        
-        plt.figure(figsize=(10, 6))
-        shap.dependence_plot(
-            top_feature_idx, 
-            shap_values_for_plots, 
-            X_sample_values, 
-            feature_names=feature_names,
-            show=False
-        )
-        plt.title(f'SHAP Dependence Plot for {top_feature}')
-        plt.tight_layout()
-        plt.savefig(f'insights/performance/shap_dependence_{top_feature}.png')
-        plt.close()
-        
-        # Calculate and save SHAP importance values
-        # Create DataFrame with feature importance based on SHAP
-        shap_importance = pd.DataFrame({
-            'feature': feature_names,
-            'importance': mean_abs_shap
-        }).sort_values('importance', ascending=False)
-        
-        logging.info(f"Top 20 important features (SHAP): {shap_importance['feature'].head(20).tolist()}")
-        
-        # Save SHAP importance to CSV
-        shap_importance.to_csv('insights/performance/shap_importance.csv', index=False)
-        logging.info("SHAP importance saved")
-        
-    except Exception as e:
-        logging.error(f"Error calculating SHAP values: {str(e)}")
-        logging.error(f"Error type: {type(e).__name__}")
-        import traceback
-        logging.error(f"Traceback: {traceback.format_exc()}")
-        logging.warning("Continuing without SHAP analysis")
-        shap_importance = None
+
+    # Sample the data if it's too large
+    sample_size = min(500, X_scaled.shape[0])  # Use at most 500 samples
+    sample_indices = np.random.choice(X_scaled.shape[0], sample_size, replace=False)
+    X_sample = X_scaled.iloc[sample_indices]
+    logging.info(f"Sample for SHAP: {X_sample.shape}")
+    
+    # Convert to numpy array for compatibility with SHAP
+    X_sample_values = X_sample.values
+    feature_names = X_sample.columns.tolist()
+    logging.info(f"X_sample_values shape: {X_sample_values.shape}")
+    
+    # Create the explainer with proper numpy array input
+    logging.info("Creating SHAP explainer...")
+    explainer = shap.TreeExplainer(dt)
+    logging.info("Explainer created, calculating SHAP values...")
+    shap_values = explainer(X_sample_values)
+    logging.info(f"SHAP values calculated, shape: {shap_values.shape}")
+    
+    # For binary classification, SHAP returns values for both classes
+    # Use the values for the positive class (fatal accidents, class 1)
+    # This is typically the second element in the values array (index 1)
+    
+    # Check if we have multi-dimensional SHAP values (for binary classification)
+    if len(shap_values.shape) == 3:
+        logging.info("Multi-dimensional SHAP values detected (binary classification)")
+        # Use class 1 (index 1) for binary classification
+        shap_values_for_plots = shap_values.values[:, :, 1]
+        logging.info(f"Using SHAP values for positive class, shape: {shap_values_for_plots.shape}")
+    else:
+        # If it's just samples x features, use as is
+        shap_values_for_plots = shap_values.values
+        logging.info(f"Using direct SHAP values, shape: {shap_values_for_plots.shape}")
+    
+    # SHAP Summary Plot
+    logging.info("Creating SHAP summary plot...")
+    plt.figure(figsize=(12, 8))
+    shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, show=False)
+    plt.title('SHAP Feature Importance')
+    plt.tight_layout()
+    plt.savefig('insights/performance/shap_summary.png')
+    plt.close()
+    
+    # SHAP Bar Plot
+    logging.info("Creating SHAP bar plot...")
+    plt.figure(figsize=(12, 6))
+    shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, plot_type="bar", show=False)
+    plt.title('SHAP Mean Absolute Feature Importance')
+    plt.tight_layout()
+    plt.savefig('insights/performance/shap_bar.png')
+    plt.close()
+    
+    # SHAP Dependence Plot for top feature
+    logging.info("Creating SHAP dependence plot for top feature...")
+    # First get the feature with highest mean absolute SHAP value
+    mean_abs_shap = np.abs(shap_values_for_plots).mean(0)
+    top_feature_idx = np.argmax(mean_abs_shap)
+    top_feature = feature_names[top_feature_idx]
+    
+    plt.figure(figsize=(10, 6))
+    shap.dependence_plot(
+        top_feature_idx, 
+        shap_values_for_plots, 
+        X_sample_values, 
+        feature_names=feature_names,
+        show=False
+    )
+    plt.title(f'SHAP Dependence Plot for {top_feature}')
+    plt.tight_layout()
+    plt.savefig(f'insights/performance/shap_dependence_{top_feature}.png')
+    plt.close()
+    
+    # Calculate and save SHAP importance values
+    # Create DataFrame with feature importance based on SHAP
+    shap_importance = pd.DataFrame({
+        'feature': feature_names,
+        'importance': mean_abs_shap
+    }).sort_values('importance', ascending=False)
+    
+    logging.info(f"Top 30 important features (SHAP): {shap_importance['feature'].head(30).tolist()}")
+    
+    # Save SHAP importance to CSV
+    shap_importance.to_csv('insights/performance/shap_importance.csv', index=False)
+    logging.info("SHAP importance saved")
+
     
     # 4. Random Forest MDI (Mean Decrease in Impurity)
     logging.info("Calculating Random Forest Mean Decrease in Impurity...")
+    # Train a random forest model
+    rf = RandomForestClassifier(n_estimators=100, random_state=48, n_jobs=-1)
+    rf.fit(X_scaled, y)
+    
+    # Get MDI feature importance
+    rf_importance = pd.DataFrame({
+        'feature': X.columns,
+        'importance': rf.feature_importances_
+    }).sort_values('importance', ascending=False)
+    
+    logging.info(f"Top 30 important features (RF MDI): {rf_importance['feature'].head(30).tolist()}")
+    
+    # Save RF MDI importance to CSV
+    rf_importance.to_csv('insights/performance/rf_mdi_importance.csv', index=False)
+    
+    # Plot RF MDI importance
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=rf_importance.head(30), x='importance', y='feature')
+    plt.title('Random Forest MDI Feature Importance')
+    plt.tight_layout()
+    plt.savefig('insights/performance/rf_mdi_importance.png')
+    plt.close()
+    logging.info("Random Forest MDI importance saved")
+    
+
+    # 5. Create a comparison of all methods
+    logging.info("Creating comparison of all methods...")
     try:
-        # Train a random forest model
-        rf = RandomForestClassifier(n_estimators=100, random_state=48, n_jobs=-1)
-        rf.fit(X_scaled, y)
+        plt.figure(figsize=(14, 10))
         
-        # Get MDI feature importance
-        rf_importance = pd.DataFrame({
-            'feature': X.columns,
-            'importance': rf.feature_importances_
-        }).sort_values('importance', ascending=False)
+        methods = [
+            ('Native', native_importance),
+            ('Permutation', perm_importance_df),
+            ('SHAP', shap_importance),
+            ('RF MDI', rf_importance)
+        ]
+            
+        # Get top 30 features from each method
+        top_features = set()
+        for method_name, df in methods:
+            logging.info(f"Adding top features from {method_name} method")
+            top_features.update(df.head(30)['feature'].tolist())
         
-        logging.info(f"Top 20 important features (RF MDI): {rf_importance['feature'].head(20).tolist()}")
+        logging.info(f"Total unique top features: {len(top_features)}")
         
-        # Save RF MDI importance to CSV
-        rf_importance.to_csv('insights/performance/rf_mdi_importance.csv', index=False)
+        # Create DataFrame for comparison
+        comparison_df = pd.DataFrame(index=list(top_features))
         
-        # Plot RF MDI importance
-        plt.figure(figsize=(12, 6))
-        sns.barplot(data=rf_importance.head(20), x='importance', y='feature')
-        plt.title('Random Forest MDI Feature Importance')
+        # Normalize importances for each method
+        for name, df in methods:
+            # Create a Series with index as feature and value as importance
+            importance_series = df.set_index('feature')['importance']
+            
+            # Normalize to sum to 1
+            normalized = importance_series / importance_series.sum()
+            
+            # Add to comparison DataFrame
+            comparison_df[f'{name} Importance'] = normalized
+        
+        # Fill NaN with 0 (features not in top 30 for a method)
+        comparison_df.fillna(0, inplace=True)
+        
+        # Sort by average importance across methods
+        comparison_df['Average'] = comparison_df.mean(axis=1)
+        comparison_df.sort_values('Average', ascending=False, inplace=True)
+        
+        # Save top 30 features to a separate file
+        top_30_features = comparison_df.head(30).index.tolist()
+        with open('insights/performance/top_30_features.txt', 'w') as f:
+            f.write("Top 30 Most Important Features (Averaged Across Methods):\n")
+            for i, feature in enumerate(top_30_features, 1):
+                f.write(f"{i}. {feature}\n")
+        
+        # Save comparison before dropping the average column
+        comparison_df.to_csv('insights/performance/importance_comparison_with_average.csv')
+        
+        # Drop the average column for the plot
+        plot_df = comparison_df.drop('Average', axis=1)
+        
+        # Plot comparison of top 30 features
+        plot_df.head(30).plot(kind='bar', figsize=(14, 10))
+        plt.title('Feature Importance Comparison Across Methods')
+        plt.xlabel('Features')
+        plt.ylabel('Normalized Importance')
+        plt.legend(title='Method')
+        plt.xticks(rotation=90)
         plt.tight_layout()
-        plt.savefig('insights/performance/rf_mdi_importance.png')
+        plt.savefig('insights/performance/importance_comparison.png')
         plt.close()
-        logging.info("Random Forest MDI importance saved")
+        
+        # Create a heatmap for better visualization of differences between methods
+        plt.figure(figsize=(14, 12))
+        sns.heatmap(plot_df.head(20), cmap='viridis', annot=True, fmt='.2f')
+        plt.title('Feature Importance Heatmap Across Methods')
+        plt.tight_layout()
+        plt.savefig('insights/performance/importance_heatmap.png')
+        plt.close()
+        
+        logging.info("Feature importance comparison completed")
+        
+        # Return the top 20 features for potential use in the main model
+        return top_30_features
+        
     except Exception as e:
-        logging.error(f"Error calculating Random Forest MDI: {e}")
-        rf_importance = native_importance.copy()  # Fallback to native importance
+        logging.error(f"Error creating importance comparison: {e}")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        return None
 
 def visualize_tree(model, feature_names, max_depth=3):
     """Create and save a visualization of the decision tree"""
@@ -433,7 +501,11 @@ def main():
     X, y, pipeline = load_and_preprocess_data()
     
     # Calculate feature importance
-    calculate_feature_importance_features(X, y)
+    top_features = calculate_feature_importance_features(X, y)
+    
+    # Print the top features discovered
+    if top_features:
+        logging.info(f"Top features across all methods: {top_features}")
     
     # Train and evaluate model
     model = train_and_evaluate_model(X, y)
