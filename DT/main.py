@@ -47,32 +47,40 @@ def load_and_preprocess_data():
     return X, y, pipeline
 
 def calculate_feature_importance_features(X, y):
-    """Determine important features using a simple decision tree"""
-    logging.info("Determining important features...")
+    """Determine important features using multiple techniques"""
+    logging.info(f"Determining important features using multiple techniques... Shape of X: {X.shape}")
     
     # Create and scale features for importance calculation
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     X_scaled = pd.DataFrame(X_scaled, columns=X.columns)
+    logging.info(f"X_scaled shape: {X_scaled.shape}, dtypes: {X_scaled.dtypes.iloc[0]}")
     
     # Train a decision tree to get feature importance
     dt = DecisionTreeClassifier(random_state=48)
     dt.fit(X_scaled, y)
+    logging.info("Decision tree model trained successfully")
     
-    # Get feature importance
-    feature_importance = pd.DataFrame({
+    # 1. Native Decision Tree feature importance
+    logging.info("Calculating native feature importance...")
+    native_importance = pd.DataFrame({
         'feature': X.columns,
         'importance': dt.feature_importances_
     }).sort_values('importance', ascending=False)
     
-    # Save feature importance plot
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=feature_importance, x='importance', y='feature')
-    plt.title('Feature Importance')
-    plt.tight_layout()
-    plt.savefig('insights/performance/feature_importance.png')
-    plt.close()
+    logging.info(f"Top 20 important features (native): {native_importance['feature'].head(20).tolist()}")
     
+    # Save native feature importance to CSV
+    native_importance.to_csv('insights/performance/native_feature_importance.csv', index=False)
+    
+    # Plot native feature importance
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=native_importance.head(20), x='importance', y='feature')
+    plt.title('Native Feature Importance (Decision Tree)')
+    plt.tight_layout()
+    plt.savefig('insights/performance/native_feature_importance.png')
+    plt.close()
+    logging.info("Native feature importance saved")
     # Save feature importance to CSV
     feature_importance.to_csv('insights/performance/feature_importance.csv', index=False)
 
