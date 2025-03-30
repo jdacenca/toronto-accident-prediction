@@ -292,27 +292,25 @@ def main():
     """Main execution function"""
 
     # Load and preprocess data
-    logging.info("Loading and preprocessing data...")
+    logging.info("Loading data...")
     df = pd.read_csv('data/TOTAL_KSI_6386614326836635957.csv')
 
-    # Save unseen data for reference
+    # Create preprocessing pipeline
     pipeline = create_preprocessing_pipeline()
-
+    
+    # Process dataset
+    logging.info("Preprocessing data...")
+    X = pipeline.fit_transform(df)
     # Create target variable for main dataset
-    mask_main = df['ACCLASS'] != 'Property Damage O'
-    df_processed_main = df[mask_main]
-    y_main = (df_processed_main['ACCLASS'] == 'Fatal').astype(int)
+    y = (df['ACCLASS'] == 'Fatal').astype(int)
 
-    # Process main dataset
-    X_main = pipeline.fit_transform(df_processed_main)
+    logging.info(f"Final dataset shape: {X.shape}")
+    logging.info(f"Number of Fatal accidents: {y.sum()}")
+    logging.info(f"Number of Non-Fatal accidents: {len(y) - y.sum()}")
 
-    # Convert X_main to DataFrame with proper column names
-    feature_names = pipeline.named_steps['engineer'].feature_names_
-    X_main = pd.DataFrame(X_main, columns=feature_names)
-
-    # Run comparison on main dataset
-    logging.info("Running comparison on main dataset...")
-    comparison_main = HyperparameterTuning(X_main, y_main)
+    # Run comparison on dataset
+    logging.info("Running comparison on dataset...")
+    comparison_main = HyperparameterTuning(X, y)
     comparison_main.run_comparison()
     comparison_main.save_results()
 

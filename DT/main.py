@@ -37,13 +37,8 @@ def load_and_preprocess_data():
     logging.info("Preprocessing data...")
     # First preprocess the data
     X = pipeline.fit_transform(df)
-    
-    # Get the indices of rows that weren't dropped
-    mask = df['ACCLASS'] != 'Property Damage O'
-    df_processed = df[mask]
-    
     # Create target variable
-    y = (df_processed['ACCLASS'] == 'Fatal').astype(int)
+    y = (df['ACCLASS'] == 'Fatal').astype(int)
 
     logging.info(f"Final dataset shape: {X.shape}")
     logging.info(f"Number of Fatal accidents: {y.sum()}")
@@ -72,8 +67,8 @@ def calculate_feature_importance_features(X, y):
     
     # Save feature importance plot
     plt.figure(figsize=(12, 6))
-    sns.barplot(data=feature_importance.head(20), x='importance', y='feature')
-    plt.title('Top 20 Most Important Features')
+    sns.barplot(data=feature_importance, x='importance', y='feature')
+    plt.title('Feature Importance')
     plt.tight_layout()
     plt.savefig('insights/performance/feature_importance.png')
     plt.close()
