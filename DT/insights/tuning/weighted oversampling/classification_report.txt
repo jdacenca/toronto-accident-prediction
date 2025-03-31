@@ -1,0 +1,16 @@
+Classification Report for weighted oversampling
+==================================================
+
+              precision    recall  f1-score   support
+
+           0       0.98      0.80      0.88      3258
+           1       0.42      0.89      0.57       534
+
+    accuracy                           0.81      3792
+   macro avg       0.70      0.84      0.73      3792
+weighted avg       0.90      0.81      0.84      3792
+
+
+Model Parameters:
+--------------------
+{'ccp_alpha': 0.0, 'class_weight': 'balanced', 'criterion': 'gini', 'max_depth': None, 'max_features': None, 'max_leaf_nodes': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 2, 'min_weight_fraction_leaf': 0.0, 'monotonic_cst': None, 'random_state': 48, 'splitter': 'best'}

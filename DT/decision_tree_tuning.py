@@ -1,5 +1,6 @@
+"""Script for tuning decision tree hyperparameters."""
+
 import pandas as pd
-import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -7,13 +8,14 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_curve, 
 from sklearn.preprocessing import StandardScaler
 import logging
 from pathlib import Path
-import joblib
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 import warnings
-from preprocessing_pipeline import create_preprocessing_pipeline
+from preprocessing.pipeline import create_preprocessing_pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
+from utils.hyperparameter_tuning import HyperparameterTuning
+from utils.config import DATA_DIR, RANDOM_STATE
 
 warnings.filterwarnings('ignore')
 plt.style.use('default')
@@ -34,7 +36,7 @@ class HyperparameterTuning:
         
     def setup_directories(self):
         """Create necessary directories"""
-        dirs = ['insights/dt_tuning']
+        dirs = ['insights/tuning']
         for dir_path in dirs:
             Path(f'{dir_path}').mkdir(parents=True, exist_ok=True)
     
@@ -44,7 +46,7 @@ class HyperparameterTuning:
         X_train, X_test, y_train, y_test = train_test_split(
             self.X, self.y, 
             test_size=0.2, 
-            random_state=48,
+            random_state=RANDOM_STATE,
             stratify=self.y
         )
         
@@ -65,7 +67,7 @@ class HyperparameterTuning:
             # Random oversampling
             sampler = RandomUnderSampler(
                 sampling_strategy='majority',
-                random_state=48
+                random_state=RANDOM_STATE
             )
             X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
             logging.info("\nOversampling Class Distribution:")
@@ -77,7 +79,7 @@ class HyperparameterTuning:
             # Random undersampling
             sampler = RandomUnderSampler(
                 sampling_strategy='majority',
-                random_state=48
+                random_state=RANDOM_STATE
             )
             X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
             logging.info("\nUndersampling Class Distribution:")
@@ -87,7 +89,7 @@ class HyperparameterTuning:
         
         elif sampling_strategy == 'SMOTE':
             # SMOTE
-            smote = SMOTE(random_state=48)
+            smote = SMOTE(random_state=RANDOM_STATE)
             X_train_scaled, y_train = smote.fit_resample(X_train_scaled, y_train)
             logging.info("\nSMOTE Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
@@ -137,7 +139,7 @@ class HyperparameterTuning:
         logging.info(f"F1-Score: {results['F1-Score']:.4f}")
         
         # Create visualizations directory if it doesn't exist
-        viz_dir = Path(f'insights/dt_tuning/{model_name}')
+        viz_dir = Path(f'insights/tuning/{model_name}')
         viz_dir.mkdir(parents=True, exist_ok=True)
         
         # 1. Plot and save confusion matrix
@@ -218,43 +220,43 @@ class HyperparameterTuning:
             X_train, X_test, y_train, y_test = self.prepare_data(sampling)
             
             # Basic Decision Tree
-            dt_basic = DecisionTreeClassifier(min_samples_split=2, random_state=48)
+            dt_basic = DecisionTreeClassifier(min_samples_split=2, random_state=RANDOM_STATE)
             self.evaluate_model(
                 dt_basic, X_train, X_test, y_train, y_test,
-                f"DT_basic_{sampling if sampling else 'original'}"
+                (f"basic {sampling if sampling else ''}").rstrip()
             )
             
             # Decision Tree with Gini
             dt_gini = DecisionTreeClassifier(
                 criterion='gini',
                 min_samples_split=2,
-                random_state=48
+                random_state=RANDOM_STATE
             )
             self.evaluate_model(
                 dt_gini, X_train, X_test, y_train, y_test,
-                f"DT_gini_{sampling if sampling else 'original'}"
+                (f"gini {sampling if sampling else ''}").rstrip()
             )
             
             # Decision Tree with Entropy
             dt_entropy = DecisionTreeClassifier(
                 criterion='entropy',
                 min_samples_split=2,
-                random_state=48
+                random_state=RANDOM_STATE
             )
             self.evaluate_model(
                 dt_entropy, X_train, X_test, y_train, y_test,
-                f"DT_entropy_{sampling if sampling else 'original'}"
+                (f"entropy {sampling if sampling else ''}").rstrip()
             )
             
             # Decision Tree with Class Weights
             dt_weighted = DecisionTreeClassifier(
                 class_weight='balanced',
                 min_samples_split=2,
-                random_state=48
+                random_state=RANDOM_STATE
             )
             self.evaluate_model(
                 dt_weighted, X_train, X_test, y_train, y_test,
-                f"DT_weighted_{sampling if sampling else 'original'}"
+                (f"weighted {sampling if sampling else ''}").rstrip()
             )
     
     def save_results(self):
@@ -263,8 +265,8 @@ class HyperparameterTuning:
         results_df = pd.DataFrame(self.results)
         
         # Save to CSV
-        results_df.to_csv(f'insights/dt_tuning/results.csv', index=False)
-        logging.info(f"\nResults saved to insights/dt_tuning/results.csv")
+        results_df.to_csv(f'insights/tuning/results.csv', index=False)
+        logging.info(f"\nResults saved to insights/tuning/results.csv")
 
         # Create a formatted markdown table
         markdown_table = f"# Decision Tree Tuning Results \n\n"
@@ -283,36 +285,32 @@ class HyperparameterTuning:
             markdown_table += f"{sampling} |\n"
         
         # Save markdown table
-        with open(f'insights/dt_tuning/results.md', 'w') as f:
+        with open(f'insights/tuning/results.md', 'w') as f:
             f.write(markdown_table)
         
-        logging.info(f"Markdown results saved to insights/dt_tuning/results.md")
+        logging.info(f"Markdown results saved to insights/tuning/results.md")
 
 def main():
-    """Main execution function"""
-
+    """Main execution function."""
     # Load and preprocess data
-    logging.info("Loading data...")
-    df = pd.read_csv('data/TOTAL_KSI_6386614326836635957.csv')
-
+    data_path = DATA_DIR / 'TOTAL_KSI_6386614326836635957.csv'
+    df = pd.read_csv(data_path)
+    
     # Create preprocessing pipeline
     pipeline = create_preprocessing_pipeline()
     
-    # Process dataset
-    logging.info("Preprocessing data...")
+    # Prepare features and target
     X = pipeline.fit_transform(df)
-    # Create target variable for main dataset
     y = (df['ACCLASS'] == 'Fatal').astype(int)
-
-    logging.info(f"Final dataset shape: {X.shape}")
-    logging.info(f"Number of Fatal accidents: {y.sum()}")
-    logging.info(f"Number of Non-Fatal accidents: {len(y) - y.sum()}")
-
-    # Run comparison on dataset
-    logging.info("Running comparison on dataset...")
-    comparison_main = HyperparameterTuning(X, y)
-    comparison_main.run_comparison()
-    comparison_main.save_results()
+    
+    # Initialize hyperparameter tuning
+    tuner = HyperparameterTuning(X, y)
+    
+    # Run comparison
+    tuner.run_comparison()
+    
+    # Save all results
+    tuner.save_results()
 
 if __name__ == "__main__":
     main() 

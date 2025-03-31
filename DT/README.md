@@ -22,7 +22,7 @@ This project analyzes traffic accidents in Toronto to predict accident severity 
 ├── insights/                  # Analysis outputs
 │   ├── analysis_report.md    # Comprehensive analysis report
 │   ├── correlation/          # Correlation matrices and analysis
-│   ├── dt_tuning/           # Decision tree tuning analysis results
+│   ├── tuning/           # Decision tree tuning analysis results
 │   ├── geographic_analysis/  # Geographic distribution
 │   ├── performance/         # Model performance metrics and Feature importance analysis
 │   ├── seasonal_analysis/   # Seasonal patterns
@@ -145,8 +145,8 @@ python decision_tree_tuning.py
 1. Analysis Reports
 
    - `insights/analysis_report.md`: Comprehensive data analysis
-   - `insights/dt_tuning/main_dataset_results.csv`: Decision tree tuning metrics
-   - `insights/dt_tuning/unseen_dataset_results.csv`: Unseen data evaluation
+   - `insights/tuning/main_dataset_results.csv`: Decision tree tuning metrics
+   - `insights/tuning/unseen_dataset_results.csv`: Unseen data evaluation
    - `insights/performance/*.txt`: Detailed classification reports
 
 2. Visualizations

@@ -1,34 +1,43 @@
+"""Main script for training and evaluating the Decision Tree model."""
+
 import time
-import joblib
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, precision_recall_curve, average_precision_score, accuracy_score
-from preprocessing_pipeline import create_preprocessing_pipeline
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from pathlib import Path
 import logging
-from sklearn.preprocessing import StandardScaler
+import pandas as pd
 import numpy as np
-from imblearn.over_sampling import SMOTE
-from sklearn.inspection import permutation_importance
-import shap
-from sklearn.ensemble import RandomForestClassifier
+from pathlib import Path
+from typing import Any
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.tree import DecisionTreeClassifier
+
+from utils.config import (
+    DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR,
+    MODEL_PARAMS, SCORING_METRICS, RANDOM_STATE
+)
+from utils.visualization import plot_feature_importance, plot_importance_comparison
+from utils.evaluation import evaluate_model, calculate_feature_importance, save_model_artifacts
+from preprocessing.pipeline import create_preprocessing_pipeline
 
 # Set up logging
-logging.basicConfig(level=logging.INFO,format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-def setup_directories():
-    """Create necessary directories for outputs"""
-    dirs = ['insights/serialized_artifacts', 'insights/performance']
+def setup_directories() -> None:
+    """Create necessary directories for outputs."""
+    dirs = [SERIALIZED_DIR, PERFORMANCE_DIR]
     for dir_path in dirs:
         Path(dir_path).mkdir(parents=True, exist_ok=True)
 
-def load_and_preprocess_data():
-    """Load and preprocess the data"""
+def load_and_preprocess_data() -> tuple[pd.DataFrame, np.ndarray, Any]:
+    """Load and preprocess the data.
+    
+    Returns:
+        tuple: (X, y, pipeline) where X is the feature matrix, y is the target vector,
+               and pipeline is the fitted preprocessing pipeline.
+    """
     logging.info("Loading data...")
-    df = pd.read_csv('data/TOTAL_KSI_6386614326836635957.csv')
+    df = pd.read_csv(DATA_DIR / 'TOTAL_KSI_6386614326836635957.csv')
     
     # Create preprocessing pipeline
     pipeline = create_preprocessing_pipeline()
@@ -45,274 +54,17 @@ def load_and_preprocess_data():
     
     return X, y, pipeline
 
-def calculate_feature_importance_features(X, y):
-    """Determine important features using multiple techniques"""
-    logging.info(f"Determining important features using multiple techniques... Shape of X: {X.shape}")
+def train_model(X: pd.DataFrame, y: np.ndarray) -> DecisionTreeClassifier:
+    """Train the decision tree model using grid search.
     
-    # Create and scale features for importance calculation
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_scaled = pd.DataFrame(X_scaled, columns=X.columns)
-    logging.info(f"X_scaled shape: {X_scaled.shape}, dtypes: {X_scaled.dtypes.iloc[0]}")
-    
-    # Train a decision tree to get feature importance
-    dt = DecisionTreeClassifier(random_state=48)
-    dt.fit(X_scaled, y)
-    logging.info("Decision tree model trained successfully")
-    
-    # 1. Native Decision Tree feature importance
-    logging.info("Calculating native feature importance...")
-    native_importance = pd.DataFrame({
-        'feature': X.columns,
-        'importance': dt.feature_importances_
-    }).sort_values('importance', ascending=False)
-    
-    logging.info(f"Top 30 important features (native): {native_importance['feature'].head(30).tolist()}")
-    
-    # Save native feature importance to CSV
-    native_importance.to_csv('insights/performance/native_feature_importance.csv', index=False)
-    
-    # Plot native feature importance
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=native_importance.head(20), x='importance', y='feature')
-    plt.title('Native Feature Importance (Decision Tree)')
-    plt.tight_layout()
-    plt.savefig('insights/performance/native_feature_importance.png')
-    plt.close()
-    logging.info("Native feature importance saved")
-    
-    # 2. Permutation Importance (more reliable than native importance)
-    logging.info("Calculating permutation importance...")
-    
-    perm_importance = permutation_importance(dt, X_scaled, y, n_repeats=10, random_state=48)
-    
-    perm_importance_df = pd.DataFrame({
-        'feature': X.columns,
-        'importance': perm_importance.importances_mean
-    }).sort_values('importance', ascending=False)
-    
-    logging.info(f"Top 30 important features (permutation): {perm_importance_df['feature'].head(30).tolist()}")
-    
-    # Save permutation importance to CSV
-    perm_importance_df.to_csv('insights/performance/permutation_importance.csv', index=False)
-    
-    # Plot permutation importance
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=perm_importance_df.head(30), x='importance', y='feature')
-    plt.title('Permutation Feature Importance')
-    plt.tight_layout()
-    plt.savefig('insights/performance/permutation_importance.png')
-    plt.close()
-    logging.info("Permutation importance saved")
-
-    
-    # 3. SHAP Values for more detailed and accurate feature importance
-    logging.info("Calculating SHAP values...")
-
-    # Convert to numpy array for compatibility with SHAP
-    X_sample_values = X.values
-    feature_names = X.columns.tolist()
-    logging.info(f"X_sample_values shape: {X_sample_values.shape}")
-    
-    # Create the explainer with proper numpy array input
-    logging.info("Creating SHAP explainer...")
-    explainer = shap.TreeExplainer(dt)
-    logging.info("Explainer created, calculating SHAP values...")
-    shap_values = explainer(X_sample_values)
-    logging.info(f"SHAP values calculated, shape: {shap_values.shape}")
-    
-    # For binary classification, SHAP returns values for both classes
-    # Use the values for the positive class (fatal accidents, class 1)
-    # This is typically the second element in the values array (index 1)
-    
-    # Check if we have multi-dimensional SHAP values (for binary classification)
-    if len(shap_values.shape) == 3:
-        logging.info("Multi-dimensional SHAP values detected (binary classification)")
-        # Use class 1 (index 1) for binary classification
-        shap_values_for_plots = shap_values.values[:, :, 1]
-        logging.info(f"Using SHAP values for positive class, shape: {shap_values_for_plots.shape}")
-    else:
-        # If it's just samples x features, use as is
-        shap_values_for_plots = shap_values.values
-        logging.info(f"Using direct SHAP values, shape: {shap_values_for_plots.shape}")
-    
-    # SHAP Summary Plot
-    logging.info("Creating SHAP summary plot...")
-    plt.figure(figsize=(12, 8))
-    shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, show=False)
-    plt.title('SHAP Feature Importance')
-    plt.tight_layout()
-    plt.savefig('insights/performance/shap_summary.png')
-    plt.close()
-    
-    # SHAP Bar Plot
-    logging.info("Creating SHAP bar plot...")
-    plt.figure(figsize=(12, 6))
-    shap.summary_plot(shap_values_for_plots, X_sample_values, feature_names=feature_names, plot_type="bar", show=False)
-    plt.title('SHAP Mean Absolute Feature Importance')
-    plt.tight_layout()
-    plt.savefig('insights/performance/shap_bar.png')
-    plt.close()
-    
-    # SHAP Dependence Plot for top feature
-    logging.info("Creating SHAP dependence plot for top feature...")
-    # First get the feature with highest mean absolute SHAP value
-    mean_abs_shap = np.abs(shap_values_for_plots).mean(0)
-    top_feature_idx = np.argmax(mean_abs_shap)
-    top_feature = feature_names[top_feature_idx]
-    
-    plt.figure(figsize=(10, 6))
-    shap.dependence_plot(
-        top_feature_idx, 
-        shap_values_for_plots, 
-        X_sample_values, 
-        feature_names=feature_names,
-        show=False
-    )
-    plt.title(f'SHAP Dependence Plot for {top_feature}')
-    plt.tight_layout()
-    plt.savefig(f'insights/performance/shap_dependence_{top_feature}.png')
-    plt.close()
-    
-    # Calculate and save SHAP importance values
-    # Create DataFrame with feature importance based on SHAP
-    shap_importance = pd.DataFrame({
-        'feature': feature_names,
-        'importance': mean_abs_shap
-    }).sort_values('importance', ascending=False)
-    
-    logging.info(f"Top 30 important features (SHAP): {shap_importance['feature'].head(30).tolist()}")
-    
-    # Save SHAP importance to CSV
-    shap_importance.to_csv('insights/performance/shap_importance.csv', index=False)
-    logging.info("SHAP importance saved")
-
-    
-    # 4. Random Forest MDI (Mean Decrease in Impurity)
-    logging.info("Calculating Random Forest Mean Decrease in Impurity...")
-    # Train a random forest model
-    rf = RandomForestClassifier(n_estimators=100, random_state=48, n_jobs=-1)
-    rf.fit(X_scaled, y)
-    
-    # Get MDI feature importance
-    rf_importance = pd.DataFrame({
-        'feature': X.columns,
-        'importance': rf.feature_importances_
-    }).sort_values('importance', ascending=False)
-    
-    logging.info(f"Top 30 important features (RF MDI): {rf_importance['feature'].head(30).tolist()}")
-    
-    # Save RF MDI importance to CSV
-    rf_importance.to_csv('insights/performance/rf_mdi_importance.csv', index=False)
-    
-    # Plot RF MDI importance
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=rf_importance.head(30), x='importance', y='feature')
-    plt.title('Random Forest MDI Feature Importance')
-    plt.tight_layout()
-    plt.savefig('insights/performance/rf_mdi_importance.png')
-    plt.close()
-    logging.info("Random Forest MDI importance saved")
-    
-
-    # 5. Create a comparison of all methods
-    logging.info("Creating comparison of all methods...")
-
-    plt.figure(figsize=(14, 10))
-    
-    methods = [
-        ('Native', native_importance),
-        ('Permutation', perm_importance_df),
-        ('SHAP', shap_importance),
-        ('RF MDI', rf_importance)
-    ]
+    Args:
+        X: Feature matrix
+        y: Target vector
         
-    # Get top 30 features from each method
-    top_features = set()
-    for method_name, df in methods:
-        logging.info(f"Adding top features from {method_name} method")
-        top_features.update(df.head(30)['feature'].tolist())
-    
-    logging.info(f"Total unique top features: {len(top_features)}")
-    
-    # Create DataFrame for comparison
-    comparison_df = pd.DataFrame(index=list(top_features))
-    
-    # Normalize importances for each method
-    for name, df in methods:
-        # Create a Series with index as feature and value as importance
-        importance_series = df.set_index('feature')['importance']
-        
-        # Normalize to sum to 1
-        normalized = importance_series / importance_series.sum()
-        
-        # Add to comparison DataFrame
-        comparison_df[f'{name} Importance'] = normalized
-    
-    # Fill NaN with 0 (features not in top 30 for a method)
-    comparison_df.fillna(0, inplace=True)
-    
-    # Sort by average importance across methods
-    comparison_df['Average'] = comparison_df.mean(axis=1)
-    comparison_df.sort_values('Average', ascending=False, inplace=True)
-    
-    # Save top features to a separate file
-    top_features = comparison_df.index.tolist()
-    with open('insights/performance/top_features.txt', 'w') as f:
-        f.write("Most Important Features (Averaged Across Methods):\n")
-        for i, feature in enumerate(top_features, 1):
-            f.write(f"{i}. {feature}\n")
-    
-    # Save comparison before dropping the average column
-    comparison_df.to_csv('insights/performance/importance_comparison_with_average.csv')
-    
-    # Drop the average column for the plot
-    plot_df = comparison_df.drop('Average', axis=1)
-    
-    # Plot comparison of features
-    plot_df.plot(kind='bar', figsize=(14, 10))
-    plt.title('Feature Importance Comparison Across Methods')
-    plt.xlabel('Features')
-    plt.ylabel('Normalized Importance')
-    plt.legend(title='Method')
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.savefig('insights/performance/importance_comparison.png')
-    plt.close()
-    
-    # Create a heatmap for better visualization of differences between methods
-    plt.figure(figsize=(14, 12))
-    sns.heatmap(plot_df.head(20), cmap='viridis', annot=True, fmt='.2f')
-    plt.title('Feature Importance Heatmap Across Methods')
-    plt.tight_layout()
-    plt.savefig('insights/performance/importance_heatmap.png')
-    plt.close()
-    
-    logging.info("Feature importance comparison completed")
-    
-    # Return the top features for potential use in the main model
-    return top_features
-
-def visualize_tree(model, feature_names, max_depth=3):
-    """Create and save a visualization of the decision tree"""
-    plt.figure(figsize=(20, 10))
-    plot_tree(model, 
-             feature_names=feature_names,
-             class_names=['Non-Fatal', 'Fatal'],
-             filled=True,
-             rounded=True,
-             max_depth=max_depth)
-    plt.savefig('insights/performance/decision_tree_visualization.png', dpi=300, bbox_inches='tight')
-    plt.close()
-
-def train_and_evaluate_model(X, y):
-    """Train and evaluate the decision tree model"""
+    Returns:
+        DecisionTreeClassifier: The best trained model
+    """
     logging.info("Training and evaluating model...")
-    
-    # Scale the features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-    X_scaled = pd.DataFrame(X_scaled, columns=X.columns)
     
     # Calculate class weights
     n_samples = len(y)
@@ -325,49 +77,28 @@ def train_and_evaluate_model(X, y):
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X_scaled, y, 
+        X, y, 
         test_size=0.2, 
-        random_state=48,
+        random_state=RANDOM_STATE,
         stratify=y
     )
     
-    # # SMOTE for balancing 
-    # smote = SMOTE(random_state=48)
-    # X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
-    # logging.info(f"After SMOTE - Training samples shape: {X_train_balanced.shape}")
-    
-    # Enhanced parameter grid
-    param_grid = {
-        'max_depth': [3, 5, 7, None],
-        'min_samples_split': [2, 5, 10],
-        'criterion': ['gini', 'entropy'],
-        'class_weight': ['balanced', class_weights, None], 
-        'max_features': ['sqrt', 'log2', None]
-    }
-    
     # Create base model
-    dt = DecisionTreeClassifier(random_state=48)
+    dt = DecisionTreeClassifier(random_state=RANDOM_STATE)
     
-    # Create grid search with both accuracy and f1 scoring
-    scoring = {
-        'f1': 'f1',
-        'precision': 'precision',
-        'recall': 'recall',
-        'accuracy': 'accuracy'
-    }
-    
+    # Create grid search
     grid_search = GridSearchCV(
         estimator=dt,
-        param_grid=param_grid,
+        param_grid=MODEL_PARAMS,
         cv=5,
-        scoring=scoring,
-        refit='f1',  # Still optimize for F1 score
+        scoring=SCORING_METRICS,
+        refit='f1',
         n_jobs=-1,
         verbose=1
     )
     
-    # Fit on balanced data
-    logging.info("Performing grid search with balanced data...")
+    # Fit on training data
+    logging.info("Performing grid search...")
     grid_search.fit(X_train, y_train)
     
     # Log detailed results
@@ -375,7 +106,7 @@ def train_and_evaluate_model(X, y):
     for param, value in grid_search.best_params_.items():
         logging.info(f"{param}: {value}")
     
-    for metric in scoring.keys():
+    for metric in SCORING_METRICS.keys():
         score = grid_search.cv_results_[f'mean_test_{metric}']
         best_idx = grid_search.best_index_
         logging.info(f"Best {metric} score: {score[best_idx]:.3f}")
@@ -383,102 +114,51 @@ def train_and_evaluate_model(X, y):
     # Get best model
     best_model = grid_search.best_estimator_
     
-    # Create tree visualization
-    visualize_tree(best_model, X.columns)
+    # Evaluate model
+    feature_names = X.columns.tolist()
+    evaluate_model(best_model, X_test, y_test, feature_names)
     
-    # Make predictions and calculate metrics
-    y_pred = best_model.predict(X_test)
-    test_accuracy = accuracy_score(y_test, y_pred)
-
-    
-    # Generate and save detailed classification report
-    report = classification_report(y_test, y_pred)
-    logging.info("\nClassification Report:\n" + report)
-    
-    with open('insights/performance/classification_report.txt', 'w') as f:
-        f.write("Model Performance Metrics:\n")
-        f.write("=" * 50 + "\n\n")
-        
-        f.write("Accuracy Metrics:\n")
-        f.write("-" * 20 + "\n")
-        f.write(f"Testing Accuracy:  {test_accuracy:.3f}\n\n")
-        
-        f.write("Best Parameters:\n")
-        f.write("-" * 20 + "\n")
-        for param, value in grid_search.best_params_.items():
-            f.write(f"{param}: {value}\n")
-        
-        f.write("\nCross-Validation Scores:\n")
-        f.write("-" * 20 + "\n")
-        for metric in scoring.keys():
-            score = grid_search.cv_results_[f'mean_test_{metric}'][grid_search.best_index_]
-            f.write(f"{metric}: {score:.3f}\n")
-        
-        f.write("\nDetailed Classification Report:\n")
-        f.write("-" * 20 + "\n")
-        f.write(report)
-    
-    # Create confusion matrix plot
-    plt.figure(figsize=(8, 6))
-    cm = confusion_matrix(y_test, y_pred)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title('Confusion Matrix')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
-    plt.savefig('insights/performance/confusion_matrix.png')
-    plt.close()
-
-    # Create ROC curve
-    y_prob = best_model.predict_proba(X_test)[:, 1]
-    fpr, tpr, _ = roc_curve(y_test, y_prob)
-    roc_auc = auc(fpr, tpr)
-
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr, tpr, color='darkorange', lw=2,
-             label=f'ROC curve (AUC = {roc_auc:.2f})')
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic (ROC) Curve')
-    plt.legend(loc="lower right")
-    plt.savefig('insights/performance/roc_curve.png')
-    plt.close()
-
-    # Create Precision-Recall curve
-    precision, recall, _ = precision_recall_curve(y_test, y_prob)
-    avg_precision = average_precision_score(y_test, y_prob)
-
-    plt.figure(figsize=(8, 6))
-    plt.plot(recall, precision, color='blue', lw=2,
-             label=f'Precision-Recall curve\n(Average Precision = {avg_precision:.2f})')
-    plt.axhline(y=sum(y_test)/len(y_test), color='red', linestyle='--',
-                label=f'No Skill (Baseline = {sum(y_test)/len(y_test):.2f})')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Precision-Recall Curve')
-    plt.legend(loc="lower left")
-    plt.grid(True)
-    plt.savefig('insights/performance/precision_recall_curve.png')
-    plt.close()
-
     return best_model
 
-def save_model(model, pipeline):
-    """Save the model and artifacts"""
-    logging.info("Saving model and artifacts...")
+def analyze_feature_importance(model: DecisionTreeClassifier, X: pd.DataFrame, y: np.ndarray) -> None:
+    """Analyze and visualize feature importance using multiple methods."""
+    logging.info("Calculating feature importance...")
     
-    # Save model
-    joblib.dump(model, 'insights/serialized_artifacts/decision_tree_model.pkl')
+    # Calculate feature importance using multiple methods
+    native_importance, perm_importance_df, shap_importance = calculate_feature_importance(model, X, y)
     
-    # Save pipeline
-    joblib.dump(pipeline, 'insights/serialized_artifacts/preprocessing_pipeline.pkl')
+    # Save feature importance to CSV files
+    native_importance.to_csv(PERFORMANCE_DIR / 'native_feature_importance.csv', index=False)
+    perm_importance_df.to_csv(PERFORMANCE_DIR / 'permutation_importance.csv', index=False)
+    shap_importance.to_csv(PERFORMANCE_DIR / 'shap_importance.csv', index=False)
+    
+    # Plot feature importance
+    plot_feature_importance(native_importance, 'Native Feature Importance (Decision Tree)', 'native_feature_importance.png')
+    plot_feature_importance(perm_importance_df, 'Permutation Feature Importance', 'permutation_importance.png')
+    plot_feature_importance(shap_importance, 'SHAP Feature Importance', 'shap_importance.png')
+    
+    # Create comparison DataFrame
+    comparison_df = pd.DataFrame({
+        'Native': native_importance.set_index('feature')['importance'],
+        'Permutation': perm_importance_df.set_index('feature')['importance'],
+        'SHAP': shap_importance.set_index('feature')['importance']
+    })
+    
+    # Normalize importances
+    comparison_df = comparison_df.div(comparison_df.sum())
+    
+    # Plot comparison
+    plot_importance_comparison(comparison_df)
+    
+    # Save top features to a separate file
+    top_features = comparison_df.mean(axis=1).sort_values(ascending=False).index.tolist()
+    with open(PERFORMANCE_DIR / 'top_features.txt', 'w') as f:
+        f.write("Most Important Features (Averaged Across Methods):\n")
+        for i, feature in enumerate(top_features, 1):
+            f.write(f"{i}. {feature}\n")
 
-def main():
-    """Main execution function"""
+def main() -> None:
+    """Main execution function."""
     start_time = time.time()
     
     # Setup
@@ -486,19 +166,15 @@ def main():
     
     # Load and preprocess data
     X, y, pipeline = load_and_preprocess_data()
+
+    # Train model
+    model = train_model(X, y)
     
-    # Calculate feature importance
-    top_features = calculate_feature_importance_features(X, y)
-    
-    # Print the top features discovered
-    if top_features:
-        logging.info(f"Top features across all methods: {top_features}")
-    
-    # Train and evaluate model
-    model = train_and_evaluate_model(X, y)
+    # Analyze feature importance
+    analyze_feature_importance(model, X, y)
     
     # Save artifacts
-    save_model(model, pipeline)
+    save_model_artifacts(model, pipeline)
     
     end_time = time.time()
     execution_time = end_time - start_time
