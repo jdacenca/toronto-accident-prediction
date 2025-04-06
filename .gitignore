@@ -140,3 +140,7 @@ src/.DS_Store
 
 # Local Netlify folder
 .netlify
+
+# Pycharm IDE settings
+DT/.idea/
+
