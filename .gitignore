@@ -144,3 +144,6 @@ src/.DS_Store
 # Pycharm IDE settings
 DT/.idea/
 
+/.idea
+.idea/misc.xml
+.idea/toronto-accident-prediction.iml
