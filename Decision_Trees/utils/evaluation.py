@@ -9,6 +9,8 @@ from utils.visualization import (
     plot_precision_recall_curve, plot_decision_tree
 )
 from utils.config import PERFORMANCE_DIR, RANDOM_STATE, SERIALIZED_DIR
+from sklearn.inspection import permutation_importance
+import shap
 
 def evaluate_model(model: Any, X_test: pd.DataFrame, y_test: np.ndarray, feature_names: list[str]) -> dict[str, float]:
     """Evaluate model performance and generate visualizations."""
@@ -46,8 +48,6 @@ def evaluate_model(model: Any, X_test: pd.DataFrame, y_test: np.ndarray, feature
 
 def calculate_feature_importance(model: Any, X: pd.DataFrame, y: np.ndarray) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Calculate feature importance using multiple methods."""
-    from sklearn.inspection import permutation_importance
-    import shap
     
     # Native feature importance
     native_importance = pd.DataFrame({

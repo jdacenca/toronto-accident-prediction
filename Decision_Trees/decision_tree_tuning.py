@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
-from sklearn.preprocessing import StandardScaler
+
 import logging
 from pathlib import Path
 from imblearn.over_sampling import SMOTE
@@ -50,10 +50,6 @@ class HyperparameterTuning:
             stratify=self.y
         )
         
-        # Scale features
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
         
         # Print original class distribution
         if sampling_strategy is None:
@@ -69,7 +65,7 @@ class HyperparameterTuning:
                 sampling_strategy='majority',
                 random_state=RANDOM_STATE
             )
-            X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = sampler.fit_resample(X_train, y_train)
             logging.info("\nOversampling Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
@@ -81,7 +77,7 @@ class HyperparameterTuning:
                 sampling_strategy='majority',
                 random_state=RANDOM_STATE
             )
-            X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = sampler.fit_resample(X_train, y_train)
             logging.info("\nUndersampling Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
@@ -90,13 +86,13 @@ class HyperparameterTuning:
         elif sampling_strategy == 'SMOTE':
             # SMOTE
             smote = SMOTE(random_state=RANDOM_STATE)
-            X_train_scaled, y_train = smote.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = smote.fit_resample(X_train, y_train)
             logging.info("\nSMOTE Class Distribution:")
             logging.info(f"Fatal: {sum(y_train == 1)}")
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
             logging.info(f"Total samples: {len(y_train)}")
         
-        return X_train_scaled, X_test_scaled, y_train, y_test
+        return X_train, X_test, y_train, y_test
     
     def evaluate_model(self, model, X_train, X_test, y_train, y_test, model_name):
         """Evaluate a model and store results"""

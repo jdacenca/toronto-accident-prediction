@@ -6,7 +6,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, classification_report, roc_curve, auc
-from sklearn.preprocessing import StandardScaler
 import logging
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
@@ -54,7 +53,7 @@ class HyperparameterTuning:
                              ('oversampling', 'undersampling', 'SMOTE', or None)
         
         Returns:
-            Tuple containing (X_train_scaled, X_test_scaled, y_train, y_test)
+            Tuple containing (X_train, X_test, y_train, y_test)
         """
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(
@@ -63,11 +62,6 @@ class HyperparameterTuning:
             random_state=RANDOM_STATE,
             stratify=self.y
         )
-        
-        # Scale features
-        scaler = StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
         
         # Print original class distribution
         if sampling_strategy is None:
@@ -82,7 +76,7 @@ class HyperparameterTuning:
                 sampling_strategy='majority',
                 random_state=RANDOM_STATE
             )
-            X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = sampler.fit_resample(X_train, y_train)
             logging.info("\nOversampling Class Distribution:")
             
         elif sampling_strategy == 'undersampling':
@@ -90,12 +84,12 @@ class HyperparameterTuning:
                 sampling_strategy='majority',
                 random_state=RANDOM_STATE
             )
-            X_train_scaled, y_train = sampler.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = sampler.fit_resample(X_train, y_train)
             logging.info("\nUndersampling Class Distribution:")
             
         elif sampling_strategy == 'SMOTE':
             smote = SMOTE(random_state=RANDOM_STATE)
-            X_train_scaled, y_train = smote.fit_resample(X_train_scaled, y_train)
+            X_train, y_train = smote.fit_resample(X_train, y_train)
             logging.info("\nSMOTE Class Distribution:")
             
         if sampling_strategy is not None:
@@ -103,7 +97,7 @@ class HyperparameterTuning:
             logging.info(f"Non-Fatal: {sum(y_train == 0)}")
             logging.info(f"Total samples: {len(y_train)}")
         
-        return X_train_scaled, X_test_scaled, y_train, y_test
+        return X_train, X_test, y_train, y_test
     
     def evaluate_model(self, model: DecisionTreeClassifier, 
                       X_train: np.ndarray, X_test: np.ndarray,
