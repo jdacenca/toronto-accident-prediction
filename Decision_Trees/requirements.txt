@@ -1,0 +1,10 @@
+# Required Python packages
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+folium
+imbalanced-learn
+shap
+joblib
