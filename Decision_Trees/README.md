@@ -4,15 +4,6 @@
 
 This project analyzes traffic accidents in Toronto to predict accident severity and identify key factors contributing to fatal accidents. The model uses historical accident data to classify accidents as either Fatal or Non-Fatal.
 
-## Features
-
-- Comprehensive data exploration and visualization
-- Decision Tree hyperparameter tuning and sampling strategy analysis
-- Feature importance analysis
-- Temporal and seasonal pattern analysis
-- Geographic distribution analysis
-- Unseen data validation
-
 ## Project Structure
 
 ```
@@ -22,147 +13,28 @@ This project analyzes traffic accidents in Toronto to predict accident severity 
 ├── insights/                  # Analysis outputs
 │   ├── analysis_report.md    # Comprehensive analysis report
 │   ├── correlation/          # Correlation matrices and analysis
-│   ├── tuning/              # Decision tree tuning analysis results
+│   ├── tuning/               # Decision tree tuning analysis results
 │   ├── geographic_analysis/  # Geographic distribution
-│   ├── performance/         # Model performance metrics and Feature importance analysis
-│   ├── seasonal_analysis/   # Seasonal patterns
+│   ├── performance/          # Model performance metrics and Feature importance analysis
+│   ├── seasonal_analysis/    # Seasonal patterns
 │   ├── serialized_artifacts/ # Saved model artifacts
-│   ├── severity_analysis/   # Severity distribution analysis
-│   ├── time_analysis/      # Temporal pattern analysis
-│   └── unseen_testing/     # Results from testing on unseen data (last 10 rows)
+│   ├── severity_analysis/    # Severity distribution analysis
+│   ├── time_analysis/        # Temporal pattern analysis
+│   └── unseen_testing/       # Results from testing on unseen data (last 10 rows)
+├── utils/                     # Utility scripts
+│   ├── config.py             # Configuration settings
+│   ├── data_cleaner.py       # Data cleaning utilities
+│   ├── data_explorer.py      # Data exploration utilities
+│   ├── evaluation.py         # Model evaluation utilities
+│   ├── feature_engineer.py   # Feature engineering utilities
+│   ├── hyperparameter_tuning.py # Hyperparameter tuning utilities
+│   ├── pipeline.py           # Preprocessing pipeline
+│   └── visualization.py      # Visualization utilities
+├── data_exploration.py        # Script for data exploration
+├── decision_tree_tuning.py    # Script for decision tree hyperparameter tuning
+├── main.py                    # Main script for training and evaluation
+└── README.md                  # Project documentation
 ```
-
-## Decision Tree Analysis
-
-The project focuses on optimizing Decision Tree models through:
-
-1. Hyperparameter Tuning
-
-   - Basic Decision Tree baseline
-   - Gini impurity optimization
-   - Entropy criterion analysis
-   - Class weight balancing
-
-2. Sampling Strategy Evaluation
-
-   - Original data distribution
-   - Random oversampling
-   - Random undersampling
-   - SMOTE (Synthetic Minority Over-sampling Technique)
-
-3. Performance Analysis
-   - Training vs Testing accuracy comparison
-   - Precision, Recall, and F1-Score metrics
-   - Impact of different sampling methods
-   - Model generalization assessment
-
-## Key Features Analyzed
-
-- Temporal patterns (time of day, day of week, seasonality)
-- Road conditions and environmental factors
-- Geographic location
-- Vehicle types and characteristics
-- Driver and participant information
-- Injury severity levels
-
-## Model Evaluation
-
-The model is evaluated using several methods:
-
-1. Standard Train/Test Split: The main dataset is split into 80% training and 20% testing sets.
-
-2. Cross-Validation: 5-fold cross-validation is used during hyperparameter tuning.
-
-3. Unseen Data Testing: The model is also evaluated on completely unseen data (the last 10 rows of the dataset) to test its robustness on truly out-of-sample data.
-
-4. Multiple Metrics: Accuracy, Precision, Recall, and F1-Score are calculated to give a comprehensive view of model performance.
-
-## Unseen Data Testing
-
-- Last 10 rows of the dataset are reserved for final testing
-- Models are trained on the remaining data
-- Final evaluation is performed on both test set and unseen data
-- Results are compared to ensure model generalization
-
-## Generated Insights
-
-1. Correlation Analysis
-
-   - Feature correlations with Accidents
-   - Inter-feature correlation matrices
-   - Key factor identification
-
-2. Time-Based Analysis
-
-   - Peak accident hours
-   - Seasonal patterns
-   - Time period risk assessment
-
-3. Severity Analysis
-
-   - Injury distribution patterns
-   - Road condition impact
-   - Environmental factor effects
-
-4. Geographic Analysis
-   - Accident hotspots
-   - Neighborhood-wise distribution
-   - Seasonal geographic patterns
-
-## How to Run
-
-1. Setup Environment:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Run Data Exploration:
-
-```bash
-python data_exploration.py
-```
-
-3. Train and Evaluate Models:
-
-```bash
-python main.py
-```
-
-- This will train the model and evaluate it on both the test set and unseen data (last 10 rows)
-- Results will be saved to the `insights/performance/` and `insights/unseen_testing/` directories
-
-4. Run Decision Tree Analysis:
-
-```bash
-python decision_tree_tuning.py
-```
-
-- This will train models with different configurations and evaluate them on both test sets and the same unseen data
-- Results will be saved to the `insights/tuning/` and `insights/unseen_testing/` directories
-
-## Output Files
-
-1. Analysis Reports
-
-   - `insights/analysis_report.md`: Comprehensive data analysis
-   - `insights/tuning/main_dataset_results.csv`: Decision tree tuning metrics
-   - `insights/tuning/unseen_dataset_results.csv`: Unseen data evaluation
-   - `insights/performance/*.txt`: Detailed classification reports
-
-2. Visualizations
-
-   - Correlation matrices
-   - Feature importance plots
-   - Time-based analysis charts
-   - Geographic heatmaps
-   - Model performance curves
-
-3. Model Artifacts
-   - Trained model files
-   - Preprocessing pipeline
-   - Feature scalers
-   - Selected features list
 
 ## Dependencies
 
@@ -174,6 +46,48 @@ python decision_tree_tuning.py
 - seaborn
 - folium
 - imbalanced-learn
+
+## Prerequisites
+
+- Python 3.8 or higher
+- Install dependencies using:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes with clear messages.
+4. Submit a pull request.
+
+## Known Issues
+
+- The dataset is imbalanced, which may affect model performance.
+
+## Additional Outputs
+
+### Serialized Artifacts
+
+- `serialized_artifacts/decision_tree_model.pkl`: Trained Decision Tree model.
+- `serialized_artifacts/preprocessing_pipeline.pkl`: Preprocessing pipeline for data transformation.
+
+### Insights Directory
+
+The `insights/` directory contains detailed analysis outputs:
+
+- **Correlation Analysis**: Full correlation matrices and feature-target correlations.
+- **Geographic Analysis**: Accident heatmaps.
+- **Performance Metrics**: Classification reports, confusion matrices, ROC curves, and SHAP visualizations.
+- **Seasonal Analysis**: Monthly and seasonal accident patterns.
+- **Severity Analysis**: Injury severity distributions and environmental impacts.
+- **Time Analysis**: Temporal patterns and severity heatmaps.
+- **Tuning Results**: Hyperparameter tuning results for various sampling strategies.
+- **Unseen Testing**: Results from testing on unseen data with different sampling methods.
 
 ## Contributors
 
