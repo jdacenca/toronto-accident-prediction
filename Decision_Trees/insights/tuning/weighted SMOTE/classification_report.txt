@@ -3,12 +3,12 @@ Classification Report for weighted SMOTE
 
               precision    recall  f1-score   support
 
-           0       0.95      0.92      0.93      3258
-           1       0.59      0.68      0.63       534
+           0       0.92      0.88      0.90      3256
+           1       0.43      0.55      0.48       534
 
-    accuracy                           0.89      3792
-   macro avg       0.77      0.80      0.78      3792
-weighted avg       0.90      0.89      0.89      3792
+    accuracy                           0.83      3790
+   macro avg       0.68      0.72      0.69      3790
+weighted avg       0.85      0.83      0.84      3790
 
 
 Model Parameters:

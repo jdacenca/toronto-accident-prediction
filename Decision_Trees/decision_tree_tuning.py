@@ -1,6 +1,7 @@
 """Script for tuning decision tree hyperparameters."""
 
 import pandas as pd
+import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -8,7 +9,7 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_curve, 
 
 import logging
 from pathlib import Path
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 import warnings
 from utils.pipeline import create_preprocessing_pipeline
@@ -73,9 +74,21 @@ class HyperparameterTuning:
             X_resampled, y_resampled = sampler.fit_resample(X, y)
             
         elif sampling_strategy == 'SMOTE':
-            # SMOTE
-            smote = SMOTE(random_state=RANDOM_STATE)
-            X_resampled, y_resampled = smote.fit_resample(X, y)
+            # Check if the dataset is large enough for SMOTE
+            # Count samples in minority class
+            class_counts = dict(zip(*np.unique(y, return_counts=True)))
+            min_class_count = min(class_counts.values())
+            
+            if min_class_count >= 6:  # SMOTE needs at least 6 samples in minority class by default
+                # SMOTE
+                smote = SMOTE(random_state=RANDOM_STATE)
+                X_resampled, y_resampled = smote.fit_resample(X, y)
+            else:
+                # Fall back to random oversampling for small datasets
+                logging.info("Not enough samples for SMOTE. Falling back to random oversampling.")
+                from imblearn.over_sampling import RandomOverSampler
+                sampler = RandomOverSampler(random_state=RANDOM_STATE)
+                X_resampled, y_resampled = sampler.fit_resample(X, y)
         
         return X_resampled, y_resampled
     

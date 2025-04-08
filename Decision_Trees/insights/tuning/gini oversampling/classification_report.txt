@@ -3,12 +3,12 @@ Classification Report for gini oversampling
 
               precision    recall  f1-score   support
 
-           0       0.98      0.80      0.88      3258
-           1       0.42      0.89      0.57       534
+           0       0.97      0.75      0.85      3256
+           1       0.37      0.87      0.52       534
 
-    accuracy                           0.81      3792
-   macro avg       0.70      0.84      0.73      3792
-weighted avg       0.90      0.81      0.84      3792
+    accuracy                           0.77      3790
+   macro avg       0.67      0.81      0.68      3790
+weighted avg       0.89      0.77      0.80      3790
 
 
 Model Parameters:

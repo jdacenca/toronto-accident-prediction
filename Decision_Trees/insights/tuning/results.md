@@ -2,19 +2,19 @@
 
 | Model | Train Acc. | Test Acc. | Precision | Recall | F1-Score | Sampling |
 |-------|------------|-----------|-----------|---------|-----------|----------|
-| basic | 90.86 | 93.83 | 0.7820 | 0.7790 | 0.7805 | original |
-| gini | 90.86 | 93.83 | 0.7820 | 0.7790 | 0.7805 | original |
-| entropy | 92.26 | 93.88 | 0.7706 | 0.8052 | 0.7875 | original |
-| weighted | 91.86 | 93.78 | 0.7780 | 0.7809 | 0.7794 | original |
-| basic oversampling | 81.16 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| gini oversampling | 81.16 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| entropy oversampling | 80.36 | 81.22 | 0.4186 | 0.8577 | 0.5627 | original |
-| weighted oversampling | 80.99 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| basic undersampling | 81.16 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| gini undersampling | 81.16 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| entropy undersampling | 80.36 | 81.22 | 0.4186 | 0.8577 | 0.5627 | original |
-| weighted undersampling | 80.99 | 81.41 | 0.4235 | 0.8858 | 0.5730 | original |
-| basic SMOTE | 92.37 | 88.87 | 0.5909 | 0.6816 | 0.6330 | original |
-| gini SMOTE | 92.37 | 88.87 | 0.5909 | 0.6816 | 0.6330 | original |
-| entropy SMOTE | 93.13 | 89.56 | 0.6186 | 0.6742 | 0.6452 | original |
-| weighted SMOTE | 92.31 | 88.87 | 0.5909 | 0.6816 | 0.6330 | original |
+| basic | 90.93 | 94.01 | 0.7924 | 0.7790 | 0.7856 | original |
+| gini | 90.93 | 94.01 | 0.7924 | 0.7790 | 0.7856 | original |
+| entropy | 90.75 | 93.11 | 0.7468 | 0.7734 | 0.7599 | original |
+| weighted | 91.01 | 94.85 | 0.8291 | 0.7996 | 0.8141 | original |
+| basic oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
+| gini oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
+| entropy oversampling | 76.96 | 74.25 | 0.3331 | 0.8258 | 0.4747 | oversampling |
+| weighted oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
+| basic undersampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | undersampling |
+| gini undersampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | undersampling |
+| entropy undersampling | 76.96 | 74.25 | 0.3331 | 0.8258 | 0.4747 | undersampling |
+| weighted undersampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | undersampling |
+| basic SMOTE | 88.25 | 83.38 | 0.4302 | 0.5543 | 0.4845 | SMOTE |
+| gini SMOTE | 88.25 | 83.38 | 0.4302 | 0.5543 | 0.4845 | SMOTE |
+| entropy SMOTE | 88.11 | 83.32 | 0.4246 | 0.5169 | 0.4662 | SMOTE |
+| weighted SMOTE | 88.18 | 83.38 | 0.4302 | 0.5543 | 0.4845 | SMOTE |

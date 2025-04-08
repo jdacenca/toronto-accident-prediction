@@ -1,0 +1,13 @@
+Unseen Data Classification Report for entropy oversampling
+==================================================
+
+Sampling Strategy: oversampling
+
+              precision    recall  f1-score   support
+
+           0       0.00      0.00      0.00       2.0
+           1       0.00      0.00      0.00       2.0
+
+    accuracy                           0.00       4.0
+   macro avg       0.00      0.00      0.00       4.0
+weighted avg       0.00      0.00      0.00       4.0
