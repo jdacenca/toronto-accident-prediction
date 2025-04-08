@@ -55,31 +55,42 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2.drop(columns=columns_to_drop, inplace=True)
 
     # Handle missing target values and specific rows
-    df2 = df2.dropna(subset=["ACCLASS"])
+    df2['ACCLASS'] = df2['ACCLASS'].fillna('Fatal')
+
     df2.drop(df2[df2['ACCLASS'] == 'Property Damage O'].index, inplace=True)
     df2.drop_duplicates(inplace=True)
 
-    # aggregate rows with same ACCNUM, DATE, TIME, LATITUDE, LONGITUDE
+    # # aggregate rows with same ACCNUM, DATE, TIME, LATITUDE, LONGITUDE
     df2 = df2.groupby(['ACCNUM'], as_index=False).apply(aggregate_rows).reset_index(drop=True)
     df2 = df2.groupby(['DATE', 'TIME', 'LATITUDE', 'LONGITUDE'], as_index=False).apply(aggregate_rows).reset_index(drop=True)
 
-
+    df2.drop(columns=['ACCNUM'], inplace=True)
     # Format date and time
     df2["DATE"] = pd.to_datetime(df2["DATE"]).dt.to_period("D").astype(str)
-    df2['TIME'] = pd.to_datetime(df2['TIME'], format='%H%M', errors='coerce').dt.hour
+
+    # Extract date components
+    df2['MONTH'] = pd.to_datetime(df2['DATE']).dt.month
+    df2['DAY'] = pd.to_datetime(df2['DATE']).dt.day
+    df2['WEEK'] = pd.to_datetime(df2['DATE']).dt.isocalendar().week
+    df2['DAYOFWEEK'] = pd.to_datetime(df2['DATE']).dt.dayofweek
+
+    # Extract hour from TIME
+    df2['HOUR'] = df2['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
+
+    # Drop the original DATE, TIME column
+    df2.drop(columns=['DATE','TIME'], inplace=True)
 
     # Replace specific values
     df2['ROAD_CLASS'] = df2['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
 
     # Fill missing values
-    unknown_columns = ['PEDCOND', 'DRIVCOND', 'CYCLISTYPE', 'PEDACT', 'MANOEUVER', 
-                       'INJURY', 'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR']
-    other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND', 'DRIVACT', 'INVAGE']
+    unknown_columns = ['PEDCOND','CYCCOND','DISTRICT']
+    other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND','INVAGE','TRAFFCTL','INVTYPE', 'IMPACTYPE',]
     boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
-                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
+                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY','EMERG_VEH']
 
     df2[other_columns] = df2[other_columns].fillna("Other")
-    df2[unknown_columns] = df2[unknown_columns].fillna("Unknown")
+    df2[unknown_columns] = df2[unknown_columns].fillna("NA")
     df2[boolean_columns] = df2[boolean_columns].fillna("No")
 
     # Convert boolean columns to numeric
@@ -93,6 +104,8 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['max_age'] = pd.to_numeric(df2['max_age'], errors='coerce')
     df2['AVG_AGE'] = df2[['min_age', 'max_age']].mean(axis=1).astype(float)
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
+    df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
+    df2.drop(columns=['AVG_AGE'], inplace=True)
 
     # Handle class imbalance
     if class_imb == 'oversampling':
@@ -257,8 +270,10 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
 
     # Save the model
     os.makedirs("./model_pickles", exist_ok=True)
-    joblib.dump(best_model, f"./model_pickles/best_{model_name.lower()}_model.pkl")
+    joblib.dump(best_model, f"./model_pickles/best_{model_name.lower()}.pkl")
     print("\nModel saved successfully.")
+
+    return best_model
 
 # ===================== SAVE RESULTS TO MD =====================
 def save_results_to_md(file_path):
