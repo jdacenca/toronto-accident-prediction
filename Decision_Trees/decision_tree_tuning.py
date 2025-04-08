@@ -59,16 +59,12 @@ class HyperparameterTuning:
         # Apply sampling strategy
         if sampling_strategy == 'oversampling':
             # Random oversampling
-            sampler = RandomUnderSampler(
-                sampling_strategy='majority',
-                random_state=RANDOM_STATE
-            )
+            sampler = RandomOverSampler(random_state=RANDOM_STATE)
             X_resampled, y_resampled = sampler.fit_resample(X, y)
             
         elif sampling_strategy == 'undersampling':
             # Random undersampling
             sampler = RandomUnderSampler(
-                sampling_strategy='majority',
                 random_state=RANDOM_STATE
             )
             X_resampled, y_resampled = sampler.fit_resample(X, y)
@@ -86,7 +82,7 @@ class HyperparameterTuning:
             else:
                 # Fall back to random oversampling for small datasets
                 logging.info("Not enough samples for SMOTE. Falling back to random oversampling.")
-                from imblearn.over_sampling import RandomOverSampler
+
                 sampler = RandomOverSampler(random_state=RANDOM_STATE)
                 X_resampled, y_resampled = sampler.fit_resample(X, y)
         

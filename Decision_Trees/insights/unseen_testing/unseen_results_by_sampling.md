@@ -14,10 +14,10 @@
 
 | Model | Accuracy | Precision | Recall | F1-Score |
 |-------|----------|-----------|--------|----------|
-| basic oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| gini oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| entropy oversampling | 0.00 | 0.0000 | 0.0000 | 0.0000 |
-| weighted oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
+| basic oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
+| gini oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
+| entropy oversampling | 75.00 | 1.0000 | 0.5000 | 0.6667 |
+| weighted oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
 
 ## Undersampling Strategy
 

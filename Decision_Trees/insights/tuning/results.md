@@ -6,10 +6,10 @@
 | gini | 90.93 | 94.01 | 0.7924 | 0.7790 | 0.7856 | original |
 | entropy | 90.75 | 93.11 | 0.7468 | 0.7734 | 0.7599 | original |
 | weighted | 91.01 | 94.85 | 0.8291 | 0.7996 | 0.8141 | original |
-| basic oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
-| gini oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
-| entropy oversampling | 76.96 | 74.25 | 0.3331 | 0.8258 | 0.4747 | oversampling |
-| weighted oversampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | oversampling |
+| basic oversampling | 97.10 | 92.93 | 0.7481 | 0.7509 | 0.7495 | oversampling |
+| gini oversampling | 97.10 | 92.93 | 0.7481 | 0.7509 | 0.7495 | oversampling |
+| entropy oversampling | 97.15 | 92.74 | 0.7430 | 0.7416 | 0.7423 | oversampling |
+| weighted oversampling | 97.13 | 92.93 | 0.7481 | 0.7509 | 0.7495 | oversampling |
 | basic undersampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | undersampling |
 | gini undersampling | 74.75 | 76.94 | 0.3661 | 0.8708 | 0.5155 | undersampling |
 | entropy undersampling | 76.96 | 74.25 | 0.3331 | 0.8258 | 0.4747 | undersampling |

@@ -6,10 +6,10 @@
 | gini | None | 80.00 | 0.0000 | 0.0000 | 0.0000 |
 | entropy | None | 80.00 | 0.0000 | 0.0000 | 0.0000 |
 | weighted | None | 100.00 | 1.0000 | 1.0000 | 1.0000 |
-| basic oversampling | oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| gini oversampling | oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| entropy oversampling | oversampling | 0.00 | 0.0000 | 0.0000 | 0.0000 |
-| weighted oversampling | oversampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
+| basic oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
+| gini oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
+| entropy oversampling | oversampling | 75.00 | 1.0000 | 0.5000 | 0.6667 |
+| weighted oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
 | basic undersampling | undersampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
 | gini undersampling | undersampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
 | entropy undersampling | undersampling | 0.00 | 0.0000 | 0.0000 | 0.0000 |
