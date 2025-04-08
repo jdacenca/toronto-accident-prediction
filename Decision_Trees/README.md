@@ -9,7 +9,6 @@ This project analyzes traffic accidents in Toronto to predict accident severity 
 ```
 ├── data/                      # Data directory
 │   ├── TOTAL_KSI_*.csv       # Raw accident data
-│   └── unseen_data.csv       # Last 10 rows for final testing
 ├── insights/                  # Analysis outputs
 │   ├── analysis_report.md    # Comprehensive analysis report
 │   ├── correlation/          # Correlation matrices and analysis
