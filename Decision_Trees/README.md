@@ -22,20 +22,14 @@ This project analyzes traffic accidents in Toronto to predict accident severity 
 ├── insights/                  # Analysis outputs
 │   ├── analysis_report.md    # Comprehensive analysis report
 │   ├── correlation/          # Correlation matrices and analysis
-│   ├── tuning/           # Decision tree tuning analysis results
+│   ├── tuning/              # Decision tree tuning analysis results
 │   ├── geographic_analysis/  # Geographic distribution
 │   ├── performance/         # Model performance metrics and Feature importance analysis
 │   ├── seasonal_analysis/   # Seasonal patterns
 │   ├── serialized_artifacts/ # Saved model artifacts
 │   ├── severity_analysis/   # Severity distribution analysis
-│   └── time_analysis/      # Temporal pattern analysis
-├── main.py                   # Main execution script
-├── decision_tree_tuning.py   # Decision Tree optimization and sampling analysis
-├── data_exploration.py       # Data exploration functions
-├── preprocessing_pipeline.py  # Data preprocessing pipeline
-├── data_cleaning.md          # Data cleaning documentation
-├── feature_engineering_doc.md # Feature engineering documentation
-└── README.md                 # Project documentation
+│   ├── time_analysis/      # Temporal pattern analysis
+│   └── unseen_testing/     # Results from testing on unseen data (last 10 rows)
 ```
 
 ## Decision Tree Analysis
@@ -73,14 +67,15 @@ The project focuses on optimizing Decision Tree models through:
 
 ## Model Evaluation
 
-Models are evaluated using:
+The model is evaluated using several methods:
 
-- Accuracy (Training and Testing)
-- Precision
-- Recall
-- F1 Score
-- Impact of sampling strategies
-- Performance on imbalanced data
+1. Standard Train/Test Split: The main dataset is split into 80% training and 20% testing sets.
+
+2. Cross-Validation: 5-fold cross-validation is used during hyperparameter tuning.
+
+3. Unseen Data Testing: The model is also evaluated on completely unseen data (the last 10 rows of the dataset) to test its robustness on truly out-of-sample data.
+
+4. Multiple Metrics: Accuracy, Precision, Recall, and F1-Score are calculated to give a comprehensive view of model performance.
 
 ## Unseen Data Testing
 
@@ -134,11 +129,17 @@ python data_exploration.py
 python main.py
 ```
 
+- This will train the model and evaluate it on both the test set and unseen data (last 10 rows)
+- Results will be saved to the `insights/performance/` and `insights/unseen_testing/` directories
+
 4. Run Decision Tree Analysis:
 
 ```bash
 python decision_tree_tuning.py
 ```
+
+- This will train models with different configurations and evaluate them on both test sets and the same unseen data
+- Results will be saved to the `insights/tuning/` and `insights/unseen_testing/` directories
 
 ## Output Files
 
