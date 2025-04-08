@@ -16,10 +16,12 @@ class DataCleaner(BaseEstimator, TransformerMixin):
     
     def _clean_initial_data(self, df: pd.DataFrame) -> None:
         """Perform initial data cleaning by dropping unnecessary columns."""
-        # Fill missing ACCLASS values with 'Fatal'
-        df['ACCLASS'] = df['ACCLASS'].fillna('Fatal')
-        # Drop Property Damage Only records
-        df.drop(df[df['ACCLASS'] == 'Property Damage Only'].index, inplace=True)
+        # Check if ACCLASS exists before performing operations on it
+        if 'ACCLASS' in df.columns:
+            # Fill missing ACCLASS values with 'Fatal'
+            df['ACCLASS'] = df['ACCLASS'].fillna('Fatal')
+            # Drop Property Damage Only records
+            df.drop(df[df['ACCLASS'] == 'Property Damage Only'].index, inplace=True)
         # Drop unnecessary columns
         df.drop(columns=COLUMNS_TO_DROP, errors='ignore', inplace=True)
     

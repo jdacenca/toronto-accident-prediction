@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import calendar
 import logging
-from typing import Tuple
 from .config import INSIGHTS_DIR
 
 class DataExplorer:
@@ -112,11 +111,11 @@ class DataExplorer:
         
         return self.missing_values
     
-    def analyze_correlations(self) -> Tuple[pd.Series, dict]:
+    def analyze_correlations(self) -> tuple[pd.Series, dict]:
         """Create and save correlation matrices.
         
         Returns:
-            Tuple[pd.Series, dict]: Target correlations and category mappings
+            tuple[pd.Series, dict]: Target correlations and category mappings
         """
         logging.info("\n=== Creating Correlation Matrices ===")
         

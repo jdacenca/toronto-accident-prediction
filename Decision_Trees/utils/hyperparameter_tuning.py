@@ -12,7 +12,7 @@ from imblearn.under_sampling import RandomUnderSampler
 import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
-from typing import Tuple, Optional
+from typing import Optional
 from .config import INSIGHTS_DIR, RANDOM_STATE
 
 warnings.filterwarnings('ignore')
@@ -40,12 +40,9 @@ class HyperparameterTuning:
     
     def _setup_logging(self) -> None:
         """Set up logging configuration."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
-        )
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    def prepare_data(self, sampling_strategy: Optional[str] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def prepare_data(self, sampling_strategy: Optional[str] = None) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Prepare data with optional sampling strategy.
         
         Args:

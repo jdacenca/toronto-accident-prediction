@@ -2,15 +2,13 @@
 
 import pandas as pd
 import numpy as np
-from typing import Any, Tuple
+from typing import Any
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc, precision_recall_curve, average_precision_score, accuracy_score
-from utils.visualization import (
-    plot_confusion_matrix, plot_roc_curve, 
-    plot_precision_recall_curve, plot_decision_tree
-)
+from utils.visualization import plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve, plot_decision_tree
 from utils.config import PERFORMANCE_DIR, RANDOM_STATE, SERIALIZED_DIR
 from sklearn.inspection import permutation_importance
 import shap
+import joblib
 
 def evaluate_model(model: Any, X_test: pd.DataFrame, y_test: np.ndarray, feature_names: list[str]) -> dict[str, float]:
     """Evaluate model performance and generate visualizations."""
@@ -46,7 +44,7 @@ def evaluate_model(model: Any, X_test: pd.DataFrame, y_test: np.ndarray, feature
     
     return metrics
 
-def calculate_feature_importance(model: Any, X: pd.DataFrame, y: np.ndarray) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def calculate_feature_importance(model: Any, X: pd.DataFrame, y: np.ndarray) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Calculate feature importance using multiple methods."""
     
     # Native feature importance
@@ -80,8 +78,6 @@ def calculate_feature_importance(model: Any, X: pd.DataFrame, y: np.ndarray) -> 
     return native_importance, perm_importance_df, shap_importance
 
 def save_model_artifacts(model: Any, pipeline: Any) -> None:
-    """Save model and preprocessing pipeline."""
-    import joblib
-    
+    """Save model and preprocessing pipeline."""    
     joblib.dump(model, SERIALIZED_DIR / 'decision_tree_model.pkl')
     joblib.dump(pipeline, SERIALIZED_DIR / 'preprocessing_pipeline.pkl') 

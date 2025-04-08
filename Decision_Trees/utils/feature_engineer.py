@@ -44,9 +44,7 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         return X
     
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Transform the data by adding engineered features."""
-        X = X.copy()
-        
+        """Transform the data by adding engineered features."""        
         # Create time-based features
         X = self._create_time_features(X)
         

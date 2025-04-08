@@ -11,7 +11,7 @@ from pathlib import Path
 from imblearn.over_sampling import SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 import warnings
-from preprocessing.pipeline import create_preprocessing_pipeline
+from utils.pipeline import create_preprocessing_pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.hyperparameter_tuning import HyperparameterTuning
@@ -21,10 +21,7 @@ warnings.filterwarnings('ignore')
 plt.style.use('default')
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class HyperparameterTuning:
     def __init__(self, X, y):

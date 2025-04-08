@@ -8,20 +8,13 @@ from pathlib import Path
 from typing import Any
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
-
-from utils.config import (
-    DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR,
-    MODEL_PARAMS, SCORING_METRICS, RANDOM_STATE
-)
+from utils.config import DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR, MODEL_PARAMS, SCORING_METRICS, RANDOM_STATE
 from utils.visualization import plot_feature_importance, plot_importance_comparison
 from utils.evaluation import evaluate_model, calculate_feature_importance, save_model_artifacts
-from preprocessing.pipeline import create_preprocessing_pipeline
+from utils.pipeline import create_preprocessing_pipeline
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def setup_directories() -> None:
     """Create necessary directories for outputs."""

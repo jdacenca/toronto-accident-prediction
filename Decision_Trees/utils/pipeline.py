@@ -1,8 +1,8 @@
 """Main preprocessing pipeline for accident data."""
 
 from sklearn.pipeline import Pipeline
-from .data_cleaner import DataCleaner
-from .feature_engineer import FeatureEngineer
+from utils.data_cleaner import DataCleaner
+from utils.feature_engineer import FeatureEngineer
 
 def create_preprocessing_pipeline() -> Pipeline:
     """Create the main preprocessing pipeline.
@@ -13,4 +13,4 @@ def create_preprocessing_pipeline() -> Pipeline:
     return Pipeline([
         ('cleaner', DataCleaner()),
         ('engineer', FeatureEngineer()),
-    ]) 
+    ])
