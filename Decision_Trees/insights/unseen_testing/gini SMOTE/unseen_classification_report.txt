@@ -1,0 +1,13 @@
+Unseen Data Classification Report for gini SMOTE
+==================================================
+
+Sampling Strategy: SMOTE
+
+              precision    recall  f1-score   support
+
+           0       0.47      0.88      0.61         8
+           1       0.00      0.00      0.00         8
+
+    accuracy                           0.44        16
+   macro avg       0.23      0.44      0.30        16
+weighted avg       0.23      0.44      0.30        16

@@ -1,0 +1,13 @@
+Unseen Data Classification Report for weighted oversampling
+==================================================
+
+Sampling Strategy: oversampling
+
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00         8
+           1       1.00      1.00      1.00         8
+
+    accuracy                           1.00        16
+   macro avg       1.00      1.00      1.00        16
+weighted avg       1.00      1.00      1.00        16
