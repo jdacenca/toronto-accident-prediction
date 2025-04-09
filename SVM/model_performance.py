@@ -41,7 +41,7 @@ class ModelPerformance:
         plt.title("Confusion Matrix", fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(save_path)
-        plt.show()
+        #plt.show()
 
     def roc_cur(self, save_path):
         """
@@ -63,7 +63,7 @@ class ModelPerformance:
         plt.grid(alpha=0.3)
         plt.tight_layout()
         plt.savefig(save_path)
-        plt.show()
+        #plt.show()
 
     # classification report heatmap
     def classification_report_heatmap(self, save_path):
@@ -81,4 +81,4 @@ class ModelPerformance:
         plt.title("Classification Report", fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(save_path)
-        plt.show()
+        #plt.show()
