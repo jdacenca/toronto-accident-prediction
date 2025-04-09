@@ -45,7 +45,16 @@ def data_overview(df):
     for column in df.columns:
         print(f"\nUnique values in {column}:", df[column].unique())
 
-
+# ===================== MONTH TO SEASON =====================
+def month_to_season(month):
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    else:
+        return 'Fall'
 # ===================== DATA CLEANING =====================
 def data_cleaning(df, columns_to_drop, class_imb='original'):
     """Cleans the dataset by handling missing values, dropping unnecessary columns, and balancing classes."""
@@ -74,8 +83,12 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['WEEK'] = pd.to_datetime(df2['DATE']).dt.isocalendar().week
     df2['DAYOFWEEK'] = pd.to_datetime(df2['DATE']).dt.dayofweek
 
+    # Extract season
+    df2['SEASON'] = df2['MONTH'].apply(month_to_season)
+
     # Extract hour from TIME
-    df2['HOUR'] = df2['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
+    df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
+    df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
 
     # Drop the original DATE, TIME column
     df2.drop(columns=['DATE','TIME'], inplace=True)
@@ -93,6 +106,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2[unknown_columns] = df2[unknown_columns].fillna("NA")
     df2[boolean_columns] = df2[boolean_columns].fillna("No")
 
+
     # Convert boolean columns to numeric
     df2[boolean_columns] = df2[boolean_columns].replace({'Yes': 1, 'No': 0}).astype(float)
 
@@ -105,6 +119,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['AVG_AGE'] = df2[['min_age', 'max_age']].mean(axis=1).astype(float)
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
     df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
+
     df2.drop(columns=['AVG_AGE'], inplace=True)
 
     # Handle class imbalance
@@ -153,7 +168,6 @@ def sample_and_update_data(cleaned_df):
     unseen_labels = label_encoder.transform(unseen_labels)
 
     return unseen_features, unseen_labels, cleaned_df, features, target
-
 
 # ===================== DATA PREPROCESSING =====================
 def data_preprocessing_svm(features, smote=False):
@@ -253,8 +267,8 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
     # Confusion Matrix and ROC Curve
     model_performance = ModelPerformance(best_model, X_test, y_test)
     model_performance.conf_matrix(f"./insights/svm_tuning/{model_name}/confusion_matrix.png")
-    model_performance.roc_cur(f"./insights/svm_tuning/roc_curve.png")
-    model_performance.classification_report_heatmap(f"./insights/svm_tuning/classification_report.png")
+    model_performance.roc_cur(f"./insights/svm_tuning/{model_name}/roc_curve.png")
+    model_performance.classification_report_heatmap(f"./insights/svm_tuning/{model_name}/classification_report.png")
 
     print("\n===================== CLASSIFICATION REPORT =====================")
     print(classification_report(y_test, y_pred, zero_division=1))
