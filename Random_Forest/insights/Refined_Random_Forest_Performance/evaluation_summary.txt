@@ -1,0 +1,22 @@
+Random Forest Model Evaluation Summary (Refined Tuning)
+=======================================================
+
+Best Parameters Found:
+{'class_weight': 'balanced_subsample', 'max_depth': None, 'max_features': 'sqrt', 'min_samples_leaf': 5, 'min_samples_split': 2, 'n_estimators': 300}
+
+Best Cross-Validation F1 Score: 0.7584
+
+--- Test Set Metrics ---
+Accuracy: 0.9520
+Average Precision: 0.9093
+ROC AUC: 0.9722
+
+Classification Report:
+              precision    recall  f1-score   support
+
+   Non-Fatal       0.95      0.99      0.97      3254
+       Fatal       0.93      0.71      0.81       534
+
+    accuracy                           0.95      3788
+   macro avg       0.94      0.85      0.89      3788
+weighted avg       0.95      0.95      0.95      3788
