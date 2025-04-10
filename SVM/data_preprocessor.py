@@ -90,6 +90,9 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
     df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
 
+    df2['HOUR'] = df2['HOUR'].astype(int)
+    df2['MINUTE'] = df2['MINUTE'].astype(int)
+
     # Drop the original DATE, TIME column
     df2.drop(columns=['DATE','TIME'], inplace=True)
 
