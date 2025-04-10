@@ -28,15 +28,15 @@ data_ksi = pd.read_csv("./data/Total_KSI.csv")
 data_overview(data_ksi)
 
 # Drop unnecessary columns            
-columns_to_drop = [
-    'OBJECTID', 'INDEX',  # index_id 
-    'FATAL_NO',  # sequence No. - high missing values
-    'OFFSET',  # high missing values
-    'x', 'y', 'CYCLISTYPE', 'PEDTYPE', 'PEDACT',  # high correlation
-    'EMERG_VEH',  # 0 permutation importance 
-    'CYCCOND',  # 0 permutation importance 
-    "HOOD_140", "NEIGHBOURHOOD_140", "HOOD_158", "STREET1", "STREET2"  # based on feature importance
+columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id 
+    'FATAL_NO', # sequence No. - high missing values
+    'OFFSET', #high missing values
+    'x', 'y','CYCLISTYPE', 'PEDTYPE', 'PEDACT', # high correlation
+    'EMERG_VEH',       # 0 permutation importance 
+    'CYCCOND',         # 0 permutation importance 
+    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2" # based on feature importance
 ]
+
 
 # ===================== FUNCTION TO STORE METRICS =====================
 def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_features, unseen_labels, voting_type, class_imb, results):
@@ -69,10 +69,14 @@ def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_f
         unseen_pred = classifier.predict(unseen_features)
         unseen_acc = accuracy_score(unseen_labels, unseen_pred)
 
-        # Append results
+        if isinstance(classifier, VotingClassifier):
+            classifier_name = voting_type+str(classifier).split('(')[0].strip()
+
+        else:
+            classifier_name = str(classifier).split('(')[0].strip()
+
         results.append({
-            "Classifier": str(classifier),
-            "Voting Type": voting_type,
+            "Classifier": classifier_name,
             "Class Imbalance": class_imb,
             "Train Accuracy": f"{train_acc:.4f}",
             "Test Accuracy": f"{test_acc:.4f}",
@@ -129,10 +133,10 @@ def save_results_to_files(results, csv_file, md_file):
 
     # Save results to Markdown
     with open(md_file, mode='w') as f:
-        f.write("| Classifier | Voting Type | Class Imbalance | Train Accuracy | Test Accuracy | Unseen Accuracy | Precision | Recall | F1 Score | ROC AUC |\n")
-        f.write("|------------|-------------|-----------------|----------------|---------------|-----------------|-----------|--------|----------|---------|\n")
+        f.write("| Classifier | Class Imbalance | Train Accuracy | Test Accuracy | Unseen Accuracy | Precision | Recall | F1 Score | ROC AUC |\n")
+        f.write("|------------|-----------------|----------------|---------------|-----------------|-----------|--------|----------|---------|\n")
         for result in results:
-            f.write(f"| {result['Classifier']} | {result['Voting Type']} | {result['Class Imbalance']} | {result['Train Accuracy']} | {result['Test Accuracy']} | {result['Unseen Accuracy']} | {result['Precision']} | {result['Recall']} | {result['F1 Score']} | {result['ROC AUC']} |\n")
+            f.write(f"| {result['Classifier']} |  {result['Class Imbalance']} | {result['Train Accuracy']} | {result['Test Accuracy']} | {result['Unseen Accuracy']} | {result['Precision']} | {result['Recall']} | {result['F1 Score']} | {result['ROC AUC']} |\n")
 
     print(f"\nResults saved to {md_file}")
 
@@ -167,8 +171,8 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     log_reg_H = LogisticRegression(max_iter=1400)
     dt_H = DecisionTreeClassifier(criterion='entropy', max_depth=42)
     nn_H = MLPClassifier(activation='tanh', alpha=0.01, hidden_layer_sizes=(15, 10, 1), learning_rate='invscaling', max_iter=1000, solver='adam')
-    svm_H = SVC(C=1, kernel='linear')
-    svm_soft_H = SVC(C=1, kernel='linear', probability=True)  # For soft voting
+    svm_H = SVC(C=10, kernel='poly', degree=3, gamma=1.0)
+    svm_soft_H = SVC(C=10, kernel='poly', degree=3, gamma=1.0, probability=True)  # For soft voting
     rf_H = RandomForestClassifier(n_estimators=1000, random_state=37, n_jobs=-1, class_weight='balanced')
 
     # Hard voting
