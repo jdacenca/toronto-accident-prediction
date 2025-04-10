@@ -1,0 +1,13 @@
+Unseen Data Classification Report for entropy random_under
+==================================================
+
+Sampling Strategy: random_under
+
+              precision    recall  f1-score   support
+
+           0       0.88      0.88      0.88         8
+           1       0.50      0.50      0.50         2
+
+    accuracy                           0.80        10
+   macro avg       0.69      0.69      0.69        10
+weighted avg       0.80      0.80      0.80        10
