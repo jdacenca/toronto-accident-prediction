@@ -41,7 +41,7 @@ columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id
     'x', 'y','CYCLISTYPE', 'PEDTYPE', 'PEDACT', # high correlation
     'EMERG_VEH',       # 0 permutation importance 
     'CYCCOND',         # 0 permutation importance 
-    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2" # based on feature importance
+    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2","INJURY"  # based on feature importance
 ]
 
 # Visualizations

@@ -34,7 +34,7 @@ columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id
     'x', 'y','CYCLISTYPE', 'PEDTYPE', 'PEDACT', # high correlation
     'EMERG_VEH',       # 0 permutation importance 
     'CYCCOND',         # 0 permutation importance 
-    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2" # based on feature importance
+    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2","INJURY" # based on feature importance
 ]
 
 
@@ -171,8 +171,8 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     log_reg_H = LogisticRegression(max_iter=1400)
     dt_H = DecisionTreeClassifier(criterion='entropy', max_depth=42)
     nn_H = MLPClassifier(activation='tanh', alpha=0.01, hidden_layer_sizes=(15, 10, 1), learning_rate='invscaling', max_iter=1000, solver='adam')
-    svm_H = SVC(C=10, kernel='poly', degree=3, gamma=1.0)
-    svm_soft_H = SVC(C=10, kernel='poly', degree=3, gamma=1.0, probability=True)  # For soft voting
+    svm_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1)
+    svm_soft_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True)  # For soft voting
     rf_H = RandomForestClassifier(n_estimators=1000, random_state=37, n_jobs=-1, class_weight='balanced')
 
     # Hard voting
