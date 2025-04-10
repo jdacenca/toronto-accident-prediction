@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback} from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Stack from '@mui/material/Stack';
@@ -6,6 +6,15 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import CardMedia from '@mui/material/CardMedia';
+import Avatar from '@mui/material/Avatar';
+
+import DT from '../assets/decision-tree.png';
+import RF from '../assets/forest.png';
+import LR from '../assets/logistic-regression.png';
+import SVM from '../assets/scatter-graph.png';
+import NN from '../assets/deep-learning.png';
+import P from '../assets/predictive.png';
 
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -17,6 +26,9 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
+import AutoCompleteResult from './AutoCompleteResult';
+import AutoCompleteControl from './AutoCompleteControl';
+
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
   flexDirection: 'column',
@@ -26,15 +38,16 @@ import {
   useMapsLibrary,
   AdvancedMarker,
   APIProvider,
-  InfoWindow,
+  ControlPosition,
   Map,
   MapMouseEvent
 } from '@vis.gl/react-google-maps';
 
-const API_KEY = "";
+const API_KEY = "AIzaSyAPgyc_grB1usN6bQm5HEwSaBB8SK8lowg";
+export type AutocompleteMode = { id: string; label: string };
 
 export default function Prediction() {
-  const apiUrl = 'http://127.0.0.1:5000'; 
+  const apiUrl = 'http://127.0.0.1:5000';
 
   const maps = useMapsLibrary('maps'); // Access the core maps library
   const places = useMapsLibrary('places'); // Access the places library
@@ -137,18 +150,18 @@ export default function Prediction() {
   const [long, setLong] = useState(0);
 
   const mapClick = useCallback((ev: MapMouseEvent) => {
-      //if(!maps) return;
-      //if(!ev.latLng) return;
-      if (ev.detail.latLng) {
-        console.log('marker clicked:', ev.detail.latLng);
-        setLat(ev.detail.latLng.lat);
-        setLong(ev.detail.latLng.lng);
+    //if(!maps) return;
+    //if(!ev.latLng) return;
+    if (ev.detail.latLng) {
+      console.log('marker clicked:', ev.detail.latLng);
+      setLat(ev.detail.latLng.lat);
+      setLong(ev.detail.latLng.lng);
 
-      } else {
-        console.log('marker clicked: latLng is null');
-      }
-      //maps.panTo(ev.latLng);
-    }, []);
+    } else {
+      console.log('marker clicked: latLng is null');
+    }
+    //maps.panTo(ev.latLng);
+  }, []);
 
   const handlePrediction = () => {
     console.log("PREDICTION")
@@ -186,28 +199,49 @@ export default function Prediction() {
   const [age, setAge] = useState('UNKNOWN');
   const [pedestrian, setPedestrian] = useState('NORMAL');
   const [cyclist, setCyclist] = useState('NORMAL');
+
+  const [selectedPlace, setSelectedPlace] =
+    useState<google.maps.places.Place | null>(null);
+
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px', lg: '2400px'} }}>
+    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px', lg: '2400px' } }}>
+      <Stack
+        sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 3 }}
+      >
+        <Button
+          onClick={handlePrediction}
+          variant="outlined"
+          sx={{ display: { xs: '12', m: '6' }, width: 500, alignItems: 'center', height: 50 }}
+          startIcon={<Avatar src={P} />}
+        >
+          <Typography variant="body2" sx={{
+            color: 'text.secondary', fontSize: 20,
+            fontWeight: 700,
+          }}>PREDICT</Typography>
+        </Button>
+      </Stack>
+      <Grid
+        container
+        sx={{
+          height: {
+            xs: '100%',
+            sm: 'calc(100dvh - var(--template-frame-height, 0px))',
+          },
+          mt: {
+            xs: 4,
+            sm: 0,
+          },
+        }}
+      >
+
         <Grid
           container
-          sx={{
-            height: {
-              xs: '100%',
-              sm: 'calc(100dvh - var(--template-frame-height, 0px))',
-            },
-            mt: {
-              xs: 4,
-              sm: 0,
-            },
-          }}
-        >
-        <Grid
-          size={{ xs: 12, sm: 5, lg: 4 }}
+          size={{ xs: 12, sm: 5, lg: 5 }}
           sx={{
             display: { xs: 'none', md: 'flex' },
             flexDirection: 'column',
             backgroundColor: 'background.paper',
-            borderRight: { sm: 'none', md: '1px solid' },
+            border: { sm: 'none', md: '1px solid' },
             borderColor: { sm: 'none', md: 'divider' },
             alignItems: 'start',
             pt: 5,
@@ -216,428 +250,428 @@ export default function Prediction() {
           }}
         >
           <Grid container spacing={3}>
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="roadClass" required>
-          Road Class
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-roadClass"
-            id="select-roadClass"
-            value={roadClass}
-            label="Road Class"
-            onChange={setRoadClasshandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {roadClassRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="roadClass" required>
+                Road Class
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-roadClass"
+                  id="select-roadClass"
+                  value={roadClass}
+                  label="Road Class"
+                  onChange={setRoadClasshandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {roadClassRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="district" required>
-          District
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-district"
-            id="select-district"
-            value={district}
-            label="District"
-            onChange={setDistricthandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {districtRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
-      
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="collition" required>
-          Collition Location
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-collition"
-            id="select-collition"
-            value={collitionLocation}
-            label="collition"
-            onChange={setcollitionLocationhandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {collitionLocationRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="district" required>
+                District
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-district"
+                  id="select-district"
+                  value={district}
+                  label="District"
+                  onChange={setDistricthandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {districtRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="traffic" required>
-          Traffic
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-traffic"
-            id="select-traffic"
-            value={traffic}
-            label="traffic"
-            onChange={setTraffichandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {trafficRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
-      
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="visibility" required>
-          VISIBILITY
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-visibility"
-            id="select-visibility"
-            value={visibility}
-            label="visibility"
-            onChange={setVisibilityhandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {visibilityRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="collition" required>
+                Collition Location
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-collition"
+                  id="select-collition"
+                  value={collitionLocation}
+                  label="collition"
+                  onChange={setcollitionLocationhandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {collitionLocationRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="light" required>
-          Light
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-light"
-            id="select-light"
-            value={light}
-            label="light"
-            onChange={setLighthandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {lightRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
-      
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="roadSurface" required>
-          Road Surface
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-roadSurface"
-            id="select-roadSurface"
-            value={roadSurface}
-            label="roadSurface"
-            onChange={setRoadSurfaceLocationhandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {roadSurfaceRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="traffic" required>
+                Traffic
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-traffic"
+                  id="select-traffic"
+                  value={traffic}
+                  label="traffic"
+                  onChange={setTraffichandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {trafficRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="impactType" required>
-          Impact Type
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-impactType"
-            id="select-impactType"
-            value={impactType}
-            label="impactType"
-            onChange={setImpactTypehandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {impactTypeRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="visibility" required>
+                VISIBILITY
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-visibility"
+                  id="select-visibility"
+                  value={visibility}
+                  label="visibility"
+                  onChange={setVisibilityhandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {visibilityRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="invType" required>
-          Involvement Type
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-invType"
-            id="select-invType"
-            value={invtype}
-            label="invType"
-            onChange={setInvtypehandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {invtypeRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="light" required>
+                Light
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-light"
+                  id="select-light"
+                  value={light}
+                  label="light"
+                  onChange={setLighthandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {lightRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="age" required>
-          Age
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-age"
-            id="select-age"
-            value={age}
-            label="age"
-            onChange={setAgehandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {ageRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="roadSurface" required>
+                Road Surface
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-roadSurface"
+                  id="select-roadSurface"
+                  value={roadSurface}
+                  label="roadSurface"
+                  onChange={setRoadSurfaceLocationhandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {roadSurfaceRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="predestrianCond" required>
-          Pedestrian Condition
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-predestrianCond"
-            id="select-predestrianCond"
-            value={pedestrian}
-            label="predestrianCond"
-            onChange={setPedestrianhandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {pedestrianRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="impactType" required>
+                Impact Type
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-impactType"
+                  id="select-impactType"
+                  value={impactType}
+                  label="impactType"
+                  onChange={setImpactTypehandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {impactTypeRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12, md: 6 }}>
-      <FormLabel htmlFor="cyclistCond" required>
-          Cyclist Condition
-      </FormLabel>
-      <FormControl sx={{ m: 0, minWidth: 120}}>
-          <Select
-            labelId="select-cyclistCond"
-            id="select-cyclistCond"
-            value={cyclist}
-            label="cyclistCond"
-            onChange={setCyclisthandleChange}
-            MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Adjust this value as needed
-                  },
-                },
-              }}
-          >
-            <MenuItem value="2023">
-            </MenuItem>
-            {cyclistRef.map((option) => (
-                <MenuItem key={option} value={option}>
-                    {String(option)}
-                </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="invType" required>
+                Involvement Type
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-invType"
+                  id="select-invType"
+                  value={invtype}
+                  label="invType"
+                  onChange={setInvtypehandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {invtypeRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12 , md: 6 }}>
-        <FormControlLabel
-          control={<Checkbox name="isPedestrian" checked={isPedestrian} onChange={setisPedestrianhandleChange} value="yes" />}
-          label="Pedestrian"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isCyclist" checked={isCyclist} onChange={setisCyclisthandleChange} value="yes" />}
-          label="Cyclist"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isAutomobile" checked={isAutomobile} onChange={setisAutomobilehandleChange} value="yes" />}
-          label="Automobile"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isMotorcycle" checked={isMotorcycle} onChange={setisMotorcyclehandleChange} value="yes" />}
-          label="Motorcycle"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isSpeeding" checked={isSpeeding} onChange={setisSpeedinghandleChange} value="yes" />}
-          label="Speeding"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isAggressive" checked={isAggressive} onChange={setisAggressivehandleChange} value="yes" />}
-          label="Aggressive"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isRedLight" checked={isRedLight} onChange={setisRedLighthandleChange} value="yes" />}
-          label="Red Light Related"
-        />
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="age" required>
+                Age
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-age"
+                  id="select-age"
+                  value={age}
+                  label="age"
+                  onChange={setAgehandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {ageRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-      <FormGrid size={{ xs: 12 , md: 6 }}>
-        <FormControlLabel
-          control={<Checkbox name="isTruck" checked={isTruck} onChange={setisTruckhandleChange} value="yes" />}
-          label="Truck"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isCityVehicle" checked={isCityVehicle} onChange={setisCityVehiclehandleChange} value="yes" />}
-          label="City Vehicle"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isEmergency" checked={isEmergency} onChange={setisEmergencyhandleChange} value="yes" />}
-          label="Emergency Vehicle"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isPassenger" checked={isPassenger} onChange={setisPassengerhandleChange} value="yes" />}
-          label="Passenger"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isAlcohol" checked={isAlcohol} onChange={setisAlcoholhandleChange} value="yes" />}
-          label="Alcohol"
-        />
-        <FormControlLabel
-          control={<Checkbox name="isDisability" checked={isDisability} onChange={setisDisabilityhandleChange} value="yes" />}
-          label="Disability"
-        />
-      </FormGrid>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="predestrianCond" required>
+                Pedestrian Condition
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-predestrianCond"
+                  id="select-predestrianCond"
+                  value={pedestrian}
+                  label="predestrianCond"
+                  onChange={setPedestrianhandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {pedestrianRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
 
-    </Grid>
-        <Card variant="outlined" sx={{ width: '100%' }}>
-          <CardContent>
-          <Stack sx={{ justifyContent: 'space-between' }}>
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormLabel htmlFor="cyclistCond" required>
+                Cyclist Condition
+              </FormLabel>
+              <FormControl sx={{ m: 0, minWidth: 120 }}>
+                <Select
+                  labelId="select-cyclistCond"
+                  id="select-cyclistCond"
+                  value={cyclist}
+                  label="cyclistCond"
+                  onChange={setCyclisthandleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="2023">
+                  </MenuItem>
+                  {cyclistRef.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {String(option)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </FormGrid>
+
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormControlLabel
+                control={<Checkbox name="isPedestrian" checked={isPedestrian} onChange={setisPedestrianhandleChange} value="yes" />}
+                label="Pedestrian"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isCyclist" checked={isCyclist} onChange={setisCyclisthandleChange} value="yes" />}
+                label="Cyclist"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isAutomobile" checked={isAutomobile} onChange={setisAutomobilehandleChange} value="yes" />}
+                label="Automobile"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isMotorcycle" checked={isMotorcycle} onChange={setisMotorcyclehandleChange} value="yes" />}
+                label="Motorcycle"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isSpeeding" checked={isSpeeding} onChange={setisSpeedinghandleChange} value="yes" />}
+                label="Speeding"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isAggressive" checked={isAggressive} onChange={setisAggressivehandleChange} value="yes" />}
+                label="Aggressive"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isRedLight" checked={isRedLight} onChange={setisRedLighthandleChange} value="yes" />}
+                label="Red Light Related"
+              />
+            </FormGrid>
+
+            <FormGrid size={{ xs: 12, md: 6 }}>
+              <FormControlLabel
+                control={<Checkbox name="isTruck" checked={isTruck} onChange={setisTruckhandleChange} value="yes" />}
+                label="Truck"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isCityVehicle" checked={isCityVehicle} onChange={setisCityVehiclehandleChange} value="yes" />}
+                label="City Vehicle"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isEmergency" checked={isEmergency} onChange={setisEmergencyhandleChange} value="yes" />}
+                label="Emergency Vehicle"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isPassenger" checked={isPassenger} onChange={setisPassengerhandleChange} value="yes" />}
+                label="Passenger"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isAlcohol" checked={isAlcohol} onChange={setisAlcoholhandleChange} value="yes" />}
+                label="Alcohol"
+              />
+              <FormControlLabel
+                control={<Checkbox name="isDisability" checked={isDisability} onChange={setisDisabilityhandleChange} value="yes" />}
+                label="Disability"
+              />
+            </FormGrid>
+
+          </Grid>
+          <Card variant="outlined" sx={{ width: '100%' }}>
+            <CardContent>
+              <Stack sx={{ justifyContent: 'space-between' }}>
                 <Stack
                   direction="row"
                   sx={{ justifyContent: 'space-between', alignItems: 'center' }}
@@ -647,59 +681,181 @@ export default function Prediction() {
                   </Typography>
                 </Stack>
                 <FormGrid size={{ xs: 12 }}>
-                    <FormLabel htmlFor="latitude" required>
-                      Latitude
-                    </FormLabel>
-                    <OutlinedInput
-                      id="latitude"
-                      name="latitude"
-                      type="latitude"
-                      required
-                      size="small"
-                      value={lat}
+                  <FormLabel htmlFor="latitude" required>
+                    Latitude
+                  </FormLabel>
+                  <OutlinedInput
+                    id="latitude"
+                    name="latitude"
+                    type="latitude"
+                    required
+                    size="small"
+                    value={lat}
+                  />
+                </FormGrid>
+                <FormGrid size={{ xs: 12 }}>
+                  <FormLabel htmlFor="longitude" required>
+                    Longitude
+                  </FormLabel>
+                  <OutlinedInput
+                    id="longitude"
+                    name="longitude"
+                    type="longitude"
+                    required
+                    size="small"
+                    value={long}
+                  />
+                </FormGrid>
+                <Stack
+                  direction="row"
+                  sx={{ justifyContent: 'space-between', alignItems: 'center', 'padding-top': 10 }}
+                >
+                  <APIProvider apiKey={API_KEY} libraries={['marker']} solutionChannel='GMP_devsite_samples_v3_rgmbasicmap' onLoad={() => console.log('Maps API has loaded.')}>
+                    <Map
+                      mapId='Basic_Map'
+                      style={{ width: '30vw', height: '30vh' }}
+                      defaultZoom={11}
+                      defaultCenter={{ lat: 43.6532, lng: -79.3832 }}
+                      gestureHandling={'greedy'}
+                      disableDefaultUI={true}
+                      onClick={mapClick}
+                    >
+                    </Map>
+                    <AutoCompleteControl
+                      controlPosition={ControlPosition.TOP_LEFT}
+                      onPlaceSelect={setSelectedPlace}
                     />
-                  </FormGrid>
-                  <FormGrid size={{ xs: 12 }}>
-                    <FormLabel htmlFor="longitude" required>
-                      Longitude
-                    </FormLabel>
-                    <OutlinedInput
-                      id="longitude"
-                      name="longitude"
-                      type="longitude"
-                      required
-                      size="small"
-                      value={long}
-                    />
-                  </FormGrid>
+                    <AutoCompleteResult place={selectedPlace} />
+                  </APIProvider>
+                </Stack>
               </Stack>
-            <div className="advanced-marker">
-              <APIProvider apiKey={API_KEY} libraries={['marker']} solutionChannel='GMP_devsite_samples_v3_rgmbasicmap' onLoad={() => console.log('Maps API has loaded.')}>
-                <Map
-                  mapId='Basic_Map'
-                  style={{width: '50vw', height: '50vh'}}
-                  defaultZoom={11}
-                  defaultCenter={{lat: 43.6532, lng: -79.3832}}
-                  gestureHandling={'greedy'}
-                  disableDefaultUI={true}
-                  onClick={mapClick}
-                  >
-                </Map>
-              </APIProvider>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Button
-          onClick={handlePrediction}
-          variant="outlined"
-          fullWidth
-          sx={{ display: { xs: '12', m: '6' } }}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Box
+          sx={[
+            {
+              display: 'flex',
+              flexDirection: { xs: 'column-reverse', sm: 'row' },
+              flexGrow: 1,
+              gap: 1,
+              pl: { xs: 4, sm: 4 },
+              ml: { xs: 4, sm: 4 },
+              mb: '60px'
+            },
+          ]}
         >
-          Prediction
-        </Button>
+
+          <Grid size={{ xs: 5, sm: 5, lg: 5 }} direction='row' sx={{ justifyContent: 'center', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}>
+            <Stack
+              sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}
+            >
+              <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                  component="img"
+                  height="250"
+                  image={DT}
+                  alt="DecisionTree"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    Decision Tree
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    FATAL
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+            <Stack
+              sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}
+            >
+              <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                  component="img"
+                  height="250"
+                  image={RF}
+                  alt="RandomForest"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    Random Forest
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    FATAL
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+
+            <Stack
+              sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}
+            >
+              <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                  component="img"
+                  height="250"
+                  image={LR}
+                  alt="Logistic"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    Logistic Regression
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    FATAL
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
+
+          <Grid size={{ xs: 5, sm: 5, lg: 5 }} direction='row' sx={{ justifyContent: 'center', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}>
+            <Stack
+              sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}
+            >
+              <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                  component="img"
+                  height="250"
+                  image={SVM}
+                  alt="SupportVector"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    Support Vector
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    FATAL
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+            <Stack
+              sx={{ justifyContent: 'space-between', alignItems: 'center', padding: 1, 'padding-right': 1, 'padding-left': 1 }}
+            >
+              <Card sx={{ maxWidth: 345 }}>
+                <CardMedia
+                  component="img"
+                  height="250"
+                  image={NN}
+                  alt="Neural Network"
+                />
+                <CardContent>
+                  <Typography gutterBottom variant="h5" component="div">
+                    Neural Network
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    FATAL
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
+        </Box>
       </Grid>
-      </Grid>
-    </Box>
+    </Box >
   );
 }

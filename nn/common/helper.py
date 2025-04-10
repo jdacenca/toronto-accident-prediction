@@ -74,13 +74,13 @@ def clean_dataset(df, drop_fields):
     ]
 
     other_column =  [
-        'ACCLOC',
+        #'ACCLOC',
         'TRAFFCTL',
         'VISIBILITY',
         'LIGHT',
         'RDSFCOND',
         'IMPACTYPE',
-        'INVTYPE',
+        #'INVTYPE',
         'ROAD_CLASS',
         'DISTRICT'
     ]
@@ -128,7 +128,7 @@ def runGridSearchCV(model, param_grid, X_train, y_train, X_test, y_test):
 
     return tuning_model
 
-def analysis(model, model_name, X_train, y_train, X_test, y_test):
+def analysis(model, model_name, X_train, y_train, X_test, y_test, desc):
 
     print("\n")
     print("="*70)
@@ -138,15 +138,15 @@ def analysis(model, model_name, X_train, y_train, X_test, y_test):
     test_predictions = model.predict(X_test)
 
     print("Train Data:")
-    generateMetrics(model, X_train, y_train, train_predictions)
+    generateMetrics(model, X_train, y_train, train_predictions, desc)
 
     print("Test Data:")
-    generateMetrics(model, X_test, y_test, test_predictions)
+    generateMetrics(model, X_test, y_test, test_predictions, desc)
 
     print("\n")
     print("="*70)
 
-def generateMetrics(model, x, y, predictions):
+def generateMetrics(model, x, y, predictions, desc):
     fold = KFold(n_splits=3, shuffle=True, random_state=1)
     scores1 = cross_val_score(model, x, y, cv=fold, scoring="accuracy")
     accuracy1 = accuracy_score(y, predictions)
@@ -154,13 +154,13 @@ def generateMetrics(model, x, y, predictions):
 
     y_train_pred = cross_val_predict(model, x, y, cv=fold)
     ConfusionMatrixDisplay.from_predictions(y, y_train_pred, normalize="true", values_format=".0%")
-    plt.show()
+    plt.savefig(f"./output/confusion_matrix_{desc}.png")
     
     target = ['0', '1']
     labels = np.arange(2)
     report = classification_report(y, y_train_pred, labels=labels, target_names=target, output_dict=True)
     sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, annot=True)
-    plt.show()
+    plt.savefig(f"./output/classification_{desc}.png")
 
     # Get the ROC
     y_probability = model.predict_proba(x)[:, 1]
@@ -178,7 +178,7 @@ def generateMetrics(model, x, y, predictions):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic')
     plt.legend(loc="lower right")
-    plt.show()
+    plt.savefig(f"./output/roc_{desc}.png")
 
     print('\n' + '-'*50)
     print(f"Accuracy: {accuracy1}")
@@ -205,7 +205,7 @@ def custom_permutation_importance(model, X_train, y_train):
     plt.ylabel("Decrease in Acuracy")
     plt.xlabel("Features")
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f"./output/permutation.png")
 
 def select_best_features(X, y, col_names):
     selector = SelectKBest(score_func=f_classif, k=30)
@@ -221,7 +221,7 @@ def select_best_features(X, y, col_names):
     plt.ylabel("Scores")
     plt.xlabel("Features")
     plt.tight_layout()
-    plt.savefig("./output/beast_features.png")
+    plt.savefig(f"./output/best_features.png")
 
 def recursive_feature_elimination(X, y):
     model = RandomForestClassifier()
@@ -244,7 +244,7 @@ def recursive_feature_elimination(X, y):
     plt.ylabel("Ranking (Lower is better)")
     plt.xticks(rotation=90)
     plt.tight_layout()
-    plt.savefig("./output/recursive_feature_elimination.png")
+    plt.savefig(f"./output/recursive_feature_elimination.png")
 
 def variance_threshold(X, y):
     selector = VarianceThreshold()
@@ -265,4 +265,4 @@ def variance_threshold(X, y):
     plt.legend()
     plt.xticks(rotation=90)
     plt.tight_layout()
-    plt.savefig("./output/variance_threshold.png")
+    plt.savefig(f"./output/variance_threshold.png")

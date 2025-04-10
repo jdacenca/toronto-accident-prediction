@@ -36,68 +36,68 @@ export default function MainGrid() {
     },
   ]);
 
-  const apiUrl = 'http://127.0.0.1:5000'; 
+  const apiUrl = 'http://127.0.0.1:5000';
 
   useEffect(() => {
-      const fetchData = async () => {
-        
-         // Fetch the total accidents for the selected year for Fatalities
-         try {
-          const response = await fetch(apiUrl + '/data/accident/total/' + year + '/Fatal', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data: any = await response.json();
+    const fetchData = async () => {
 
-          const newData1 = [...statData];
-          newData1[0].value = data.total.toString();
-          newData1[0].data = data.per_month;
-          newData1[0].interval = 'Based on Year (' + year + ')',
+      // Fetch the total accidents for the selected year for Fatalities
+      try {
+        const response = await fetch(apiUrl + '/data/accident/total/' + year + '/Fatal', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: any = await response.json();
+
+        const newData1 = [...statData];
+        newData1[0].value = data.total.toString();
+        newData1[0].data = data.per_month;
+        newData1[0].interval = 'Based on Year (' + year + ')',
           setStatData(newData1);
 
-        } catch (err) {
-          console.error('Error fetching data:', err);
-          console.error('Failed to load options. Please try again later.');
-        } 
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        console.error('Failed to load options. Please try again later.');
+      }
 
-        // Fetch the total accidents for the selected year for Non Fatalities
-        try {
-          const response = await fetch(apiUrl + '/data/accident/total/' + year + '/Non-Fatal%20Injury', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data: any = await response.json();
+      // Fetch the total accidents for the selected year for Non Fatalities
+      try {
+        const response = await fetch(apiUrl + '/data/accident/total/' + year + '/Non-Fatal%20Injury', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: any = await response.json();
 
-          const newData2 = [...statData];
-          newData2[1].value = data.total.toString();
-          newData2[1].data = data.per_month;
-          newData2[1].interval = 'Based on Year (' + year + ')',
+        const newData2 = [...statData];
+        newData2[1].value = data.total.toString();
+        newData2[1].data = data.per_month;
+        newData2[1].interval = 'Based on Year (' + year + ')',
           setStatData(newData2);
 
-        } catch (err) {
-          console.error('Error fetching data:', err);
-          console.error('Failed to load options. Please try again later.');
-        } 
-      };
-  
-      fetchData();
-    }, [year]);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        console.error('Failed to load options. Please try again later.');
+      }
+    };
+
+    fetchData();
+  }, [year]);
   return (
-    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px', lg: '2400px'} }}>
+    <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px', lg: '2400px' } }}>
       {/* cards */}
       <Stack direction="row" sx={{ gap: 1 }}>
         <Typography component="h4" variant="h4" sx={{ mb: 2 }}>
-          Year: 
+          Year:
         </Typography>
         <YearSelection />
       </Stack>
@@ -108,17 +108,17 @@ export default function MainGrid() {
         sx={{ mb: (theme) => theme.spacing(2) }}
       >
         {statData.map((card, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 12, lg: 6}}>
+          <Grid key={index} size={{ xs: 12, sm: 12, lg: 6 }}>
             <StatCard {...card} />
           </Grid>
         ))}
-        <Grid size={{  xs: 12, sm: 12, lg: 12}}>
+        <Grid size={{ xs: 12, sm: 12, lg: 12 }}>
           <PageViewsBarChart />
         </Grid>
       </Grid>
-        <Grid size={{ xs: 4, md: 4}}>
-          <BasicMap />
-        </Grid>
+      <Grid size={{ xs: 4, md: 4 }}>
+        <BasicMap />
+      </Grid>
 
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Details

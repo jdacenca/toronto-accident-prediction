@@ -5,7 +5,7 @@ import seaborn as sns
 
 from mlp_classifier import mlp_classifier
 from helper import clean_dataset, data_description, unique_values, select_best_features, recursive_feature_elimination, variance_threshold
-from sampling_helper import random_sampling, tomek_links, near_miss
+from sampling_helper import random_sampling, tomek_links, near_miss, smote_tomek, ncr
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
 
@@ -47,6 +47,8 @@ dropped_fields = [
     'DIVISION',
     'x',
     'y',
+    'INVTYPE',
+    'ACCLOC'
 ]
 
 df, cleaned_df = clean_dataset(ksi_df, dropped_fields)# Checking the Feature scores
@@ -102,16 +104,16 @@ column_binary = [
 ]
 column_le = [
     'ROAD_CLASS',
-    'LATITUDE',
-    'LONGITUDE',
+    #'LATITUDE',
+    #'LONGITUDE',
     'DISTRICT',
-    'ACCLOC',
+    #'ACCLOC',
     'TRAFFCTL',
     'VISIBILITY',
     'LIGHT',
     'RDSFCOND',
     'IMPACTYPE',
-    'INVTYPE',
+    #'INVTYPE',
     'INVAGE',
     'PEDCOND',
     'CYCCOND',
@@ -119,13 +121,14 @@ column_le = [
     'MONTH','DAY','WEEK', 'DAYOFWEEK'
 ]
 
+print()
 # Apply binary mapping using .loc
 for column in column_binary:
     cleaned_df[column] = cleaned_df[column].map(lambda x: binary_mapping[x.upper()])
 
 cleaned_df["ACCLASS"] = cleaned_df["ACCLASS"].replace(target_mapping)
 cleaned_df["ACCLASS"] = cleaned_df["ACCLASS"].astype(int)
-print(cleaned_df["ACCLASS"])
+
 le = LabelEncoder()
 
 for column in column_le:
@@ -151,6 +154,16 @@ target = cleaned_df["ACCLASS"]
 x_random_sampling, y_random_sampling = random_sampling(features, target)
 X_train, X_test, y_train, y_test = train_test_split(x_random_sampling, y_random_sampling, test_size=0.2, random_state=17, stratify=y_random_sampling)
 mlp_classifier("Random Sampling", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+
+# SMOTE + TOMEK
+x_random_sampling, y_random_sampling = smote_tomek(features, target)
+X_train, X_test, y_train, y_test = train_test_split(x_random_sampling, y_random_sampling, test_size=0.2, random_state=17, stratify=y_random_sampling)
+mlp_classifier("Smote+Tomek", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
+
+# NCr
+x_random_sampling, y_random_sampling = ncr(features, target)
+X_train, X_test, y_train, y_test = train_test_split(x_random_sampling, y_random_sampling, test_size=0.2, random_state=17, stratify=y_random_sampling)
+mlp_classifier("NCR", X_train, X_test, y_train, y_test, unseen_fatal, unseen_notfatal)
 
 # Tomek Links
 x_tomek_links, y_tomek_links = tomek_links(features, target)

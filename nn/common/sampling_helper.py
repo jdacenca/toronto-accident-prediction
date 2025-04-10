@@ -1,4 +1,5 @@
-from imblearn.under_sampling import RandomUnderSampler, TomekLinks, NearMiss
+from imblearn.under_sampling import RandomUnderSampler, TomekLinks, NearMiss, NeighbourhoodCleaningRule
+from imblearn.combine import SMOTETomek
 from collections import Counter
 
 '''
@@ -9,6 +10,34 @@ def random_sampling(x, y):
     print("Under Sampling using RandomUnderSampler with strategy as all")
     print('Original dataset shape: ', Counter(y))
     us = RandomUnderSampler(sampling_strategy='all', random_state=32)
+
+    X_res, y_res = us.fit_resample(x, y)
+    print('Resampled dataset shape: ', Counter(y_res))
+
+    return X_res, y_res
+
+'''
+hybrid methods (e.g., SMOTE + Tomek Links) 
+'''
+def smote_tomek(x, y):
+    print("\n", "-"*70)
+    print("Under Sampling using SMOTE + Tomek")
+    print('Original dataset shape: ', Counter(y))
+    us = SMOTETomek(random_state=32)
+
+    X_res, y_res = us.fit_resample(x, y)
+    print('Resampled dataset shape: ', Counter(y_res))
+
+    return X_res, y_res
+
+'''
+Neighbourhood Cleaning Rule (NCR)
+'''
+def ncr(x, y):
+    print("\n", "-"*70)
+    print("Under Sampling using Neighborhood Cleaning Rule (NCR)")
+    print('Original dataset shape: ', Counter(y))
+    us = NeighbourhoodCleaningRule(random_state=32)
 
     X_res, y_res = us.fit_resample(x, y)
     print('Resampled dataset shape: ', Counter(y_res))

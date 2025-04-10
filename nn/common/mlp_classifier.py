@@ -1,7 +1,10 @@
 from sklearn.neural_network import MLPClassifier
+from mlxtend.feature_selection import ExhaustiveFeatureSelector
 from helper import runGridSearchCV, analysis, custom_permutation_importance
 import matplotlib.pyplot as plt
 import pandas as pd
+import pickle
+import shap
 
 from collections import Counter
 
@@ -16,9 +19,11 @@ def mlp_classifier(desc, X_train, X_test, y_train, y_test, unseen_fatal, unseen_
         'hidden_layer_sizes': [(20, 10, 1), (20, 15, 10, 1), (15, 10, 1)],  # Number of neurons in hidden layers
         'activation': ['relu', 'tanh', 'logistic', 'identity'],      # Activation functions
         'solver': ['adam'],                       # Solvers for weight optimization
-        'alpha': [0.001, 0.01, 0.1],                  # Regularization parameter
+        'alpha': [0.0001, 0.001, 0.01, 0.1],                  # Regularization parameter
+        'learning_rate_init': [0.0001, 0.001, 0.01, 0.1],
         'learning_rate': ['constant', 'adaptive', 'invscaling'],       # Learning rate schedule
-        'max_iter': [1000]
+        'max_iter': [1000],
+        #'batch_size': ['auto', 32, 64, 128]
     }
 
     # Create a MLP classifier
@@ -51,7 +56,25 @@ def mlp_classifier(desc, X_train, X_test, y_train, y_test, unseen_fatal, unseen_
     #custom_permutation_importance(model, X_train, y_train)
 
     # Metrics
-    analysis(tuning_model.best_estimator_, "Metrics for Neural Networks", X_train, y_train, X_test, y_test)
+    analysis(tuning_model.best_estimator_, "Metrics for Neural Networks", X_train, y_train, X_test, y_test, desc)
+
+    ##
+    efs = ExhaustiveFeatureSelector(tuning_model.best_estimator_, min_features=1, max_features=5, scoring='accuracy', cv=5)
+    efs.fit(X_train, y_train)
+
+    print("Best Features (Exhaustive Feature):", efs.best_feature_names_)
+
+    explainer = shap.KernelExplainer(tuning_model.best_estimator_.predict_proba, X_train)
+    shap_values = explainer.shap_values(X_test)
+    print("Best Features (SHAP):", shap_values)
+
+    # Summary plot of feature importance
+    shap.summary_plot(shap_values, X_test, plot='bar')
+
+    with open('./output/mlp_model.pkl', 'wb') as file:
+        pickle.dump(tuning_model.best_estimator_, file)
+
+    print("Model saved as mlp_model.pkl")   
 
     #------------------------------------------------------------------------------------
     # Fatal Data
