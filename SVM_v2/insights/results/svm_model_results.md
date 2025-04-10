@@ -1,14 +1,14 @@
 | Model | Kernel | Train Acc.% | Test Acc.% | Unseen Acc.% | Parameters | Precision | F1-Score | Recall | ROC Score | Class Imbalance | SMOTE |
 |-------|--------|-------------|------------|--------------|------------|-----------|----------|--------|-----------|----------------|-------|
 | svm_linear_smote | linear | 97.90 | 97.83 | 100.00 | {'svm__C': 1, 'svm__kernel': 'linear'} | 0.9785 | 0.9783 | 0.9783 | 0.9787 | original | True |
-| svm_rbf_smote | rbf | 100.00 | 63.79 | 40.00 | {'svm__C': 1, 'svm__gamma': 3.0, 'svm__kernel': 'rbf'} | 0.7706 | 0.5084 | 0.6379 | 0.5155 | original | True |
-| svm_poly_smote | poly | 100.00 | 98.04 | 100.00 | {'svm__C': 10, 'svm__degree': 3, 'svm__gamma': 1.0, 'svm__kernel': 'poly'} | 0.9806 | 0.9805 | 0.9804 | 0.9809 | original | True |
+| svm_rbf_smote | rbf | 99.24 | 98.41 | 100.00 | {'svm__C': 1, 'svm__gamma': 0.03, 'svm__kernel': 'rbf'} | 0.9841 | 0.9841 | 0.9841 | 0.9838 | original | True |
+| svm_poly_smote | poly | 99.96 | 98.33 | 100.00 | {'svm__C': 0.1, 'svm__degree': 3, 'svm__gamma': 0.1, 'svm__kernel': 'poly'} | 0.9834 | 0.9834 | 0.9833 | 0.9832 | original | True |
 | svm_linear_original | linear | 98.01 | 97.83 | 100.00 | {'svm__C': 1, 'svm__kernel': 'linear'} | 0.9783 | 0.9783 | 0.9783 | 0.9768 | original | False |
-| svm_rbf_original | rbf | 100.00 | 63.36 | 40.00 | {'svm__C': 1, 'svm__gamma': 3.0, 'svm__kernel': 'rbf'} | 0.7688 | 0.4988 | 0.6336 | 0.5097 | original | False |
-| svm_poly_original | poly | 100.00 | 98.19 | 100.00 | {'svm__C': 10, 'svm__degree': 3, 'svm__gamma': 1.0, 'svm__kernel': 'poly'} | 0.9820 | 0.9819 | 0.9819 | 0.9820 | original | False |
+| svm_rbf_original | rbf | 99.04 | 98.41 | 100.00 | {'svm__C': 1, 'svm__gamma': 0.03, 'svm__kernel': 'rbf'} | 0.9841 | 0.9841 | 0.9841 | 0.9830 | original | False |
+| svm_poly_original | poly | 99.95 | 98.55 | 100.00 | {'svm__C': 0.1, 'svm__degree': 3, 'svm__gamma': 0.1, 'svm__kernel': 'poly'} | 0.9855 | 0.9855 | 0.9855 | 0.9849 | original | False |
 | svm_linear_oversampling | linear | 98.03 | 97.51 | 100.00 | {'svm__C': 1, 'svm__kernel': 'linear'} | 0.9752 | 0.9751 | 0.9751 | 0.9751 | oversampling | False |
-| svm_rbf_oversampling | rbf | 100.00 | 81.08 | 90.00 | {'svm__C': 1, 'svm__gamma': 3.0, 'svm__kernel': 'rbf'} | 0.8627 | 0.8037 | 0.8108 | 0.8108 | oversampling | False |
-| svm_poly_oversampling | poly | 100.00 | 99.02 | 100.00 | {'svm__C': 10, 'svm__degree': 3, 'svm__gamma': 1.0, 'svm__kernel': 'poly'} | 0.9902 | 0.9902 | 0.9902 | 0.9902 | oversampling | False |
+| svm_rbf_oversampling | rbf | 99.32 | 98.61 | 100.00 | {'svm__C': 1, 'svm__gamma': 0.03, 'svm__kernel': 'rbf'} | 0.9862 | 0.9861 | 0.9861 | 0.9861 | oversampling | False |
+| svm_poly_oversampling | poly | 100.00 | 99.02 | 100.00 | {'svm__C': 0.1, 'svm__degree': 3, 'svm__gamma': 0.3, 'svm__kernel': 'poly'} | 0.9902 | 0.9902 | 0.9902 | 0.9902 | oversampling | False |
 | svm_linear_undersampling | linear | 97.80 | 97.00 | 100.00 | {'svm__C': 1, 'svm__kernel': 'linear'} | 0.9703 | 0.9700 | 0.9700 | 0.9700 | undersampling | False |
-| svm_rbf_undersampling | rbf | 100.00 | 52.37 | 60.00 | {'svm__C': 1, 'svm__gamma': 3.0, 'svm__kernel': 'rbf'} | 0.7560 | 0.3835 | 0.5237 | 0.5233 | undersampling | False |
-| svm_poly_undersampling | poly | 100.00 | 98.26 | 90.00 | {'svm__C': 10, 'svm__degree': 3, 'svm__gamma': 1.0, 'svm__kernel': 'poly'} | 0.9827 | 0.9826 | 0.9826 | 0.9826 | undersampling | False |
+| svm_rbf_undersampling | rbf | 98.89 | 98.26 | 100.00 | {'svm__C': 1, 'svm__gamma': 0.03, 'svm__kernel': 'rbf'} | 0.9826 | 0.9826 | 0.9826 | 0.9826 | undersampling | False |
+| svm_poly_undersampling | poly | 99.95 | 98.26 | 100.00 | {'svm__C': 0.1, 'svm__degree': 3, 'svm__gamma': 0.1, 'svm__kernel': 'poly'} | 0.9826 | 0.9826 | 0.9826 | 0.9826 | undersampling | False |
