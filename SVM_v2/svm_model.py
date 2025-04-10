@@ -41,7 +41,7 @@ columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id
     'x', 'y','CYCLISTYPE', 'PEDTYPE', 'PEDACT', # high correlation
     'EMERG_VEH',       # 0 permutation importance 
     'CYCCOND',         # 0 permutation importance 
-    "HOOD_140","NEIGHBOURHOOD_140","HOOD_158","STREET1","STREET2" # based on feature importance
+    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2" # based on feature importance
 ]
 
 # Visualizations
@@ -68,10 +68,10 @@ param_grids = {
         {"svm__kernel": ["linear"], "svm__C": [1]},
     ],
     "svm_rbf": [
-        {"svm__kernel": ["rbf"], "svm__C": [1], "svm__gamma": [3.0]},
+        {"svm__kernel": ["rbf"], "svm__C": [0.01, 1], "svm__gamma": [0.03, 0.3, 3.0]},
     ],
     "svm_poly": [
-        {"svm__kernel": ["poly"], "svm__C": [10], "svm__gamma": [1.0], "svm__degree": [3]},
+        {"svm__kernel": ["poly"], "svm__C": [0.1, 1, 10], "svm__gamma": [0.1, 0.3, 1.0], "svm__degree": [3]},
     ],
 }
 
