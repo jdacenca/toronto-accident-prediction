@@ -46,15 +46,17 @@ def data_overview(df):
         print(f"\nUnique values in {column}:", df[column].unique())
 
 # ===================== MONTH TO SEASON =====================
+# Map month numbers to seasons using the MONTH column
 def month_to_season(month):
     if month in [12, 1, 2]:
-        return 'Winter'
+        return 0  # Winter
     elif month in [3, 4, 5]:
-        return 'Spring'
+        return 1  # Spring
     elif month in [6, 7, 8]:
-        return 'Summer'
+        return 2  # Summer
     else:
-        return 'Fall'
+        return 3  # Fall
+    
 # ===================== DATA CLEANING =====================
 def data_cleaning(df, columns_to_drop, class_imb='original'):
     """Cleans the dataset by handling missing values, dropping unnecessary columns, and balancing classes."""
@@ -90,18 +92,16 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     # Extract date components
     df2['MONTH'] = pd.to_datetime(df2['DATE']).dt.month
     df2['DAY'] = pd.to_datetime(df2['DATE']).dt.day
-    df2['WEEK'] = pd.to_datetime(df2['DATE']).dt.isocalendar().week
-    df2['DAYOFWEEK'] = pd.to_datetime(df2['DATE']).dt.dayofweek
 
     # Extract season
-    df2['SEASON'] = df2['MONTH'].apply(month_to_season)
+    df2['SEASON'] = df2['MONTH'].apply(month_to_season).astype(float)
 
     # Extract hour from TIME
     df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
     df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
 
-    df2['HOUR'] = df2['HOUR'].astype(int)
-    df2['MINUTE'] = df2['MINUTE'].astype(int)
+    df2['HOUR'] = df2['HOUR'].astype(float)
+    df2['MINUTE'] = df2['MINUTE'].astype(float)
 
     # Replace specific values
     df2['ROAD_CLASS'] = df2['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
@@ -131,6 +131,16 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['AVG_AGE'] = df2[['min_age', 'max_age']].mean(axis=1).astype(float)
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
     df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
+
+    df2["DIVISION"] = df2["DIVISION"].replace('NSA', '00').str[1:].astype(float)
+
+    # Replace 'NSA' with '00' and convert HOOD columns to float
+    for col in ['HOOD_158', 'HOOD_140']:
+        df2[col] = df2[col].replace('NSA', '00').astype(float)
+
+    # Convert LATITUDE and LONGITUDE to float
+    df2[['LATITUDE', 'LONGITUDE']] = df2[['LATITUDE', 'LONGITUDE']].astype(float)
+
 
     df2.drop(columns=['AVG_AGE'], inplace=True)
     df2.drop(columns=['TIME','DATE','MONTH','DAY','ACCNUM'], inplace=True)
@@ -197,7 +207,7 @@ def sample_and_update_data(cleaned_df):
 # ===================== DATA PREPROCESSING =====================
 def data_preprocessing_svm(features, smote=False):
     """Prepares the data for SVM by applying preprocessing and optional SMOTE."""
-    num_features = features.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    num_features = features.select_dtypes(include=['int', 'float']).columns.tolist()
     cat_features = features.select_dtypes(include=['object']).columns.tolist()
 
     print("\n===================== FEATURES INFO =====================")
@@ -236,7 +246,7 @@ def data_preprocessing_svm(features, smote=False):
 # ===================== DATA PREPROCESSING =====================
 def data_preprocessing(features):
     """Prepares the data for SVM by applying preprocessing and optional SMOTE."""
-    num_features = features.select_dtypes(include=['int64', 'float64']).columns.tolist()
+    num_features = features.select_dtypes(include=['int', 'float']).columns.tolist()
     cat_features = features.select_dtypes(include=['object']).columns.tolist()
 
     print("\n===================== FEATURES INFO =====================")
