@@ -43,7 +43,7 @@ import {
   MapMouseEvent
 } from '@vis.gl/react-google-maps';
 
-const API_KEY = "AIzaSyAPgyc_grB1usN6bQm5HEwSaBB8SK8lowg";
+const API_KEY = "";
 export type AutocompleteMode = { id: string; label: string };
 
 export default function Prediction() {
@@ -224,8 +224,7 @@ export default function Prediction() {
         container
         sx={{
           height: {
-            xs: '100%',
-            sm: 'calc(100dvh - var(--template-frame-height, 0px))',
+            xs: '100%'
           },
           mt: {
             xs: 4,
@@ -249,6 +248,68 @@ export default function Prediction() {
             gap: 4,
           }}
         >
+          <Card variant="outlined" sx={{ width: '100%' }}>
+            <CardContent>
+              <Stack sx={{ justifyContent: 'space-between' }}>
+                <Stack
+                  direction="row"
+                  sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <Typography variant="h4" component="p">
+                    Location
+                  </Typography>
+                </Stack>
+                <FormGrid size={{ xs: 12 }}>
+                  <FormLabel htmlFor="latitude" required>
+                    Latitude
+                  </FormLabel>
+                  <OutlinedInput
+                    id="latitude"
+                    name="latitude"
+                    type="latitude"
+                    required
+                    size="small"
+                    value={lat}
+                  />
+                </FormGrid>
+                <FormGrid size={{ xs: 12 }}>
+                  <FormLabel htmlFor="longitude" required>
+                    Longitude
+                  </FormLabel>
+                  <OutlinedInput
+                    id="longitude"
+                    name="longitude"
+                    type="longitude"
+                    required
+                    size="small"
+                    value={long}
+                  />
+                </FormGrid>
+              </Stack>
+            </CardContent>
+          </Card>
+          <Stack
+            direction="row"
+            sx={{ justifyContent: 'space-between', alignItems: 'center', 'padding-top': 10 }}
+          >
+            <APIProvider apiKey={API_KEY} libraries={['marker']} solutionChannel='GMP_devsite_samples_v3_rgmbasicmap' onLoad={() => console.log('Maps API has loaded.')}>
+              <Map
+                mapId='Basic_Map'
+                style={{ width: '30vw', height: '30vh' }}
+                defaultZoom={11}
+                defaultCenter={{ lat: 43.6532, lng: -79.3832 }}
+                gestureHandling={'greedy'}
+                disableDefaultUI={true}
+                onClick={mapClick}
+              >
+              </Map>
+              <AutoCompleteControl
+                controlPosition={ControlPosition.TOP_LEFT}
+                onPlaceSelect={setSelectedPlace}
+              />
+              <AutoCompleteResult place={selectedPlace} />
+            </APIProvider>
+          </Stack>
           <Grid container spacing={3}>
             <FormGrid size={{ xs: 12, md: 6 }}>
               <FormLabel htmlFor="roadClass" required>
@@ -669,69 +730,6 @@ export default function Prediction() {
             </FormGrid>
 
           </Grid>
-          <Card variant="outlined" sx={{ width: '100%' }}>
-            <CardContent>
-              <Stack sx={{ justifyContent: 'space-between' }}>
-                <Stack
-                  direction="row"
-                  sx={{ justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <Typography variant="h4" component="p">
-                    Location
-                  </Typography>
-                </Stack>
-                <FormGrid size={{ xs: 12 }}>
-                  <FormLabel htmlFor="latitude" required>
-                    Latitude
-                  </FormLabel>
-                  <OutlinedInput
-                    id="latitude"
-                    name="latitude"
-                    type="latitude"
-                    required
-                    size="small"
-                    value={lat}
-                  />
-                </FormGrid>
-                <FormGrid size={{ xs: 12 }}>
-                  <FormLabel htmlFor="longitude" required>
-                    Longitude
-                  </FormLabel>
-                  <OutlinedInput
-                    id="longitude"
-                    name="longitude"
-                    type="longitude"
-                    required
-                    size="small"
-                    value={long}
-                  />
-                </FormGrid>
-                <Stack
-                  direction="row"
-                  sx={{ justifyContent: 'space-between', alignItems: 'center', 'padding-top': 10 }}
-                >
-                  <APIProvider apiKey={API_KEY} libraries={['marker']} solutionChannel='GMP_devsite_samples_v3_rgmbasicmap' onLoad={() => console.log('Maps API has loaded.')}>
-                    <Map
-                      mapId='Basic_Map'
-                      style={{ width: '30vw', height: '30vh' }}
-                      defaultZoom={11}
-                      defaultCenter={{ lat: 43.6532, lng: -79.3832 }}
-                      gestureHandling={'greedy'}
-                      disableDefaultUI={true}
-                      onClick={mapClick}
-                    >
-                    </Map>
-                    <AutoCompleteControl
-                      controlPosition={ControlPosition.TOP_LEFT}
-                      onPlaceSelect={setSelectedPlace}
-                    />
-                    <AutoCompleteResult place={selectedPlace} />
-                  </APIProvider>
-                </Stack>
-              </Stack>
-
-            </CardContent>
-          </Card>
         </Grid>
 
         <Box

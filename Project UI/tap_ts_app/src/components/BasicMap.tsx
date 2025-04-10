@@ -19,7 +19,7 @@ import {
   Pin
 } from '@vis.gl/react-google-maps';
 
-const API_KEY = "AIzaSyAPgyc_grB1usN6bQm5HEwSaBB8SK8lowg";
+const API_KEY = "";
 
 export default function BasicMap() {
   const apiUrl = 'http://127.0.0.1:5000'; 
