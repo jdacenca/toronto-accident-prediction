@@ -10,22 +10,12 @@ import Copyright from '../internals/components/Copyright';
 import BasicMap from './BasicMap';
 import CustomizedDataGrid from './CustomizedDataGrid';
 import PageViewsBarChart from './PageViewsBarChart';
-import ScatterplotByLatLong from './ScatterplotByLatLong';
 import StatCard, { StatCardProps } from './StatCard';
 import YearSelection from './YearSelection';
 
 export default function MainGrid() {
   const year = useSelector((state: RootState) => state.tapApp.year);
   const [statData, setStatData] = useState<StatCardProps[]>([
-    {
-      title: 'Total Accidents',
-      value: '14k',
-      interval: 'Based on Year (' + year + ')',
-      trend: 'up',
-      data: [
-        200, 24, 220, 260, 240, 380, 100, 240, 280, 240, 300, 340,
-      ],
-    },
     {
       title: 'Total Fatalities',
       value: '325',
@@ -50,29 +40,6 @@ export default function MainGrid() {
 
   useEffect(() => {
       const fetchData = async () => {
-
-        // Fetch the total accidents for the selected year
-        try {
-          const response = await fetch(apiUrl + '/data/accident/total/' + year, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data: any = await response.json();
-
-          const newData = [...statData];
-          newData[0].value = data.total.toString();
-          newData[0].data = data.per_month;
-          setStatData(newData);
-
-        } catch (err) {
-          console.error('Error fetching data:', err);
-          console.error('Failed to load options. Please try again later.');
-        } 
         
          // Fetch the total accidents for the selected year for Fatalities
          try {
@@ -87,10 +54,11 @@ export default function MainGrid() {
           }
           const data: any = await response.json();
 
-          const newData = [...statData];
-          newData[1].value = data.total.toString();
-          newData[1].data = data.per_month;
-          setStatData(newData);
+          const newData1 = [...statData];
+          newData1[0].value = data.total.toString();
+          newData1[0].data = data.per_month;
+          newData1[0].interval = 'Based on Year (' + year + ')',
+          setStatData(newData1);
 
         } catch (err) {
           console.error('Error fetching data:', err);
@@ -110,10 +78,11 @@ export default function MainGrid() {
           }
           const data: any = await response.json();
 
-          const newData = [...statData];
-          newData[2].value = data.total.toString();
-          newData[2].data = data.per_month;
-          setStatData(newData);
+          const newData2 = [...statData];
+          newData2[1].value = data.total.toString();
+          newData2[1].data = data.per_month;
+          newData2[1].interval = 'Based on Year (' + year + ')',
+          setStatData(newData2);
 
         } catch (err) {
           console.error('Error fetching data:', err);
@@ -139,7 +108,7 @@ export default function MainGrid() {
         sx={{ mb: (theme) => theme.spacing(2) }}
       >
         {statData.map((card, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 12, lg: 4}}>
+          <Grid key={index} size={{ xs: 12, sm: 12, lg: 6}}>
             <StatCard {...card} />
           </Grid>
         ))}
