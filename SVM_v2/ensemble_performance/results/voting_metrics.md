@@ -5,7 +5,7 @@
 | SVC|oversampling | 0.9997 | 0.9907 | 1.0000 | 0.9908 | 0.9907 | 0.9907 | 0.9907 |
 | DecisionTreeClassifier| oversampling | 1.0000 | 0.9861 | 1.0000 | 0.9861 | 0.9861 | 0.9861 | 0.9861 |
 | MLPClassifier| oversampling | 0.9999 | 0.9878 | 1.0000 | 0.9878 | 0.9878 | 0.9878 | 0.9878 |
-| Har_Voting | oversampling | 1.0000 | 0.9907 | 1.0000 | 0.9908 | 0.9907 | 0.9907 | 0.9907 |
+| Hard_Voting | oversampling | 1.0000 | 0.9907 | 1.0000 | 0.9908 | 0.9907 | 0.9907 | 0.9907 |
 | LogisticRegression | oversampling | 0.9942 | 0.9832 | 1.0000 | 0.9832 | 0.9832 | 0.9832 | 0.9832 |
 | RandomForestClassifier | oversampling | 1.0000 | 0.9890 | 1.0000 | 0.9890 | 0.9890 | 0.9890 | 0.9890 |
 | SVC | oversampling | 0.9997 | 0.9907 | 1.0000 | 0.9908 | 0.9907 | 0.9907 | 0.9907 |
