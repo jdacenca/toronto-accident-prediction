@@ -65,10 +65,10 @@ param_grids = {
         {"svm__kernel": ["linear"], "svm__C": [1]},
     ],
     "svm_rbf": [
-        {"svm__kernel": ["rbf"], "svm__C": [1], "svm__gamma": [3.0]},
+        {"svm__kernel": ["rbf"], "svm__C": [0.01, 1], "svm__gamma": [0.03, 0.3, 3.0]},
     ],
     "svm_poly": [
-        {"svm__kernel": ["poly"], "svm__C": [10], "svm__gamma": [1.0], "svm__degree": [3]},
+        {"svm__kernel": ["poly"], "svm__C": [0.1, 1, 10], "svm__gamma": [0.1, 0.3, 1.0], "svm__degree": [3]},
     ],
 }
 

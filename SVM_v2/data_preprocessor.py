@@ -108,7 +108,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
 
     # Fill missing values
     unknown_columns = ['PEDCOND', 'DRIVCOND', 'MANOEUVER', 'CYCACT',
-                    'INJURY', 'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR','INVAGE']
+                     'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR','INVAGE']
     other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND', 'DRIVACT']
     boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'MOTORCYCLE',
                     'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'TRSN_CITY_VEH', 'DISABILITY','AUTOMOBILE','TRUCK']
@@ -143,7 +143,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
 
 
     df2.drop(columns=['AVG_AGE'], inplace=True)
-    df2.drop(columns=['TIME','DATE','MONTH','DAY','ACCNUM'], inplace=True)
+    df2.drop(columns=['TIME','DATE','DAY','ACCNUM'], inplace=True)
 
     # Handle class imbalance
     if class_imb == 'oversampling':

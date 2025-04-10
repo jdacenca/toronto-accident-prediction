@@ -46,15 +46,17 @@ def data_overview(df):
         print(f"\nUnique values in {column}:", df[column].unique())
 
 # ===================== MONTH TO SEASON =====================
+# Map month numbers to seasons using the MONTH column
 def month_to_season(month):
     if month in [12, 1, 2]:
-        return 'Winter'
+        return 0  # Winter
     elif month in [3, 4, 5]:
-        return 'Spring'
+        return 1  # Spring
     elif month in [6, 7, 8]:
-        return 'Summer'
+        return 2  # Summer
     else:
-        return 'Fall'
+        return 3  # Fall
+    
 # ===================== DATA CLEANING =====================
 def data_cleaning(df, columns_to_drop, class_imb='original'):
     """Cleans the dataset by handling missing values, dropping unnecessary columns, and balancing classes."""
@@ -84,7 +86,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['DAYOFWEEK'] = pd.to_datetime(df2['DATE']).dt.dayofweek
 
     # Extract season
-    df2['SEASON'] = df2['MONTH'].apply(month_to_season)
+    df2['SEASON'] = df2['MONTH'].apply(month_to_season).astype(float)
 
     # Extract hour from TIME
     df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
@@ -122,6 +124,11 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['AVG_AGE'] = df2[['min_age', 'max_age']].mean(axis=1).astype(float)
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
     df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
+
+    #df2["DIVISION"] = df2["DIVISION"].replace('NSA', '00').str[1:].astype(float)
+
+    # Convert LATITUDE and LONGITUDE to float
+    df2[['LATITUDE', 'LONGITUDE']] = df2[['LATITUDE', 'LONGITUDE']].astype(float)
 
     df2.drop(columns=['AVG_AGE'], inplace=True)
 
