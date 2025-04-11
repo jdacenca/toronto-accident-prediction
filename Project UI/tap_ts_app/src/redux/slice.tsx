@@ -4,11 +4,13 @@ import { PURGE } from "redux-persist";
 // Define the state interface
 interface AppState {
   year: string;
+  model: string;
 }
 
 // Initial state
 const initialState: AppState = {
-  year: '2023'
+  year: '2023',
+  model: 'lg',
 };
 
 // Create a slice
@@ -19,6 +21,9 @@ const appSlice = createSlice({
     setYear: (state, action: PayloadAction<string>) => {
       state.year = action.payload;
     },
+    setModel: (state, action: PayloadAction<string>) => {
+      state.model = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(PURGE, () => {
@@ -28,7 +33,7 @@ const appSlice = createSlice({
 });
 
 // Export actions
-export const { setYear } = appSlice.actions;
+export const { setYear, setModel } = appSlice.actions;
 
 // Export the reducer
 export default appSlice.reducer;
