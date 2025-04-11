@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app, origins="http://localhost:5173")
 
 # Input data path
-input_file_path = 'data/TOTAL_KSI_6386614326836635957.csv'
+input_file_path = './data/TOTAL_KSI_6386614326836635957.csv'
 
 # Load necessary data files
 data = data_util.load_data(input_file_path)

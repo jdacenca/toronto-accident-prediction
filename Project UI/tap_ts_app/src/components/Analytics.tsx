@@ -20,11 +20,61 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { setModel } from "../redux/slice";
+import FeatureImportanceChart from "./FeatureImportanceChart.tsx";
 
 function Analytics() {
   const model = useSelector((state: RootState) => state.tapApp.model);
 
   const dispatch = useDispatch<AppDispatch>();
+
+  const modelResultsMap: Record<
+    string,
+    {
+      trainingAccuracy: string;
+      testingAccuracy: string;
+      unseenDataAccuracy: string;
+    }
+  > = {
+    lg: {
+      trainingAccuracy: "91.52%",
+      testingAccuracy: "89.58%",
+      unseenDataAccuracy: "80%",
+    },
+    rf: {
+      trainingAccuracy: "100%",
+      testingAccuracy: "94.44%",
+      unseenDataAccuracy: "90%",
+    },
+    svc: {
+      trainingAccuracy: "99.46%",
+      testingAccuracy: "94.68%",
+      unseenDataAccuracy: "90%",
+    },
+    dt: {
+      trainingAccuracy: "100%",
+      testingAccuracy: "90.74%",
+      unseenDataAccuracy: "0.7%",
+    },
+    nn: {
+      trainingAccuracy: "97.93%",
+      testingAccuracy: "91.15%",
+      unseenDataAccuracy: "90%",
+    },
+    hv: {
+      trainingAccuracy: "99.81%",
+      testingAccuracy: "94.39%",
+      unseenDataAccuracy: "80%",
+    },
+    sv: {
+      trainingAccuracy: "99.68%",
+      testingAccuracy: "94.21%",
+      unseenDataAccuracy: "80%",
+    },
+  };
+
+  const getModelData = (model: string) => {
+    return modelResultsMap[model];
+  };
 
   const handleChange = (event: SelectChangeEvent) => {
     setModel(event.target.value);
@@ -33,62 +83,101 @@ function Analytics() {
 
   return (
     <Box sx={{ flexGrow: 1, padding: 3 }}>
-       
       <Grid container spacing={3}>
-      <Grid size={{ xs: 12, lg: 12 }}>
+        <Grid size={{ xs: 12, lg: 12 }}>
           <Typography variant="h4" component="h2">
             Model Analytics
           </Typography>
-          </Grid>
-
-        <Grid size={{ xs: 12, lg: 12 }}>
-        <Stack direction="row" sx={{ gap: 1 }}>
-          <Typography component="h4" variant="h4" sx={{ mb: 2 }}>
-            Select Model:
-          </Typography>
-          <FormControl sx={{ m: 0, minWidth: 180 }}>
-            <Select
-              labelId="select-model"
-              id="select-model"
-              value={model}
-              label="Model"
-              onChange={handleChange}
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 250, // Adjust this value as needed
-                  },
-                },
-              }}
-            >
-              <MenuItem key="lg" value="lg">
-                Logistic Regression
-              </MenuItem>
-              <MenuItem key="rf" value="rf">
-                Random Forest
-              </MenuItem>
-              <MenuItem key="svc" value="svc">
-                SVC Classifier
-              </MenuItem>
-              <MenuItem key="dt" value="dt">
-                Decision Tree
-              </MenuItem>
-              <MenuItem key="nn" value="nn">
-                MLP Classifier
-              </MenuItem>
-              <MenuItem key="hv" value="hv">
-                Hard Voting
-              </MenuItem>
-              <MenuItem key="sv" value="sv">
-                Soft Voting
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Stack>
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
+          <Stack direction="row" sx={{ gap: 1 }}>
+            <Typography component="h4" variant="h4" sx={{ mb: 2 }}>
+              Select Model:
+            </Typography>
+            <FormControl sx={{ m: 0, minWidth: 150 }}>
+              <Select
+                labelId="select-model"
+                id="select-model"
+                value={model}
+                label="Model"
+                onChange={handleChange}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 250, // Adjust this value as needed
+                    },
+                  },
+                }}
+              >
+                <MenuItem key="lg" value="lg">
+                  Logistic Regression
+                </MenuItem>
+                <MenuItem key="rf" value="rf">
+                  Random Forest
+                </MenuItem>
+                <MenuItem key="svc" value="svc">
+                  SVC
+                </MenuItem>
+                <MenuItem key="dt" value="dt">
+                  Decision Tree
+                </MenuItem>
+                <MenuItem key="nn" value="nn">
+                  MLP Classifier
+                </MenuItem>
+                <MenuItem key="hv" value="hv">
+                  Hard Voting
+                </MenuItem>
+                <MenuItem key="sv" value="sv">
+                  Soft Voting
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Box
+            sx={{
+              display: "grow-flex",
+              gap: 5,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6">
+                  {getModelData(model).trainingAccuracy}
+                </Typography>
+                <Typography variant="subtitle2">Training Accuracy</Typography>
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6">
+                  {getModelData(model).testingAccuracy}
+                </Typography>
+                <Typography variant="subtitle2">Testing Accuracy</Typography>
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6">
+                  {getModelData(model).unseenDataAccuracy}
+                </Typography>
+                <Typography variant="subtitle2">
+                  Unseen Data Accuracy
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
                 Confusion Matrix
@@ -103,7 +192,7 @@ function Analytics() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
+          <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
                 Roc Curve
@@ -118,7 +207,7 @@ function Analytics() {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Card>
+          <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
                 Classification Report
@@ -132,33 +221,18 @@ function Analytics() {
           </Card>
         </Grid>
 
-        {/* <Grid size={{ xs: 12, md: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">95.02%</Typography>
-                <Typography variant="subtitle2">Training Accuracy</Typography>
-                <Typography variant="body2">abcd...</Typography>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">95.02%</Typography>
-                <Typography variant="subtitle2">Testing Accuracy</Typography>
-                <Typography variant="body2">abcd...</Typography>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">90%</Typography>
-                <Typography variant="subtitle2">Unseen Data Accuracy</Typography>
-                <Typography variant="body2">abcd....</Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Grid> */}
-
         <Grid size={{ xs: 12 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" component="h3">
+                Feature Importance
+              </Typography>
+              <FeatureImportanceChart model={model} />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* <Grid size={{ xs: 12 }}>
           <Typography variant="h6" component="h3">
             Performance Analysis
           </Typography>
@@ -206,7 +280,7 @@ function Analytics() {
               </TableBody>
             </Table>
           </TableContainer>
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );
