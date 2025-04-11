@@ -1,7 +1,6 @@
 """Script for tuning decision tree hyperparameters."""
 
 import pandas as pd
-import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -9,9 +8,8 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_curve, 
 
 import logging
 from pathlib import Path
-from imblearn.over_sampling import SMOTE, RandomOverSampler
-from imblearn.under_sampling import RandomUnderSampler
 import warnings
+from utils.sampling import apply_sampling
 from utils.pipeline import create_preprocessing_pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -41,53 +39,6 @@ class HyperparameterTuning:
         for dir_path in dirs:
             Path(f'{dir_path}').mkdir(parents=True, exist_ok=True)
     
-    def apply_sampling(self, X, y, sampling_strategy=None):
-        """Apply sampling strategy to data
-        
-        Args:
-            X: Feature matrix
-            y: Target vector
-            sampling_strategy: Type of sampling to apply (None, 'oversampling', 'undersampling', 'SMOTE')
-            
-        Returns:
-            tuple: (X_resampled, y_resampled) after applying the sampling strategy
-        """
-        # For no sampling, just return original data
-        if sampling_strategy is None:
-            return X, y
-        
-        # Apply sampling strategy
-        if sampling_strategy == 'oversampling':
-            # Random oversampling
-            sampler = RandomOverSampler(random_state=RANDOM_STATE)
-            X_resampled, y_resampled = sampler.fit_resample(X, y)
-            
-        elif sampling_strategy == 'undersampling':
-            # Random undersampling
-            sampler = RandomUnderSampler(
-                random_state=RANDOM_STATE
-            )
-            X_resampled, y_resampled = sampler.fit_resample(X, y)
-            
-        elif sampling_strategy == 'SMOTE':
-            # Check if the dataset is large enough for SMOTE
-            # Count samples in minority class
-            class_counts = dict(zip(*np.unique(y, return_counts=True)))
-            min_class_count = min(class_counts.values())
-            
-            if min_class_count >= 6:  # SMOTE needs at least 6 samples in minority class by default
-                # SMOTE
-                smote = SMOTE(random_state=RANDOM_STATE)
-                X_resampled, y_resampled = smote.fit_resample(X, y)
-            else:
-                # Fall back to random oversampling for small datasets
-                logging.info("Not enough samples for SMOTE. Falling back to random oversampling.")
-
-                sampler = RandomOverSampler(random_state=RANDOM_STATE)
-                X_resampled, y_resampled = sampler.fit_resample(X, y)
-        
-        return X_resampled, y_resampled
-    
     def prepare_data(self, sampling_strategy=None):
         """Prepare data with optional sampling strategy"""
         # Split data
@@ -97,29 +48,10 @@ class HyperparameterTuning:
             random_state=RANDOM_STATE,
             stratify=self.y
         )
-        
-        # Print original class distribution
-        if sampling_strategy is None:
-            logging.info("\nOriginal Class Distribution:")
-            logging.info(f"Fatal: {sum(y_train == 1)}")
-            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
-            logging.info(f"Total samples: {len(y_train)}")
-            
-            # Also log unseen data distribution
-            if self.unseen_y is not None:
-                logging.info("\nUnseen Data Original Class Distribution:")
-                logging.info(f"Fatal: {sum(self.unseen_y == 1)}")
-                logging.info(f"Non-Fatal: {sum(self.unseen_y == 0)}")
-                logging.info(f"Total samples: {len(self.unseen_y)}")
-        
+                
         # Apply sampling strategy to training data
         if sampling_strategy:
-            X_train, y_train = self.apply_sampling(X_train, y_train, sampling_strategy)
-            
-            logging.info(f"\n{sampling_strategy.capitalize()} Class Distribution:")
-            logging.info(f"Fatal: {sum(y_train == 1)}")
-            logging.info(f"Non-Fatal: {sum(y_train == 0)}")
-            logging.info(f"Total samples: {len(y_train)}")
+            X_train, y_train = apply_sampling(X_train, y_train, sampling_strategy)
         
         return X_train, X_test, y_train, y_test
     
@@ -305,7 +237,7 @@ class HyperparameterTuning:
     
     def run_comparison(self):
         """Run comparison with different configurations"""
-        sampling_strategies = [None, 'oversampling', 'undersampling', 'SMOTE']
+        sampling_strategies = [None, 'smote', 'random_over', 'random_under', 'smote_tomek', 'smote_enn']
         
         for sampling in sampling_strategies:
             logging.info(f"\nTesting with {sampling if sampling else 'no'} sampling")
@@ -314,7 +246,10 @@ class HyperparameterTuning:
             X_train, X_test, y_train, y_test = self.prepare_data(sampling)
             
             # Basic Decision Tree
-            dt_basic = DecisionTreeClassifier(min_samples_split=2, random_state=RANDOM_STATE)
+            dt_basic = DecisionTreeClassifier(
+                class_weight='balanced', 
+                min_samples_split=2, 
+                random_state=RANDOM_STATE)
             self.evaluate_model(
                 dt_basic, X_train, X_test, y_train, y_test,
                 (f"basic {sampling if sampling else ''}").rstrip()
@@ -322,6 +257,7 @@ class HyperparameterTuning:
             
             # Decision Tree with Gini
             dt_gini = DecisionTreeClassifier(
+                class_weight='balanced',
                 criterion='gini',
                 min_samples_split=2,
                 random_state=RANDOM_STATE
@@ -333,6 +269,7 @@ class HyperparameterTuning:
             
             # Decision Tree with Entropy
             dt_entropy = DecisionTreeClassifier(
+                class_weight='balanced',
                 criterion='entropy',
                 min_samples_split=2,
                 random_state=RANDOM_STATE
@@ -340,17 +277,6 @@ class HyperparameterTuning:
             self.evaluate_model(
                 dt_entropy, X_train, X_test, y_train, y_test,
                 (f"entropy {sampling if sampling else ''}").rstrip()
-            )
-            
-            # Decision Tree with Class Weights
-            dt_weighted = DecisionTreeClassifier(
-                class_weight='balanced',
-                min_samples_split=2,
-                random_state=RANDOM_STATE
-            )
-            self.evaluate_model(
-                dt_weighted, X_train, X_test, y_train, y_test,
-                (f"weighted {sampling if sampling else ''}").rstrip()
             )
     
     def save_results(self):
@@ -409,29 +335,6 @@ class HyperparameterTuning:
             # Save markdown table
             with open(f'insights/unseen_testing/unseen_results.md', 'w') as f:
                 f.write(markdown_table)
-            
-            # Also create a grouped comparison by sampling strategy
-            markdown_table = f"# Unseen Data Performance Comparison by Sampling Strategy\n\n"
-            
-            for sampling in [None, 'oversampling', 'undersampling', 'SMOTE']:
-                sampling_str = 'None' if sampling is None else sampling
-                markdown_table += f"\n## {sampling_str.capitalize()} Strategy\n\n"
-                markdown_table += "| Model | Accuracy | Precision | Recall | F1-Score |\n"
-                markdown_table += "|-------|----------|-----------|--------|----------|\n"
-                
-                filtered_results = [r for r in self.unseen_results if r['Sampling'] == sampling_str]
-                for result in filtered_results:
-                    markdown_table += f"| {result['Model']} | "
-                    markdown_table += f"{result['Accuracy']:.2f} | "
-                    markdown_table += f"{result['Precision']:.4f} | "
-                    markdown_table += f"{result['Recall']:.4f} | "
-                    markdown_table += f"{result['F1-Score']:.4f} |\n"
-            
-            # Save grouped comparison
-            with open(f'insights/unseen_testing/unseen_results_by_sampling.md', 'w') as f:
-                f.write(markdown_table)
-            
-            logging.info(f"Unseen data markdown results saved to insights/unseen_testing/")
     
     def plot_unseen_comparison(self):
         """Create visual comparison of all models on unseen data"""
@@ -485,7 +388,7 @@ def main():
     
     # Prepare features and target
     X = pipeline.fit_transform(df)
-    y = (df['ACCLASS'] == 'Fatal').astype(int)
+    y = (df['ACCLASS'] == 'FATAL').astype(int)
     
     # Separate last 10 rows as unseen data
     unseen_X = X[-10:]

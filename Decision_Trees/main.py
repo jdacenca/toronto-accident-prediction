@@ -12,6 +12,7 @@ from utils.config import DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR, MODEL_PARAMS
 from utils.visualization import plot_feature_importance, plot_importance_comparison
 from utils.evaluation import evaluate_model, calculate_feature_importance, save_model_artifacts
 from utils.pipeline import create_preprocessing_pipeline
+from utils.sampling import apply_sampling  # Import the sampling utility function
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -39,7 +40,7 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, np.ndarray, Any]:
     # First preprocess the data
     X = pipeline.fit_transform(df)
     # Create target variable
-    y = (df['ACCLASS'] == 'Fatal').astype(int)
+    y = (df['ACCLASS'] == 'FATAL').astype(int)
 
     logging.info(f"Final dataset shape: {X.shape}")
     logging.info(f"Number of Fatal accidents: {y.sum()}")
@@ -76,8 +77,11 @@ def train_model(X: pd.DataFrame, y: np.ndarray) -> DecisionTreeClassifier:
         stratify=y
     )
     
-    # Create base model
-    dt = DecisionTreeClassifier(random_state=RANDOM_STATE)
+    # Apply sampling technique
+    X_train_resampled, y_train_resampled = apply_sampling(X_train, y_train, method='smote_tomek')
+    
+    # Create base model - still using class_weight for additional balance
+    dt = DecisionTreeClassifier(random_state=RANDOM_STATE, class_weight='balanced')
     
     # Create grid search
     grid_search = GridSearchCV(
@@ -90,9 +94,9 @@ def train_model(X: pd.DataFrame, y: np.ndarray) -> DecisionTreeClassifier:
         verbose=1
     )
     
-    # Fit on training data
-    logging.info("Performing grid search...")
-    grid_search.fit(X_train, y_train)
+    # Fit on resampled training data
+    logging.info("Performing grid search with resampled data...")
+    grid_search.fit(X_train_resampled, y_train_resampled)
     
     # Log detailed results
     logging.info("\nBest parameters found:")
@@ -107,7 +111,7 @@ def train_model(X: pd.DataFrame, y: np.ndarray) -> DecisionTreeClassifier:
     # Get best model
     best_model = grid_search.best_estimator_
     
-    # Evaluate model
+    # Evaluate model on original test set (not resampled)
     feature_names = X.columns.tolist()
     evaluate_model(best_model, X_test, y_test, feature_names)
     

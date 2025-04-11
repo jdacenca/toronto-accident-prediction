@@ -2,19 +2,21 @@
 
 | Model | Sampling | Accuracy | Precision | Recall | F1-Score |
 |-------|----------|----------|-----------|--------|----------|
-| basic | None | 80.00 | 0.0000 | 0.0000 | 0.0000 |
-| gini | None | 80.00 | 0.0000 | 0.0000 | 0.0000 |
-| entropy | None | 80.00 | 0.0000 | 0.0000 | 0.0000 |
-| weighted | None | 100.00 | 1.0000 | 1.0000 | 1.0000 |
-| basic oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
-| gini oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
-| entropy oversampling | oversampling | 75.00 | 1.0000 | 0.5000 | 0.6667 |
-| weighted oversampling | oversampling | 100.00 | 1.0000 | 1.0000 | 1.0000 |
-| basic undersampling | undersampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| gini undersampling | undersampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| entropy undersampling | undersampling | 0.00 | 0.0000 | 0.0000 | 0.0000 |
-| weighted undersampling | undersampling | 25.00 | 0.0000 | 0.0000 | 0.0000 |
-| basic SMOTE | SMOTE | 43.75 | 0.0000 | 0.0000 | 0.0000 |
-| gini SMOTE | SMOTE | 43.75 | 0.0000 | 0.0000 | 0.0000 |
-| entropy SMOTE | SMOTE | 43.75 | 0.0000 | 0.0000 | 0.0000 |
-| weighted SMOTE | SMOTE | 43.75 | 0.0000 | 0.0000 | 0.0000 |
+| basic | None | 80.00 | 0.5000 | 0.5000 | 0.5000 |
+| gini | None | 80.00 | 0.5000 | 0.5000 | 0.5000 |
+| entropy | None | 60.00 | 0.0000 | 0.0000 | 0.0000 |
+| basic smote | smote | 90.00 | 0.6667 | 1.0000 | 0.8000 |
+| gini smote | smote | 90.00 | 0.6667 | 1.0000 | 0.8000 |
+| entropy smote | smote | 70.00 | 0.0000 | 0.0000 | 0.0000 |
+| basic random_over | random_over | 70.00 | 0.0000 | 0.0000 | 0.0000 |
+| gini random_over | random_over | 70.00 | 0.0000 | 0.0000 | 0.0000 |
+| entropy random_over | random_over | 80.00 | 0.5000 | 1.0000 | 0.6667 |
+| basic random_under | random_under | 80.00 | 0.5000 | 0.5000 | 0.5000 |
+| gini random_under | random_under | 80.00 | 0.5000 | 0.5000 | 0.5000 |
+| entropy random_under | random_under | 80.00 | 0.5000 | 0.5000 | 0.5000 |
+| basic smote_tomek | smote_tomek | 60.00 | 0.0000 | 0.0000 | 0.0000 |
+| gini smote_tomek | smote_tomek | 60.00 | 0.0000 | 0.0000 | 0.0000 |
+| entropy smote_tomek | smote_tomek | 70.00 | 0.0000 | 0.0000 | 0.0000 |
+| basic smote_enn | smote_enn | 80.00 | 0.0000 | 0.0000 | 0.0000 |
+| gini smote_enn | smote_enn | 80.00 | 0.0000 | 0.0000 | 0.0000 |
+| entropy smote_enn | smote_enn | 60.00 | 0.0000 | 0.0000 | 0.0000 |
