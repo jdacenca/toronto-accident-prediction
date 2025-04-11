@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { setModel } from "../redux/slice";
 import FeatureImportanceChart from "./FeatureImportanceChart.tsx";
+import FeatureImportanceVerticalChart from "./FeatureImportanceVerticalChart.tsx";
 
 function Analytics() {
   const model = useSelector((state: RootState) => state.tapApp.model);
@@ -82,7 +83,12 @@ function Analytics() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, padding: 3 }}>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: { sm: "100%", md: "1700px", lg: "1400px" },
+      }}
+    >
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, lg: 12 }}>
           <Typography variant="h4" component="h2">
@@ -90,53 +96,7 @@ function Analytics() {
           </Typography>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Stack direction="row" sx={{ gap: 1 }}>
-            <Typography component="h4" variant="h4" sx={{ mb: 2 }}>
-              Select Model:
-            </Typography>
-            <FormControl sx={{ m: 0, minWidth: 150 }}>
-              <Select
-                labelId="select-model"
-                id="select-model"
-                value={model}
-                label="Model"
-                onChange={handleChange}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 250, // Adjust this value as needed
-                    },
-                  },
-                }}
-              >
-                <MenuItem key="lg" value="lg">
-                  Logistic Regression
-                </MenuItem>
-                <MenuItem key="rf" value="rf">
-                  Random Forest
-                </MenuItem>
-                <MenuItem key="svc" value="svc">
-                  SVC
-                </MenuItem>
-                <MenuItem key="dt" value="dt">
-                  Decision Tree
-                </MenuItem>
-                <MenuItem key="nn" value="nn">
-                  MLP Classifier
-                </MenuItem>
-                <MenuItem key="hv" value="hv">
-                  Hard Voting
-                </MenuItem>
-                <MenuItem key="sv" value="sv">
-                  Soft Voting
-                </MenuItem>
-              </Select>
-            </FormControl>
-          </Stack>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, md: 3.5 }}>
           <Box
             sx={{
               display: "grow-flex",
@@ -145,38 +105,89 @@ function Analytics() {
               alignItems: "center",
             }}
           >
+            <Stack direction="row" sx={{ gap: 1 }}>
+              <Typography component="h6" variant="h6" sx={{ mb: 2 }}>
+                Select Model:
+              </Typography>
+              <FormControl variant="outlined" sx={{ m: 0, minWidth: 165 }}>
+                <Select
+                  labelId="select-model"
+                  id="select-model"
+                  value={model}
+                  label="Model"
+                  variant="outlined"
+                  onChange={handleChange}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Adjust this value as needed
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem key="lg" value="lg">
+                    Logistic Regression
+                  </MenuItem>
+                  <MenuItem key="rf" value="rf">
+                    Random Forest
+                  </MenuItem>
+                  <MenuItem key="svc" value="svc">
+                    SVC
+                  </MenuItem>
+                  <MenuItem key="dt" value="dt">
+                    Decision Tree
+                  </MenuItem>
+                  <MenuItem key="nn" value="nn">
+                    MLP Classifier
+                  </MenuItem>
+                  <MenuItem key="hv" value="hv">
+                    Hard Voting
+                  </MenuItem>
+                  <MenuItem key="sv" value="sv">
+                    Soft Voting
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </Stack>
+          </Box>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 8.5 }}>
+          <Box
+            sx={{
+              display: "grow-flex",
+              gap: 2,
+              width: "100%",
+              alignItems: "center",
+            }}
+          >
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h6">
-                  {getModelData(model).trainingAccuracy}
+                  Training Accuracy: {getModelData(model).trainingAccuracy}
                 </Typography>
-                <Typography variant="subtitle2">Training Accuracy</Typography>
               </CardContent>
             </Card>
 
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h6">
-                  {getModelData(model).testingAccuracy}
+                  Testing Accuracy: {getModelData(model).testingAccuracy}
                 </Typography>
-                <Typography variant="subtitle2">Testing Accuracy</Typography>
               </CardContent>
             </Card>
 
             <Card variant="outlined">
               <CardContent>
                 <Typography variant="h6">
-                  {getModelData(model).unseenDataAccuracy}
-                </Typography>
-                <Typography variant="subtitle2">
-                  Unseen Data Accuracy
+                  Unseen Acc: {getModelData(model).unseenDataAccuracy}
                 </Typography>
               </CardContent>
             </Card>
           </Box>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 4}}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
@@ -221,15 +232,9 @@ function Analytics() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" component="h3">
-                Feature Importance
-              </Typography>
-              <FeatureImportanceChart model={model} />
-            </CardContent>
-          </Card>
+        <Grid size={{ xs: 12}}>
+              <FeatureImportanceVerticalChart model={model} />
+
         </Grid>
 
         {/* <Grid size={{ xs: 12 }}>

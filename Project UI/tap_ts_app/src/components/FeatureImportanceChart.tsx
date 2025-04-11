@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Slider from '@mui/material/Slider';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { axisClasses } from '@mui/x-charts/ChartsAxis';
+
 import Papa from 'papaparse';
 
 type FeatureData = {
@@ -22,7 +23,7 @@ const chartSetting = {
       label: 'Importance',
     },
   ],
-  width: 1200,
+  width: 1000,
   height: 400,
   sx: {
     [`.${axisClasses.left} .${axisClasses.label}`]: {

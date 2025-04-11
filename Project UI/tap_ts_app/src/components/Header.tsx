@@ -4,19 +4,21 @@ import NavbarBreadcrumbs from './NavbarBreadcrumbs';
 
 export default function Header() {
   return (
+    <>
+    {/*add margin5 px*/}
     <Stack
       direction="row"
-      sx={{
-        display: { xs: 'none', md: 'flex' },
-        width: '100%',
-        alignItems: { xs: 'flex-start', md: 'center' },
-        justifyContent: 'space-between',
-        maxWidth: { sm: '100%', md: '1700px', lg: '2400px' },
-        pt: 1.5,
-      }}
       spacing={2}
+      sx={{
+        width: '100%',
+        maxWidth: { sm: '100%', md: '1700px', lg: '1400px' },
+        mx: 5,
+        mb: 2,
+      }}
     >
-      <NavbarBreadcrumbs />
-    </Stack>
+      </Stack>
+ 
+
+    </>
   );
 }
