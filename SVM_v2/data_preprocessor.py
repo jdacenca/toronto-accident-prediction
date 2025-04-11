@@ -141,8 +141,6 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     # Convert LATITUDE and LONGITUDE to float
     df2[['LATITUDE', 'LONGITUDE']] = df2[['LATITUDE', 'LONGITUDE']].astype(float)
 
-
-    df2.drop(columns=['AVG_AGE'], inplace=True)
     df2.drop(columns=['TIME','DATE','DAY','ACCNUM'], inplace=True)
 
     # Handle class imbalance
