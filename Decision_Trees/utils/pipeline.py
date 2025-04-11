@@ -11,6 +11,6 @@ def create_preprocessing_pipeline() -> Pipeline:
         Pipeline: A scikit-learn pipeline that combines data cleaning and feature engineering.
     """
     return Pipeline([
-        ('cleaner', DataCleaner()),
         ('engineer', FeatureEngineer()),
+        ('cleaner', DataCleaner()),
     ])

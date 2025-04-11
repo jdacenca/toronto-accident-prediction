@@ -5,9 +5,9 @@ Sampling Strategy: None
 
               precision    recall  f1-score   support
 
-           0       0.75      0.75      0.75         8
-           1       0.00      0.00      0.00         2
+           0       0.83      1.00      0.91         5
+           1       1.00      0.80      0.89         5
 
-    accuracy                           0.60        10
-   macro avg       0.38      0.38      0.38        10
-weighted avg       0.60      0.60      0.60        10
+    accuracy                           0.90        10
+   macro avg       0.92      0.90      0.90        10
+weighted avg       0.92      0.90      0.90        10

@@ -9,12 +9,12 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_curve, 
 import logging
 from pathlib import Path
 import warnings
-from utils.sampling import apply_sampling
+from utils.sampling import apply_sampling, separate_unseen_data
 from utils.pipeline import create_preprocessing_pipeline
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.hyperparameter_tuning import HyperparameterTuning
-from utils.config import DATA_DIR, RANDOM_STATE
+from utils.config import DATA_DIR, RANDOM_STATE, TARGET
 
 warnings.filterwarnings('ignore')
 plt.style.use('default')
@@ -23,12 +23,12 @@ plt.style.use('default')
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class HyperparameterTuning:
-    def __init__(self, X, y, unseen_X=None, unseen_y=None):
+    def __init__(self, X_train, y_train, X_unseen, y_unseen):
         """Initialize with data"""
-        self.X = X
-        self.y = y
-        self.unseen_X = unseen_X
-        self.unseen_y = unseen_y
+        self.X_train = X_train
+        self.y_train = y_train
+        self.X_unseen = X_unseen
+        self.y_unseen = y_unseen
         self.results = []
         self.unseen_results = []
         self.setup_directories()
@@ -43,10 +43,10 @@ class HyperparameterTuning:
         """Prepare data with optional sampling strategy"""
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(
-            self.X, self.y, 
+            self.X_train, self.y_train, 
             test_size=0.2, 
             random_state=RANDOM_STATE,
-            stratify=self.y
+            stratify=self.y_train
         )
                 
         # Apply sampling strategy to training data
@@ -165,7 +165,7 @@ class HyperparameterTuning:
             f.write(str(model.get_params()))
         
         # If unseen data is available, evaluate on it too
-        if self.unseen_X is not None and self.unseen_y is not None:
+        if self.X_unseen is not None and self.y_unseen is not None:
             # Extract sampling strategy (if any) from model name
             parts = model_name.split(' ')
             sampling = None if len(parts) == 1 else parts[-1]
@@ -181,25 +181,25 @@ class HyperparameterTuning:
         
         # Apply same sampling strategy to unseen data if specified
         if sampling_strategy in ['oversampling', 'undersampling', 'SMOTE']:
-            unseen_X, unseen_y = self.apply_sampling(self.unseen_X, self.unseen_y, sampling_strategy)
+            X_unseen, y_unseen = self.apply_sampling(self.X_unseen, self.y_unseen, sampling_strategy)
             logging.info(f"Applied {sampling_strategy} to unseen data")
-            logging.info(f"Unseen data after {sampling_strategy}: {len(unseen_y)} samples")
-            logging.info(f"Fatal: {sum(unseen_y == 1)}, Non-Fatal: {sum(unseen_y == 0)}")
+            logging.info(f"Unseen data after {sampling_strategy}: {len(y_unseen)} samples")
+            logging.info(f"Fatal: {sum(y_unseen == 1)}, Non-Fatal: {sum(y_unseen == 0)}")
         else:
-            unseen_X, unseen_y = self.unseen_X, self.unseen_y
+            X_unseen, y_unseen = self.X_unseen, self.y_unseen
         
         # Get predictions and probabilities on unseen data
-        y_unseen_pred = model.predict(unseen_X)
-        y_unseen_prob = model.predict_proba(unseen_X)[:, 1]
+        y_unseen_pred = model.predict(X_unseen)
+        y_unseen_prob = model.predict_proba(X_unseen)[:, 1]
         
         # Calculate metrics
         unseen_results = {
             'Model': model_name,
             'Sampling': sampling_strategy if sampling_strategy else 'None',
-            'Accuracy': accuracy_score(unseen_y, y_unseen_pred) * 100,
-            'Precision': precision_score(unseen_y, y_unseen_pred, zero_division=0),
-            'Recall': recall_score(unseen_y, y_unseen_pred, zero_division=0),
-            'F1-Score': f1_score(unseen_y, y_unseen_pred, zero_division=0)
+            'Accuracy': accuracy_score(y_unseen, y_unseen_pred) * 100,
+            'Precision': precision_score(y_unseen, y_unseen_pred, zero_division=0),
+            'Recall': recall_score(y_unseen, y_unseen_pred, zero_division=0),
+            'F1-Score': f1_score(y_unseen, y_unseen_pred, zero_division=0)
         }
         
         # Store results
@@ -217,7 +217,7 @@ class HyperparameterTuning:
         viz_dir.mkdir(parents=True, exist_ok=True)
         
         # Create and save classification report for unseen data
-        report = classification_report(unseen_y, y_unseen_pred)
+        report = classification_report(y_unseen, y_unseen_pred)
         with open(f'{viz_dir}/unseen_classification_report.txt', 'w') as f:
             f.write(f"Unseen Data Classification Report for {model_name}\n")
             f.write("="*50 + "\n\n")
@@ -226,7 +226,7 @@ class HyperparameterTuning:
             
         # Plot and save confusion matrix for unseen data
         plt.figure(figsize=(8, 6))
-        cm = confusion_matrix(unseen_y, y_unseen_pred)
+        cm = confusion_matrix(y_unseen, y_unseen_pred)
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
         plt.title(f'Unseen Data Confusion Matrix - {model_name}')
         plt.ylabel('True Label')
@@ -386,18 +386,16 @@ def main():
     # Create preprocessing pipeline
     pipeline = create_preprocessing_pipeline()
     
-    # Prepare features and target
-    X = pipeline.fit_transform(df)
-    y = (df['ACCLASS'] == 'FATAL').astype(int)
-    
-    # Separate last 10 rows as unseen data
-    unseen_X = X[-10:]
-    unseen_y = y[-10:]
-    X = X[:-10]
-    y = y[:-10]
+    # First preprocess the data
+    processed_df = pipeline.fit_transform(df)
+    # Seperate features and target variable
+    X = processed_df.drop(columns=[TARGET])
+    y = processed_df[TARGET] 
+
+    X_train, y_train, X_unseen, y_unseen = separate_unseen_data(X, y)
     
     # Initialize hyperparameter tuning
-    tuner = HyperparameterTuning(X, y, unseen_X, unseen_y)
+    tuner = HyperparameterTuning(X_train, y_train, X_unseen, y_unseen)
     
     # Run comparison
     tuner.run_comparison()
