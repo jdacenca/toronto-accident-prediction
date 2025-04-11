@@ -1,17 +1,19 @@
 Model,Sampling,Accuracy,Precision,Recall,F1-Score
-basic,None,80.0,0.0,0.0,0.0
-gini,None,80.0,0.0,0.0,0.0
-entropy,None,80.0,0.0,0.0,0.0
-weighted,None,100.0,1.0,1.0,1.0
-basic oversampling,oversampling,100.0,1.0,1.0,1.0
-gini oversampling,oversampling,100.0,1.0,1.0,1.0
-entropy oversampling,oversampling,75.0,1.0,0.5,0.6666666666666666
-weighted oversampling,oversampling,100.0,1.0,1.0,1.0
-basic undersampling,undersampling,25.0,0.0,0.0,0.0
-gini undersampling,undersampling,25.0,0.0,0.0,0.0
-entropy undersampling,undersampling,0.0,0.0,0.0,0.0
-weighted undersampling,undersampling,25.0,0.0,0.0,0.0
-basic SMOTE,SMOTE,43.75,0.0,0.0,0.0
-gini SMOTE,SMOTE,43.75,0.0,0.0,0.0
-entropy SMOTE,SMOTE,43.75,0.0,0.0,0.0
-weighted SMOTE,SMOTE,43.75,0.0,0.0,0.0
+basic,None,80.0,0.5,0.5,0.5
+gini,None,80.0,0.5,0.5,0.5
+entropy,None,60.0,0.0,0.0,0.0
+basic smote,smote,90.0,0.6666666666666666,1.0,0.8
+gini smote,smote,90.0,0.6666666666666666,1.0,0.8
+entropy smote,smote,70.0,0.0,0.0,0.0
+basic random_over,random_over,70.0,0.0,0.0,0.0
+gini random_over,random_over,70.0,0.0,0.0,0.0
+entropy random_over,random_over,80.0,0.5,1.0,0.6666666666666666
+basic random_under,random_under,80.0,0.5,0.5,0.5
+gini random_under,random_under,80.0,0.5,0.5,0.5
+entropy random_under,random_under,80.0,0.5,0.5,0.5
+basic smote_tomek,smote_tomek,60.0,0.0,0.0,0.0
+gini smote_tomek,smote_tomek,60.0,0.0,0.0,0.0
+entropy smote_tomek,smote_tomek,70.0,0.0,0.0,0.0
+basic smote_enn,smote_enn,80.0,0.0,0.0,0.0
+gini smote_enn,smote_enn,80.0,0.0,0.0,0.0
+entropy smote_enn,smote_enn,60.0,0.0,0.0,0.0

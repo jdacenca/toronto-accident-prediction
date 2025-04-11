@@ -71,10 +71,10 @@ class DataExplorer:
         df['DATE'] = pd.to_datetime(df['DATE'])
         
         # Add Hour column for time analysis
-        df['Hour'] = df['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
+        df['HOUR'] = df['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
         
         # Add Season column
-        df['Season'] = df['DATE'].dt.month.map(
+        df['SEASON'] = df['DATE'].dt.month.map(
             lambda m: 'Winter' if m in [12,1,2]
             else 'Spring' if m in [3,4,5]
             else 'Summer' if m in [6,7,8]
@@ -82,7 +82,7 @@ class DataExplorer:
         )
         
         # Add TimePeriod column
-        df['TimePeriod'] = pd.cut(
+        df['TIMEPERIOD'] = pd.cut(
             df['Hour'], 
             bins=[-1, 5, 11, 16, 20, 23],
             labels=['Night (0-5)', 'Morning (6-11)', 
@@ -126,7 +126,7 @@ class DataExplorer:
         df_encoded = df_encoded[df_encoded['ACCLASS'] != 'Property Damage O']
         
         # Drop derived columns
-        df_encoded = df_encoded.drop(columns=['TimePeriod', 'Season', 'Hour'])
+        df_encoded = df_encoded.drop(columns=['TIMEPERIOD', 'SEASON', 'HOUR'])
         
         # Add target column
         df_encoded['ACCLASS'] = (df_encoded['ACCLASS'] == 'Fatal').astype(float)
@@ -223,7 +223,7 @@ class DataExplorer:
         
         # Hourly Distribution of Severity
         plt.figure(figsize=(12, 6))
-        hourly_severity = pd.crosstab(self.df['Hour'], self.df['INJURY'])
+        hourly_severity = pd.crosstab(self.df['HOUR'], self.df['INJURY'])
         hourly_severity.plot(kind='bar', stacked=True)
         plt.title('Injury Severity by Hour of Day')
         plt.xlabel('Hour')
@@ -236,7 +236,7 @@ class DataExplorer:
         
         # Time Period Analysis by Season
         plt.figure(figsize=(12, 6))
-        season_time = pd.crosstab([self.df['Season'], self.df['TimePeriod']], self.df['INJURY'])
+        season_time = pd.crosstab([self.df['SEASON'], self.df['TIMEPERIOD']], self.df['INJURY'])
         season_time.plot(kind='bar', stacked=True)
         plt.title('Injury Severity by Season and Time Period')
         plt.xlabel('Season - Time Period')
@@ -249,7 +249,7 @@ class DataExplorer:
         
         # Fatal Accidents Heatmap
         plt.figure(figsize=(12, 6))
-        fatal_matrix = pd.crosstab(self.df['Hour'], self.df['Season'], 
+        fatal_matrix = pd.crosstab(self.df['HOUR'], self.df['SEASON'], 
                                  values=self.df['FATAL_NO'].notna(), 
                                  aggfunc='sum')
         sns.heatmap(fatal_matrix, cmap='YlOrRd', annot=True, fmt='.0f')
@@ -266,7 +266,7 @@ class DataExplorer:
         
         # Injury Distribution by Season
         plt.figure(figsize=(12, 6))
-        seasonal_injury = pd.crosstab(self.df['Season'], self.df['INJURY'])
+        seasonal_injury = pd.crosstab(self.df['SEASON'], self.df['INJURY'])
         seasonal_injury.plot(kind='bar', stacked=True)
         plt.title('Injury Severity by Season')
         plt.xlabel('Season')

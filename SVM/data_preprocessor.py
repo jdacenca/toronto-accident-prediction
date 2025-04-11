@@ -45,7 +45,18 @@ def data_overview(df):
     for column in df.columns:
         print(f"\nUnique values in {column}:", df[column].unique())
 
-
+# ===================== MONTH TO SEASON =====================
+# Map month numbers to seasons using the MONTH column
+def month_to_season(month):
+    if month in [12, 1, 2]:
+        return 0  # Winter
+    elif month in [3, 4, 5]:
+        return 1  # Spring
+    elif month in [6, 7, 8]:
+        return 2  # Summer
+    else:
+        return 3  # Fall
+    
 # ===================== DATA CLEANING =====================
 def data_cleaning(df, columns_to_drop, class_imb='original'):
     """Cleans the dataset by handling missing values, dropping unnecessary columns, and balancing classes."""
@@ -55,32 +66,51 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2.drop(columns=columns_to_drop, inplace=True)
 
     # Handle missing target values and specific rows
-    df2 = df2.dropna(subset=["ACCLASS"])
+    df2['ACCLASS'] = df2['ACCLASS'].fillna('Fatal')
+
     df2.drop(df2[df2['ACCLASS'] == 'Property Damage O'].index, inplace=True)
     df2.drop_duplicates(inplace=True)
 
-    # aggregate rows with same ACCNUM, DATE, TIME, LATITUDE, LONGITUDE
+    # # aggregate rows with same ACCNUM, DATE, TIME, LATITUDE, LONGITUDE
     df2 = df2.groupby(['ACCNUM'], as_index=False).apply(aggregate_rows).reset_index(drop=True)
     df2 = df2.groupby(['DATE', 'TIME', 'LATITUDE', 'LONGITUDE'], as_index=False).apply(aggregate_rows).reset_index(drop=True)
 
-
+    df2.drop(columns=['ACCNUM'], inplace=True)
     # Format date and time
     df2["DATE"] = pd.to_datetime(df2["DATE"]).dt.to_period("D").astype(str)
-    df2['TIME'] = pd.to_datetime(df2['TIME'], format='%H%M', errors='coerce').dt.hour
+
+    # Extract date components
+    df2['MONTH'] = pd.to_datetime(df2['DATE']).dt.month
+    df2['DAY'] = pd.to_datetime(df2['DATE']).dt.day
+    df2['WEEK'] = pd.to_datetime(df2['DATE']).dt.isocalendar().week
+    df2['DAYOFWEEK'] = pd.to_datetime(df2['DATE']).dt.dayofweek
+
+    # Extract season
+    df2['SEASON'] = df2['MONTH'].apply(month_to_season).astype(float)
+
+    # Extract hour from TIME
+    df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
+    df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
+
+    df2['HOUR'] = df2['HOUR'].astype(int)
+    df2['MINUTE'] = df2['MINUTE'].astype(int)
+
+    # Drop the original DATE, TIME column
+    df2.drop(columns=['DATE','TIME'], inplace=True)
 
     # Replace specific values
     df2['ROAD_CLASS'] = df2['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
 
     # Fill missing values
-    unknown_columns = ['PEDCOND', 'DRIVCOND', 'CYCLISTYPE', 'PEDACT', 'MANOEUVER', 
-                       'INJURY', 'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR']
-    other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND', 'DRIVACT', 'INVAGE']
+    unknown_columns = ['PEDCOND','CYCCOND','DISTRICT']
+    other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND','INVAGE','TRAFFCTL','INVTYPE', 'IMPACTYPE',]
     boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
-                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
+                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY','EMERG_VEH']
 
     df2[other_columns] = df2[other_columns].fillna("Other")
-    df2[unknown_columns] = df2[unknown_columns].fillna("Unknown")
+    df2[unknown_columns] = df2[unknown_columns].fillna("NA")
     df2[boolean_columns] = df2[boolean_columns].fillna("No")
+
 
     # Convert boolean columns to numeric
     df2[boolean_columns] = df2[boolean_columns].replace({'Yes': 1, 'No': 0}).astype(float)
@@ -93,6 +123,14 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2['max_age'] = pd.to_numeric(df2['max_age'], errors='coerce')
     df2['AVG_AGE'] = df2[['min_age', 'max_age']].mean(axis=1).astype(float)
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
+    df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
+
+    #df2["DIVISION"] = df2["DIVISION"].replace('NSA', '00').str[1:].astype(float)
+
+    # Convert LATITUDE and LONGITUDE to float
+    df2[['LATITUDE', 'LONGITUDE']] = df2[['LATITUDE', 'LONGITUDE']].astype(float)
+
+    df2.drop(columns=['AVG_AGE'], inplace=True)
 
     # Handle class imbalance
     if class_imb == 'oversampling':
@@ -140,7 +178,6 @@ def sample_and_update_data(cleaned_df):
     unseen_labels = label_encoder.transform(unseen_labels)
 
     return unseen_features, unseen_labels, cleaned_df, features, target
-
 
 # ===================== DATA PREPROCESSING =====================
 def data_preprocessing_svm(features, smote=False):
@@ -240,8 +277,8 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
     # Confusion Matrix and ROC Curve
     model_performance = ModelPerformance(best_model, X_test, y_test)
     model_performance.conf_matrix(f"./insights/svm_tuning/{model_name}/confusion_matrix.png")
-    model_performance.roc_cur(f"./insights/svm_tuning/roc_curve.png")
-    model_performance.classification_report_heatmap(f"./insights/svm_tuning/classification_report.png")
+    model_performance.roc_cur(f"./insights/svm_tuning/{model_name}/roc_curve.png")
+    model_performance.classification_report_heatmap(f"./insights/svm_tuning/{model_name}/classification_report.png")
 
     print("\n===================== CLASSIFICATION REPORT =====================")
     print(classification_report(y_test, y_pred, zero_division=1))
@@ -257,8 +294,10 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
 
     # Save the model
     os.makedirs("./model_pickles", exist_ok=True)
-    joblib.dump(best_model, f"./model_pickles/best_{model_name.lower()}_model.pkl")
+    joblib.dump(best_model, f"./model_pickles/best_{model_name.lower()}.pkl")
     print("\nModel saved successfully.")
+
+    return best_model
 
 # ===================== SAVE RESULTS TO MD =====================
 def save_results_to_md(file_path):

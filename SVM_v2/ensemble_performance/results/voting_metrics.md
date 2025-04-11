@@ -1,0 +1,26 @@
+| Classifier | Class Imbalance | Train Accuracy | Test Accuracy | Unseen Accuracy | Precision | Recall | F1 Score | ROC AUC |
+|------------|-----------------|----------------|---------------|-----------------|-----------|--------|----------|---------|
+| LogisticRegression |  oversampling | 0.9152 | 0.8958 | 0.8000 | 0.8958 | 0.8958 | 0.8958 | 0.8958 |
+| RandomForestClassifier |  oversampling | 1.0000 | 0.9444 | 0.9000 | 0.9447 | 0.9444 | 0.9444 | 0.9444 |
+| SVC |  oversampling | 0.9946 | 0.9468 | 0.9000 | 0.9472 | 0.9468 | 0.9467 | 0.9468 |
+| DecisionTreeClassifier |  oversampling | 1.0000 | 0.9074 | 0.7000 | 0.9087 | 0.9074 | 0.9073 | 0.9074 |
+| MLPClassifier |  oversampling | 0.9931 | 0.9277 | 0.8000 | 0.9293 | 0.9277 | 0.9276 | 0.9277 |
+| HardVotingClassifier |  oversampling | 0.9981 | 0.9439 | 0.8000 | 0.9443 | 0.9439 | 0.9439 | 0.9439 |
+| LogisticRegression |  oversampling | 0.9152 | 0.8958 | 0.8000 | 0.8958 | 0.8958 | 0.8958 | 0.8958 |
+| RandomForestClassifier |  oversampling | 1.0000 | 0.9444 | 0.9000 | 0.9447 | 0.9444 | 0.9444 | 0.9444 |
+| SVC |  oversampling | 0.9946 | 0.9468 | 0.9000 | 0.9472 | 0.9468 | 0.9467 | 0.9468 |
+| DecisionTreeClassifier |  oversampling | 1.0000 | 0.9120 | 0.7000 | 0.9137 | 0.9120 | 0.9120 | 0.9120 |
+| MLPClassifier |  oversampling | 0.9793 | 0.9115 | 0.9000 | 0.9135 | 0.9115 | 0.9113 | 0.9115 |
+| SoftVotingClassifier |  oversampling | 0.9968 | 0.9421 | 0.8000 | 0.9426 | 0.9421 | 0.9421 | 0.9421 |
+| LogisticRegression |  undersampling | 0.9131 | 0.8954 | 0.8000 | 0.8954 | 0.8954 | 0.8954 | 0.8954 |
+| RandomForestClassifier |  undersampling | 1.0000 | 0.9112 | 0.8000 | 0.9112 | 0.9112 | 0.9112 | 0.9112 |
+| SVC |  undersampling | 0.9921 | 0.9121 | 0.6000 | 0.9127 | 0.9121 | 0.9121 | 0.9122 |
+| DecisionTreeClassifier |  undersampling | 1.0000 | 0.8618 | 0.9000 | 0.8619 | 0.8618 | 0.8618 | 0.8618 |
+| MLPClassifier |  undersampling | 0.9798 | 0.8776 | 0.8000 | 0.8777 | 0.8776 | 0.8776 | 0.8776 |
+| HardVotingClassifier |  undersampling | 0.9946 | 0.9151 | 0.8000 | 0.9153 | 0.9151 | 0.9151 | 0.9151 |
+| LogisticRegression |  undersampling | 0.9131 | 0.8954 | 0.8000 | 0.8954 | 0.8954 | 0.8954 | 0.8954 |
+| RandomForestClassifier |  undersampling | 1.0000 | 0.9112 | 0.8000 | 0.9112 | 0.9112 | 0.9112 | 0.9112 |
+| SVC |  undersampling | 0.9921 | 0.9121 | 0.6000 | 0.9127 | 0.9121 | 0.9121 | 0.9122 |
+| DecisionTreeClassifier |  undersampling | 1.0000 | 0.8628 | 0.8000 | 0.8629 | 0.8628 | 0.8628 | 0.8628 |
+| MLPClassifier |  undersampling | 0.9906 | 0.8786 | 0.8000 | 0.8787 | 0.8786 | 0.8786 | 0.8786 |
+| SoftVotingClassifier |  undersampling | 0.9970 | 0.9220 | 0.9000 | 0.9220 | 0.9220 | 0.9220 | 0.9220 |

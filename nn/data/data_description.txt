@@ -1,0 +1,53 @@
+Field  Field Name           Description
+1      INDEX_               Unique Identifier
+2      ACCNUM               Accident Number
+3      DATE                 Date Collision Occurred (time is displayed in UTC format when downloaded as a CSV)
+4      TIME                 Time Collision Occurred
+5      STREET1              Street Collision Occurred
+6      STREET2              Street Collision Occurred
+7      OFFSET               Distance and direction of the Collision
+8      ROAD_CLASS           Road Classification
+9      DISTRICT             City District
+10     LATITUDE             Latitude
+11     LONGITUDE            Longitude
+12     ACCLOC               Collision Location
+13     TRAFFCTL             Traffic Control Type
+14     VISIBILITY           Environment Condition
+15     LIGHT                Light Condition
+16     RDSFCOND             Road Surface Condition
+17     ACCLASS              Classification of Accident
+18     IMPACTYPE            Initial Impact Type
+19     INVTYPE              Involvement Type
+20     INVAGE               Age of Involved Party
+21     INJURY               Severity of Injury
+22     FATAL_NO             Sequential Number
+23     INITDIR              Initial Direction of Travel
+24     VEHTYPE              Type of Vehicle
+25     MANOEUVER            Vehicle Manoeuver
+26     DRIVACT              Apparent Driver Action
+27     DRIVCOND             Driver Condition 
+28     PEDTYPE              Pedestrian Crash Type - detail
+29     PEDACT               Pedestrian Action
+30     PEDCOND              Condition of Pedestrian
+31     CYCLISTYPE           Cyclist Crash Type - detail
+32     CYCACT               Cyclist Action
+33     CYCCOND              Cyclist Condition
+34     PEDESTRIAN           Pedestrian Involved In Collision
+35     CYCLIST              Cyclists Involved in Collision
+36     AUTOMOBILE           Driver Involved in Collision
+37     MOTORCYCLE           Motorcyclist Involved in Collision
+38     TRUCK                Truck Driver Involved in Collision
+39     TRSN_CITY_VEH        Transit or City Vehicle Involved in Collision
+40     EMERG_VEH            Emergency Vehicle Involved in Collision
+41     PASSENGER            Passenger Involved in Collision
+42     SPEEDING             Speeding Related Collision
+43     AG_DRIV              Aggressive and Distracted Driving Collision
+44     REDLIGHT             Red Light Related Collision
+45     ALCOHOL              Alcohol Related Collision
+46     DISABILITY           Medical or Physical Disability Related Collision
+47     HOOD_158             Unique ID for City of Toronto Neighbourhood (new)
+48     NEIGHBOURHOOD_158    City of Toronto Neighbourhood name (new)
+49     HOOD_140             Unique ID for City of Toronto Neighbourhood (old)
+50     NEIGHBOURHOOD_140    City of Toronto Neighbourhood name (old)
+51     DIVISION             Toronto Police Service Division
+52     ObjectID             Unique Identifier (auto generated)

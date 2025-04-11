@@ -1,17 +1,17 @@
 Model Performance Metrics:
 ==================================================
 
-Accuracy: 0.942
-ROC AUC: 0.894
-Average Precision: 0.665
+Accuracy: 0.933
+ROC AUC: 0.905
+Average Precision: 0.641
 
 Detailed Classification Report:
 --------------------
               precision    recall  f1-score   support
 
-           0       0.97      0.96      0.97      3258
-           1       0.77      0.83      0.80       534
+           0       0.98      0.94      0.96      3254
+           1       0.72      0.87      0.79       534
 
-    accuracy                           0.94      3792
-   macro avg       0.87      0.89      0.88      3792
-weighted avg       0.94      0.94      0.94      3792
+    accuracy                           0.93      3788
+   macro avg       0.85      0.90      0.87      3788
+weighted avg       0.94      0.93      0.94      3788

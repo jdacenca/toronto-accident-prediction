@@ -34,22 +34,12 @@ data_ksi = pd.read_csv("./data/Total_KSI.csv")
 # Initial data overview
 data_overview(data_ksi)
 
-# Drop unnecessary columns
-columns_to_drop = [
-    "OBJECTID",
-    "INDEX",
-    "FATAL_NO",
-    "x",
-    "y",
-    "EMERG_VEH",
-    "OFFSET",
-    "CYCACT",
-    "CYCCOND",
-    "STREET1",
-    "STREET2",
-    "NEIGHBOURHOOD_140",
-    "HOOD_140",
-]
+# Drop unnecessary columns -  ACCNUM, DATE , TIME,            
+columns_to_drop= [
+    "OBJECTID","INDEX", "FATAL_NO", "x", "y", "OFFSET", "STREET1", "STREET2",
+    "NEIGHBOURHOOD_140", "HOOD_140", "HOOD_158", "CYCLISTYPE", "CYCACT","INITDIR",
+    "VEHTYPE", "MANOEUVER", "DRIVACT", "DRIVCOND", "PEDTYPE", "PEDACT",
+    "INJURY", "DIVISION"]
 
 # Visualizations
 visualizations = [
@@ -64,8 +54,8 @@ visualizations = [
     (spline_plot, "./insights/data_exploration/spline_plot.png"),
 ]
 
-for viz_func, save_path in visualizations:
-    viz_func(data_ksi, save_path)
+# for viz_func, save_path in visualizations:
+#     viz_func(data_ksi, save_path)
 
 create_full_correlation_matrices(data_ksi)
 
@@ -75,10 +65,10 @@ param_grids = {
         {"svm__kernel": ["linear"], "svm__C": [1]},
     ],
     "svm_rbf": [
-        {"svm__kernel": ["rbf"], "svm__C": [1], "svm__gamma": [3.0]},
+        {"svm__kernel": ["rbf"], "svm__C": [0.01, 1], "svm__gamma": [0.03, 0.3, 3.0]},
     ],
     "svm_poly": [
-        {"svm__kernel": ["poly"], "svm__C": [10], "svm__gamma": [1.0], "svm__degree": [3]},
+        {"svm__kernel": ["poly"], "svm__C": [0.1, 1, 10], "svm__gamma": [0.1, 0.3, 1.0], "svm__degree": [3]},
     ],
 }
 
