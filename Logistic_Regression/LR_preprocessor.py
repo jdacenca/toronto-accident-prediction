@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder, StandardScaler
+from imblearn.over_sampling import SMOTENC
+
 # from category_encoders import BinaryEncoder
 
 class LRPreprocessor(BaseEstimator, TransformerMixin):
@@ -21,11 +23,14 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     ]
     # Columns to be used during transformation
     cols_drop2 = ['ACCNUM','DATE','TIME']
-    cols_drop3 = ['ROAD_CLASS','DISTRICT','ACCLOC','INVAGE','INVTYPE',
-                  'PEDCOND','CYCCOND','PEDESTRIAN','CYCLIST','AUTOMOBILE','MOTORCYCLE',
-                  'TRSN_CITY_VEH','EMERG_VEH','PASSENGER','SPEEDING','AG_DRIV','NEIGHBOURHOOD_158']
+    # cols_drop3 = ['ROAD_CLASS','DISTRICT','ACCLOC','INVAGE','INVTYPE',
+    #               'PEDCOND','CYCCOND','PEDESTRIAN','CYCLIST','AUTOMOBILE','MOTORCYCLE',
+    #               'TRSN_CITY_VEH','EMERG_VEH','PASSENGER','SPEEDING','AG_DRIV','NEIGHBOURHOOD_158']
+    cols_drop4 = ['ACCLOC', 'INVTYPE']
     cols_drop.extend(cols_drop2)
-    cols_drop.extend(cols_drop3)
+    # cols_drop.extend(cols_drop3)
+    cols_drop.extend(cols_drop4)
+
 
     def __init__(self, level = 2):
         self._level = level # Level 1, performs all the clean-up, imputation and encoding
@@ -107,6 +112,38 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         df.drop(columns=['DATETIME','DATE','TIME'], inplace = True)
         return df
 
+    def _smote_debug(self,X):
+        for i, col in enumerate(X.columns):
+            try:
+                print(f"Testing column: {col} (index {i})")
+                _ = np.array(X[col], dtype=np.uint32)
+            except Exception as e:
+                print(f"❌ Column '{col}' at index {i} caused an issue: {e}")
+
+    def _apply_smote(self, X):
+        """Apply SMOTENC on combined [X, y] array"""
+
+        categorical_features = ['ROAD_CLASS',
+                                'DISTRICT',
+                                # 'ACCLOC',
+                                'TRAFFCTL',
+                                'VISIBILITY',
+                                'LIGHT',
+                                'RDSFCOND',
+                                'IMPACTYPE',
+                                # 'INVTYPE',
+                                'INVAGE',
+                                'PEDCOND',
+                                'CYCCOND',
+                                'NEIGHBOURHOOD_158'
+                                ]
+        X_df, y = X.drop(['ACCLASS'], axis=1), X['ACCLASS']
+        cat_indices = [X_df.columns.get_loc(col) for col in categorical_features]
+
+        smote = SMOTENC(categorical_features=cat_indices, random_state=54)
+        X_res, y_res = smote.fit_resample(X_df, y)
+        return np.hstack((X_res, y_res.reshape(-1, 1)))
+
     # Cyclic Encoding for cyclic columns extracted from DATETIME
     def _cyclic_enc(self, df, column, max_value):
         df[column + '_sin'] = np.sin(2 * np.pi * df[column] / max_value)
@@ -134,7 +171,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
     def _labelenc_transform(self, X):
         labelenc_cols = X.select_dtypes(include=['object']).columns.tolist()
-        lblenc = LabelEncoder() # to handle the unseen category as other
+        lblenc = LabelEncoder()
         for col in labelenc_cols:
             X[col] = lblenc.fit_transform(X[col])
 
@@ -166,9 +203,13 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
 
         self._boolean_column_transform(X)
-        # X = self._add_datetime_new(X)
+        X = self._add_datetime_new(X)
         # self._cyclic_enc_transform(X)
         self._drop_columns(X)
-        X = self._ohe_transform(X)
+        if self._level == 1:
+            self._smote_debug(X)
+            X = self._apply_smote(X)
 
+        # X = self._ohe_transform(X)
+        self._labelenc_transform(X)
         return X

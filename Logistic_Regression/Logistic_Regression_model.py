@@ -53,6 +53,24 @@ def build_model(df):
     print(cv_score_default)
     print(cv_score_default.mean())
     return log_reg, X_train, X_test, y_train, y_test
+# %%
+
+def build_model_default(df):
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=54)
+    # log_reg = LogisticRegression(penalty='l1', C=0.1, solver='liblinear', max_iter=10000,
+    #                              class_weight='balanced', max_iter=100000, random_state=54)
+    log_reg = LogisticRegression(class_weight='balanced', max_iter=10000, random_state=54)
+
+    X_train, X_test, y_train, y_test = train_test_split(df.drop('ACCLASS', axis=1),
+                                                        df['ACCLASS'],
+                                                        test_size=0.2, stratify=df['ACCLASS'],
+                                                        random_state=54)
+    log_reg.fit(X_train, y_train)
+    cv_score_default = cross_val_score(log_reg, X_train, y_train, cv=skf, scoring='f1')
+    print(cv_score_default)
+    print(cv_score_default.mean())
+    return log_reg, X_train, X_test, y_train, y_test
+
 
 # %%
 ############################
@@ -93,8 +111,8 @@ def LR_tuning(df):
 
 if __name__ == '__main__':
     df_ksi = load_data()
-    data_exploration(df_ksi)
-    data_visualization(df_ksi)
+    # data_exploration(df_ksi)
+    # data_visualization(df_ksi)
     lr_preprocessor = LRPreprocessor(level=1)
     df_new = lr_preprocessor.fit_transform(df_ksi)
     print(df_new.head(5))
@@ -102,7 +120,7 @@ if __name__ == '__main__':
 
     # LR_tuning(df_new)
 
-    log_reg, X_train, X_test, y_train, y_test  = build_model(df_new)
+    log_reg, X_train, X_test, y_train, y_test  = build_model_default(df_new)
 
     evaluation = LREvaluation(log_reg, X_test, y_test)
 
