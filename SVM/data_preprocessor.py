@@ -245,6 +245,8 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
     print(f"\n===================== {model_name.upper()} GRID SEARCH FIT =====================")
     grid_search.fit(X_train, y_train)
 
+    
+
     best_model = grid_search.best_estimator_
     y_pred = best_model.predict(X_test)
     unseen_pred = best_model.predict(unseen_features)

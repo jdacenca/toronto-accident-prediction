@@ -91,7 +91,7 @@ def process_and_train(data, columns_to_drop, param_grids, class_imb="original"):
 
     # Split the data into features and target
     unseen_features, unseen_labels, cleaned_df, features, target = sample_and_update_data(cleaned_df)
-
+    
     # Encode the target variable
     label_encoder = LabelEncoder()
     target = label_encoder.fit_transform(target)
