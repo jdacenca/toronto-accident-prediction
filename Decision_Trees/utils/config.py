@@ -19,7 +19,7 @@ COLUMNS_TO_DROP = [
     'INJURY', 'INITDIR',
     'VEHTYPE', 'MANOEUVER', 'DRIVACT',
     'DRIVCOND', 'PEDTYPE', 'PEDACT',
-    'CYCLISTYPE', 'CYCACT', 
+    'CYCLISTYPE', 'CYCACT', 'x', 'y',
 ]
 # Model parameters
 MODEL_PARAMS = {

@@ -16,19 +16,27 @@ class DataCleaner(BaseEstimator, TransformerMixin):
     
     def _clean_initial_data(self, df: pd.DataFrame) -> None:
         """Perform initial data cleaning by dropping unnecessary columns."""
+        # Drop unnecessary columns
+        df.drop(columns=COLUMNS_TO_DROP, errors='ignore', inplace=True)
+        # Convert all string columns to uppercase, excluding date fields
+        object_columns = df.select_dtypes(include=['object']).columns
+        for col in object_columns:
+            # Skip columns that are likely date fields based on name
+            if any(date_term in col.upper() for date_term in ['DATE', 'TIME']):
+                continue
+            # Convert to uppercase
+            df[col] = df[col].str.upper()
         # Check if ACCLASS exists before performing operations on it
         if 'ACCLASS' in df.columns:
             # Fill missing ACCLASS values with 'Fatal'
-            df['ACCLASS'] = df['ACCLASS'].fillna('Fatal')
+            df['ACCLASS'] = df['ACCLASS'].fillna('FATAL')
             # Drop Property Damage Only records
-            df.drop(df[df['ACCLASS'] == 'Property Damage Only'].index, inplace=True)
-        # Drop unnecessary columns
-        df.drop(columns=COLUMNS_TO_DROP, errors='ignore', inplace=True)
+            df.drop(df[df['ACCLASS'] == 'PROPERTY DAMAGE O'].index, inplace=True)
     
     def _identify_binary_columns(self, df: pd.DataFrame) -> list[str]:
-        """Identify columns with binary (Yes/No) values."""
+        """Identify columns with binary (YES/NO) values."""
         binary_cols = df.select_dtypes(include=['object']).apply(
-            lambda x: x.nunique() <= 2 and set(x.unique()).issubset({'Yes', 'No', np.nan})
+            lambda x: x.nunique() <= 2 and set(x.unique()).issubset({'YES', 'NO', np.nan})
         )
         return binary_cols[binary_cols].index.tolist()
     
@@ -50,7 +58,7 @@ class DataCleaner(BaseEstimator, TransformerMixin):
                     # Fill missing values with 'NA' before fitting
                     values = df[col].fillna('NA')
                 else:
-                    values = df[col].fillna('Other')
+                    values = df[col].fillna('OTHER')
                 
                 self.label_encoders[col] = LabelEncoder()
                 self.label_encoders[col].fit(values)
@@ -59,8 +67,8 @@ class DataCleaner(BaseEstimator, TransformerMixin):
         """Transform binary columns to 0/1 values."""
         for col in self.binary_cols:
             if col in X.columns:
-                X[col] = X[col].fillna('No')
-                X[col] = (X[col] == 'Yes').astype(int)
+                X[col] = X[col].fillna('NO')
+                X[col] = (X[col] == 'YES').astype(int)
         return X
     
     def _transform_numerical_columns(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -78,7 +86,7 @@ class DataCleaner(BaseEstimator, TransformerMixin):
                 if col in ['PEDCOND', 'CYCCOND']:
                     X[col] = X[col].fillna('NA')
                 else:
-                    X[col] = X[col].fillna('Other')
+                    X[col] = X[col].fillna('OTHER')
                 X[col] = encoder.transform(X[col])
         return X
     
