@@ -34,35 +34,19 @@ function ExpandableCell({ value }: GridRenderCellParams) {
 }
 
 const columns: GridColDef[] = [
-  { field: "Classifier", headerName: "Classifier", width: 200 },
-  {
-    field: "Train Accuracy",
-    headerName: "Train Acc. %",
-    width: 120,
-    type: "number",
-  },
-  {
-    field: "Test Accuracy",
-    headerName: "Test Acc. %",
-    width: 120,
-    type: "number",
-  },
-  {
-    field: "Unseen Accuracy (10)",
-    headerName: "Unseen Acc. %",
-    width: 120,
-    type: "number",
-  },
-  { field: "Precision", headerName: "Precision", width: 120, type: "number" },
-  { field: "Recall", headerName: "Recall", width: 120, type: "number" },
-  { field: "F1 Score", headerName: "F1-Score", width: 100, type: "number" },
-  {
-    field: "Unseen Accuracy (6000)",
-    headerName: "Unseen Acc. %",
-    width: 120,
-    type: "number",
-  },
-  { field: "ROC AUC", headerName: "ROC AUC", width: 120, type: "number" },
+//  Kernel,Train Acc.,Test Acc.,Unseen Acc.,Parameters,Precision,F1-Score,Recall,ROC Score,Class Imbalance
+{field: "id", headerName: "ID", width: 80},
+{field: "Kernel", headerName: "Kernel", width: 80},
+{field: "Train Acc.", headerName: "Train Acc.", width: 120,type: "number"},
+{field: "Test Acc.", headerName: "Test Acc.", width: 120,type: "number"},
+{field: "Unseen Acc.", headerName: "Unseen Acc.", width: 120,type: "number"},
+{field: "Parameters", headerName: "Parameters", width: 100},
+{field: "Precision", headerName: "Precision", width: 100,type: "number"},
+{field: "F1-Score", headerName: "F1-Score", width: 100,type: "number"},
+{field: "Recall", headerName: "Recall", width: 100,type: "number"},
+{field: "ROC Score", headerName: "ROC Score", width: 100,type: "number"},
+{field: "Class Imbalance", headerName: "Class Imbalance", width: 160},
+
 ];
 
 interface ModelPerformanceGridProps {
@@ -102,12 +86,12 @@ export default function ModelPerformanceGrid({
       slots={{ toolbar: GridToolbar }}
       initialState={{
         pagination: {
-          paginationModel: { pageSize: 5 },
+          paginationModel: { pageSize: 12 },
         },
       }}
-      pageSizeOptions={[5]}
+      pageSizeOptions={[12]}
       sx={{
-        height: "400px",
+        height: "700px",
         width: "1080px", // Set a fixed width for the DataGrid
         border: "1px solid #ccc",
         "&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell": { py: 1 },
