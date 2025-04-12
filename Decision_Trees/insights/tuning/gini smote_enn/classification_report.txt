@@ -3,12 +3,12 @@ Classification Report for gini smote_enn
 
               precision    recall  f1-score   support
 
-           0       0.97      0.84      0.90      3252
-           1       0.47      0.83      0.60       534
+           0       0.96      0.86      0.90      3253
+           1       0.47      0.77      0.58       533
 
     accuracy                           0.84      3786
-   macro avg       0.72      0.83      0.75      3786
-weighted avg       0.90      0.84      0.86      3786
+   macro avg       0.71      0.81      0.74      3786
+weighted avg       0.89      0.84      0.86      3786
 
 
 Model Parameters:

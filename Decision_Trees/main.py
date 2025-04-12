@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
-from utils.config import DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR, MODEL_PARAMS, SCORING_METRICS, RANDOM_STATE
+from utils.config import DATA_DIR, SERIALIZED_DIR, PERFORMANCE_DIR, MODEL_PARAMS, SCORING_METRICS, RANDOM_STATE, TARGET
 from utils.visualization import plot_feature_importance, plot_importance_comparison
 from utils.evaluation import evaluate_model, calculate_feature_importance, save_model_artifacts
 from utils.pipeline import create_preprocessing_pipeline
-from utils.sampling import apply_sampling  # Import the sampling utility function
+from utils.sampling import apply_sampling
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -38,9 +38,10 @@ def load_and_preprocess_data() -> tuple[pd.DataFrame, np.ndarray, Any]:
     
     logging.info("Preprocessing data...")
     # First preprocess the data
-    X = pipeline.fit_transform(df)
-    # Create target variable
-    y = (df['ACCLASS'] == 'FATAL').astype(int)
+    processed_df = pipeline.fit_transform(df)
+    # Seperate features and target variable
+    X = processed_df.drop(columns=[TARGET])
+    y = processed_df[TARGET] 
 
     logging.info(f"Final dataset shape: {X.shape}")
     logging.info(f"Number of Fatal accidents: {y.sum()}")
