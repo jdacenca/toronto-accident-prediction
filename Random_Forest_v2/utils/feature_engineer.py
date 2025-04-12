@@ -1,17 +1,14 @@
-"""Feature engineering transformer for accident data."""
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class FeatureEngineer(BaseEstimator, TransformerMixin):
-    """Custom transformer for feature engineering focused on accident severity prediction."""
 
     def __init__(self):
         pass
 
     def fit(self, X: pd.DataFrame) -> 'FeatureEngineer':
-        """Fit the feature engineer."""
 
         return self
 
@@ -45,7 +42,6 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         return X
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Transform the data by adding engineered features."""
         # Create time-based features
         X = self._create_time_features(X)
 

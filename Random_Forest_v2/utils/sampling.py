@@ -1,7 +1,3 @@
-"""
-Utility module for data sampling techniques to handle class imbalance.
-This module provides various sampling methods to address class imbalance in datasets.
-"""
 
 import logging
 import numpy as np
@@ -16,21 +12,7 @@ from utils.config import RANDOM_STATE
 def apply_sampling(X_train: Union[pd.DataFrame, np.ndarray],
                    y_train: np.ndarray,
                    method: str = 'smote') -> tuple[Union[pd.DataFrame, np.ndarray], np.ndarray]:
-    """Apply sampling technique to balance the classes.
 
-    Args:
-        X_train: Training features (DataFrame or ndarray)
-        y_train: Training labels (ndarray)
-        method: Sampling method to use. Options:
-            - 'smote': Synthetic Minority Over-sampling Technique
-            - 'random_over': Random oversampling of minority class
-            - 'random_under': Random undersampling of majority class
-            - 'smote_tomek': SMOTE followed by Tomek links cleaning
-            - 'smote_enn': SMOTE followed by Edited Nearest Neighbors cleaning
-
-    Returns:
-        tuple: Resampled X_train and y_train
-    """
     logging.info(f"Applying {method} sampling technique...")
 
     # Log class distribution before sampling

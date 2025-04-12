@@ -29,13 +29,11 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def setup_directories() -> None:
-    """Create necessary directories for outputs."""
     dirs = [SERIALIZED_DIR, PERFORMANCE_DIR]
     for dir_path in dirs:
         Path(dir_path).mkdir(parents=True, exist_ok=True)
 
 def load_and_preprocess_data() -> tuple[pd.DataFrame, np.ndarray, Any]:
-    """Load and preprocess the data."""
     logging.info("Loading data...")
     df = pd.read_csv(DATA_DIR / 'TOTAL_KSI.csv')
 
@@ -115,7 +113,6 @@ def train_random_forest(X: pd.DataFrame, y: np.ndarray) -> RandomForestClassifie
     return best_model
 
 def analyze_feature_importance(model: RandomForestClassifier, X: pd.DataFrame, y: np.ndarray) -> None:
-    """Analyze and visualize feature importance using multiple methods."""
     logging.info("Calculating feature importance...")
 
     native_imp, perm_imp, shap_imp = calculate_feature_importance(model, X, y)
@@ -148,7 +145,6 @@ def analyze_feature_importance(model: RandomForestClassifier, X: pd.DataFrame, y
             f.write(f"{i}. {feature}\n")
 
 def main() -> None:
-    """Main execution function."""
     start_time = time.time()
     setup_directories()
 

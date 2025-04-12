@@ -1,4 +1,3 @@
-"""Visualization utilities for model evaluation and feature importance."""
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -11,7 +10,6 @@ from .config import PERFORMANCE_DIR
 
 
 def plot_feature_importance(importance_df: pd.DataFrame, title: str, filename: str, top_n: int = 20) -> None:
-    """Plot feature importance bar chart."""
     plt.figure(figsize=(12, 6))
     sns.barplot(data=importance_df.head(top_n), x='importance', y='feature')
     plt.title(title)
@@ -21,7 +19,6 @@ def plot_feature_importance(importance_df: pd.DataFrame, title: str, filename: s
 
 
 def plot_decision_tree(model: Any, feature_names: list[str], max_depth: int = 3) -> None:
-    """Create and save a visualization of the decision tree."""
     plt.figure(figsize=(20, 10))
     plot_tree(model,
               feature_names=feature_names,
@@ -34,7 +31,6 @@ def plot_decision_tree(model: Any, feature_names: list[str], max_depth: int = 3)
 
 
 def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> None:
-    """Plot confusion matrix."""
     plt.figure(figsize=(8, 6))
     cm = pd.crosstab(y_true, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -46,7 +42,6 @@ def plot_confusion_matrix(y_true: np.ndarray, y_pred: np.ndarray) -> None:
 
 
 def plot_roc_curve(y_true: np.ndarray, y_prob: np.ndarray) -> None:
-    """Plot ROC curve."""
     fpr, tpr, _ = roc_curve(y_true, y_prob)
     roc_auc = auc(fpr, tpr)
 
@@ -65,7 +60,6 @@ def plot_roc_curve(y_true: np.ndarray, y_prob: np.ndarray) -> None:
 
 
 def plot_precision_recall_curve(y_true: np.ndarray, y_prob: np.ndarray) -> None:
-    """Plot Precision-Recall curve."""
     precision, recall, _ = precision_recall_curve(y_true, y_prob)
     avg_precision = np.mean(precision)
 
@@ -86,7 +80,6 @@ def plot_precision_recall_curve(y_true: np.ndarray, y_prob: np.ndarray) -> None:
 
 
 def plot_importance_comparison(comparison_df: pd.DataFrame) -> None:
-    """Plot comparison of feature importance across different methods."""
     # Plot comparison of features
     comparison_df.plot(kind='bar', figsize=(14, 10))
     plt.title('Feature Importance Comparison Across Methods')

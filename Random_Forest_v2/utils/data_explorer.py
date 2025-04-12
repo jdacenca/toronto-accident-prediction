@@ -1,4 +1,3 @@
-"""Data exploration utilities for accident data analysis."""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,14 +8,9 @@ from .config import INSIGHTS_DIR
 
 
 class DataExplorer:
-    """Class for exploring and analyzing accident data."""
 
     def __init__(self, data_path: str):
-        """Initialize the DataExplorer.
 
-        Args:
-            data_path: Path to the data file
-        """
         self.data_path = data_path
         self.df: pd.DataFrame = None
         self.missing_values: pd.Series = None
@@ -25,7 +19,6 @@ class DataExplorer:
         self._setup_logging()
 
     def _setup_directories(self) -> None:
-        """Create necessary output directories."""
         dirs = [
             'correlation',
             'time_analysis',
@@ -39,18 +32,13 @@ class DataExplorer:
             (INSIGHTS_DIR / dir_path).mkdir(parents=True, exist_ok=True)
 
     def _setup_logging(self) -> None:
-        """Set up logging configuration."""
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
 
     def load_data(self) -> pd.DataFrame:
-        """Load the accident data.
 
-        Returns:
-            pd.DataFrame: Loaded and preprocessed data
-        """
         logging.info("Loading data...")
         self.df = pd.read_csv(self.data_path)
         logging.info(f"Dataset shape: {self.df.shape}")
@@ -60,14 +48,7 @@ class DataExplorer:
         return self.df
 
     def _preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Preprocess the data for analysis.
 
-        Args:
-            df: Raw dataframe
-
-        Returns:
-            pd.DataFrame: Preprocessed dataframe
-        """
         df = df.copy()
         df['DATE'] = pd.to_datetime(df['DATE'])
 
@@ -94,11 +75,7 @@ class DataExplorer:
         return df
 
     def analyze_basic_stats(self) -> pd.Series:
-        """Perform initial data analysis.
 
-        Returns:
-            pd.Series: Missing value counts
-        """
         logging.info("\n=== Data Analysis ===")
         logging.info("\nData Info:")
         logging.info(self.df.info())
@@ -113,11 +90,6 @@ class DataExplorer:
         return self.missing_values
 
     def analyze_correlations(self) -> tuple[pd.Series, dict]:
-        """Create and save correlation matrices.
-
-        Returns:
-            tuple[pd.Series, dict]: Target correlations and category mappings
-        """
         logging.info("\n=== Creating Correlation Matrices ===")
 
         # Create a copy of the dataframe
@@ -175,11 +147,7 @@ class DataExplorer:
                     f.write(f"  {code}: {category}\n")
 
     def _plot_correlation_matrices(self, correlations: pd.DataFrame) -> None:
-        """Plot correlation matrices.
 
-        Args:
-            correlations: Correlation matrix
-        """
         n_cols = len(correlations.columns)
         max_cols_per_plot = 20
         n_splits = (n_cols + max_cols_per_plot - 1) // max_cols_per_plot
@@ -204,11 +172,6 @@ class DataExplorer:
             plt.close()
 
     def _plot_target_correlations(self, target_corr: pd.Series) -> None:
-        """Plot target correlations.
-
-        Args:
-            target_corr: Series of correlations with target
-        """
         plt.figure(figsize=(12, 8))
         sns.barplot(x=target_corr.values, y=target_corr.index)
         plt.title('Feature Correlations with Accidents')
@@ -219,7 +182,6 @@ class DataExplorer:
         plt.close()
 
     def analyze_time_patterns(self) -> None:
-        """Analyze time-based patterns in accidents."""
         logging.info("\n=== Analyzing Time Patterns ===")
 
         # Hourly Distribution of Severity
@@ -262,7 +224,6 @@ class DataExplorer:
         plt.close()
 
     def analyze_severity_patterns(self) -> None:
-        """Analyze accident severity patterns."""
         logging.info("\n=== Analyzing Severity Patterns ===")
 
         # Injury Distribution by Season
@@ -292,7 +253,6 @@ class DataExplorer:
         plt.close()
 
     def analyze_seasonal_patterns(self) -> None:
-        """Analyze seasonal patterns in accidents."""
         logging.info("\n=== Analyzing Seasonal Patterns ===")
 
         # Monthly accidents
@@ -308,7 +268,6 @@ class DataExplorer:
         plt.close()
 
     def save_analysis_report(self) -> None:
-        """Save a comprehensive analysis report."""
         report_path = INSIGHTS_DIR / 'analysis_report.md'
 
         with open(report_path, 'w') as f:
@@ -353,7 +312,6 @@ class DataExplorer:
             logging.info(f"Analysis report saved to {report_path}")
 
     def run_full_analysis(self) -> None:
-        """Run all analysis steps."""
         self.load_data()
         self.analyze_basic_stats()
         self.analyze_correlations()

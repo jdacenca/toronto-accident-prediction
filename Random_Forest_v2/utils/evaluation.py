@@ -1,4 +1,3 @@
-"""Model evaluation utilities"""
 
 import pandas as pd
 import numpy as np

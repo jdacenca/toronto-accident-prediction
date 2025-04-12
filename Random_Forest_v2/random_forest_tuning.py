@@ -1,6 +1,3 @@
-# random_forest_tuning.py
-
-"""Script for tuning random forest hyperparameters."""
 
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -21,11 +18,9 @@ import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Our utility imports
 from utils.sampling import apply_sampling
 from utils.pipeline import create_preprocessing_pipeline
 from utils.config import DATA_DIR, RANDOM_STATE
-# ^ Remember to define MODEL_PARAMS inside config if you want to do grid search
 
 warnings.filterwarnings('ignore')
 plt.style.use('default')
@@ -34,7 +29,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class RandomForestTuning:
     def __init__(self, X, y, unseen_X=None, unseen_y=None):
-        """Initialize with data."""
         self.X = X
         self.y = y
         self.unseen_X = unseen_X
@@ -44,14 +38,11 @@ class RandomForestTuning:
         self.setup_directories()
 
     def setup_directories(self):
-        """Create necessary directories."""
         dirs = ['insights/tuning', 'insights/unseen_testing']
         for d in dirs:
             Path(d).mkdir(parents=True, exist_ok=True)
 
     def prepare_data(self, sampling_strategy=None):
-        """Prepare data with optional sampling strategy."""
-        # Split data
         X_train, X_test, y_train, y_test = train_test_split(
             self.X, self.y,
             test_size=0.2,
@@ -59,18 +50,16 @@ class RandomForestTuning:
             stratify=self.y
         )
 
-        # Apply sampling strategy to training data
         if sampling_strategy:
             X_train, y_train = apply_sampling(X_train, y_train, sampling_strategy)
 
         return X_train, X_test, y_train, y_test
 
     def evaluate_model(self, model, X_train, X_test, y_train, y_test, model_name):
-        """Evaluate a model and store results."""
-        # Perform cross-validation
+
         cv_scores = cross_val_score(
             model, X_train, y_train,
-            cv=5,  # 5-fold cross-validation
+            cv=5,  # x-fold cross-validation
             scoring='accuracy',
             n_jobs=-1,
             verbose=1
@@ -108,7 +97,7 @@ class RandomForestTuning:
         viz_dir = Path(f"insights/tuning/{model_name}")
         viz_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1. Confusion Matrix
+        # Confusion Matrix
         plt.figure(figsize=(8, 6))
         cm = confusion_matrix(y_test, y_test_pred)
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -119,7 +108,7 @@ class RandomForestTuning:
         plt.savefig(viz_dir / 'confusion_matrix.png')
         plt.close()
 
-        # 2. ROC Curve
+        # ROC Curve
         fpr, tpr, _ = roc_curve(y_test, y_test_prob)
         roc_auc = auc(fpr, tpr)
 
@@ -137,7 +126,7 @@ class RandomForestTuning:
         plt.savefig(viz_dir / 'roc_curve.png')
         plt.close()
 
-        # 3. Classification Report Visualization
+        # Classification Report Visualization
         plt.figure(figsize=(8, 6))
         cr_dict = classification_report(y_test, y_test_pred, output_dict=True)
         cr_df = pd.DataFrame({
@@ -170,7 +159,7 @@ class RandomForestTuning:
         plt.savefig(viz_dir / 'classification_report.png')
         plt.close()
 
-        # 4. Save classification report as text
+        # Save classification report as text
         report = classification_report(y_test, y_test_pred)
         with open(viz_dir / 'classification_report.txt', 'w') as f:
             f.write(f"Classification Report for {model_name}\n")
@@ -180,9 +169,8 @@ class RandomForestTuning:
             f.write("-"*20 + "\n")
             f.write(str(model.get_params()))
 
-        # Evaluate on unseen data if provided
+        # Evaluate on unseen data
         if self.unseen_X is not None and self.unseen_y is not None:
-            # Decide if sampling should be applied to unseen data
             parts = model_name.split()
             sampling = parts[-1] if len(parts) > 1 else None
 
@@ -191,7 +179,6 @@ class RandomForestTuning:
         return model
 
     def evaluate_on_unseen_data(self, model, model_name, sampling_strategy=None):
-        """Evaluate the trained model on unseen data with optional sampling."""
         logging.info(f"\nEvaluating {model_name} on unseen data...")
 
         if sampling_strategy in ['smote', 'random_over', 'random_under', 'smote_tomek', 'smote_enn']:
@@ -200,7 +187,6 @@ class RandomForestTuning:
         else:
             unseen_X, unseen_y = self.unseen_X, self.unseen_y
 
-        # Predictions on unseen data
         y_unseen_pred = model.predict(unseen_X)
         y_unseen_prob = model.predict_proba(unseen_X)[:, 1]
 
@@ -246,7 +232,6 @@ class RandomForestTuning:
         plt.close()
 
     def run_comparison(self):
-        """Run a comparison with different sampling strategies."""
         sampling_strategies = [None, 'smote', 'random_over', 'random_under', 'smote_tomek', 'smote_enn']
 
         for sampling in sampling_strategies:
@@ -254,7 +239,7 @@ class RandomForestTuning:
 
             X_train, X_test, y_train, y_test = self.prepare_data(sampling)
 
-            # Example: Basic RandomForestClassifier
+            # Basic RandomForestClassifier
             rf_basic = RandomForestClassifier(
                 n_estimators=100,
                 random_state=RANDOM_STATE,
@@ -263,16 +248,12 @@ class RandomForestTuning:
             self.evaluate_model(rf_basic, X_train, X_test, y_train, y_test,
                                 (f"basic {sampling if sampling else ''}").rstrip())
 
-            # More specialized variations if you'd like
-            # e.g. different criteria, more or fewer trees, etc.
 
     def save_results(self):
-        """Save results of all comparisons."""
         results_df = pd.DataFrame(self.results)
         results_df.to_csv('insights/tuning/results.csv', index=False)
         logging.info("\nResults saved to insights/tuning/results.csv")
 
-        # Create a formatted markdown table
         markdown_table = "# Random Forest Tuning Results\n\n"
         markdown_table += "| Model | Train Acc. | Test Acc. | Precision | Recall | F1-Score | Sampling |\n"
         markdown_table += "|-------|------------|-----------|-----------|--------|----------|----------|\n"
@@ -314,7 +295,6 @@ class RandomForestTuning:
                 f.write(md_unseen)
 
     def plot_unseen_comparison(self):
-        """Create visual comparisons of all models on unseen data."""
         if not self.unseen_results:
             return
 
@@ -347,7 +327,6 @@ class RandomForestTuning:
         logging.info(f"Unseen data comparison visualizations saved to {viz_dir}")
 
 def main():
-    """Main execution function for Random Forest tuning."""
     # Load raw data
     data_path = DATA_DIR / 'TOTAL_KSI_6386614326836635957.csv'
     df = pd.read_csv(data_path)

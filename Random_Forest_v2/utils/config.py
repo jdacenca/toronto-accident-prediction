@@ -1,7 +1,3 @@
-# utils/config.py
-
-"""Configuration module for the Random Forest model training pipeline."""
-
 from pathlib import Path
 
 # Directory paths
