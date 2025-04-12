@@ -149,3 +149,4 @@ DT/.idea/
 .idea/toronto-accident-prediction.iml
 /.idea
 /.idea
+*.pkl

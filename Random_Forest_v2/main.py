@@ -1,6 +1,6 @@
-# main.py
 
 """Main script for training and evaluating a Random Forest model."""
+
 
 import time
 import logging
@@ -22,6 +22,9 @@ from utils.evaluation import (
 )
 from utils.pipeline import create_preprocessing_pipeline
 from utils.sampling import apply_sampling
+from sklearn.model_selection import ParameterGrid
+from tqdm_joblib import tqdm_joblib
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -78,6 +81,16 @@ def train_random_forest(X: pd.DataFrame, y: np.ndarray) -> RandomForestClassifie
         n_jobs=-1,
         verbose=1
     )
+
+    # Compute the total number of iterations (number of parameter combinations * cv folds)
+    from sklearn.model_selection import ParameterGrid
+    n_combinations = len(list(ParameterGrid(MODEL_PARAMS)))
+    cv_folds = 5  # as defined in GridSearchCV cv parameter
+    n_total = cv_folds * n_combinations
+
+    # Use tqdm_joblib to wrap the grid search fit call
+    with tqdm_joblib(tqdm(desc="Performing grid search", total=n_total)):
+        grid_search.fit(X_train, y_train)
 
     logging.info("Performing grid search on Random Forest with resampled data...")
     grid_search.fit(X_train, y_train)

@@ -1,10 +1,8 @@
-# utils/evaluation.py
-
-"""Model evaluation utilities for Random Forest (or other classifiers)."""
+"""Model evaluation utilities"""
 
 import pandas as pd
 import numpy as np
-from typing import Any
+from typing import Any, Tuple
 from sklearn.metrics import (
     classification_report,
     confusion_matrix,
@@ -14,16 +12,19 @@ from sklearn.metrics import (
     average_precision_score,
     accuracy_score
 )
-from utils.visualization import (
-    plot_confusion_matrix,
-    plot_roc_curve,
-    plot_precision_recall_curve,
-    plot_feature_importance
-)
-from utils.config import PERFORMANCE_DIR, RANDOM_STATE, SERIALIZED_DIR
 from sklearn.inspection import permutation_importance
 import shap
 import joblib
+import logging
+
+from tqdm import tqdm  # For the progress bar
+
+from utils.visualization import (
+    plot_confusion_matrix,
+    plot_roc_curve,
+    plot_precision_recall_curve
+)
+from utils.config import PERFORMANCE_DIR, RANDOM_STATE, SERIALIZED_DIR
 
 def evaluate_model(
     model: Any,
@@ -31,8 +32,8 @@ def evaluate_model(
     y_test: np.ndarray,
     feature_names: list[str]
 ) -> dict[str, float]:
-    """Evaluate model performance and generate visualizations."""
-    # Make predictions
+
+    logging.info("Evaluating model on test data...")
     y_pred = model.predict(X_test)
     y_prob = model.predict_proba(X_test)[:, 1]
 
@@ -45,7 +46,7 @@ def evaluate_model(
         'average_precision': average_precision_score(y_test, y_prob)
     }
 
-    # Generate visualizations
+    # Generate and save visualizations
     plot_confusion_matrix(y_test, y_pred)
     plot_roc_curve(y_test, y_prob)
     plot_precision_recall_curve(y_test, y_prob)
@@ -66,33 +67,68 @@ def evaluate_model(
 def calculate_feature_importance(
     model: Any,
     X: pd.DataFrame,
-    y: np.ndarray
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Calculate feature importance using multiple methods."""
+    y: np.ndarray,
+    shap_sample_size: int = 1000
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
 
-    # Native feature importance (Random Forest .feature_importances_)
+    # 1) Native feature importance
+    logging.info("Calculating native feature importance...")
     native_importance = pd.DataFrame({
         'feature': X.columns,
         'importance': model.feature_importances_
     }).sort_values('importance', ascending=False)
 
-    # Permutation importance
-    perm_importance = permutation_importance(model, X, y, n_repeats=10, random_state=RANDOM_STATE)
+    # 2) Permutation importance
+    logging.info("Calculating permutation importance (this may take a while)...")
+    perm_results = permutation_importance(model, X, y, n_repeats=10, random_state=RANDOM_STATE)
     perm_importance_df = pd.DataFrame({
         'feature': X.columns,
-        'importance': perm_importance.importances_mean
+        'importance': perm_results.importances_mean
     }).sort_values('importance', ascending=False)
 
-    # SHAP values (compatible with tree-based models)
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer(X)
+    # 3) SHAP values
+    #    If the dataset is large, sample rows to reduce computation time.
+    n_samples = len(X)
+    if n_samples > shap_sample_size:
+        logging.info(f"Dataset has {n_samples} rows; sampling {shap_sample_size} for SHAP.")
+        X_sample = X.sample(n=shap_sample_size, random_state=RANDOM_STATE)
+    else:
+        logging.info("Using the full dataset for SHAP calculation.")
+        X_sample = X
 
-    if len(shap_values.shape) == 3:
+    logging.info("Calculating SHAP values...")
+    explainer = shap.TreeExplainer(model)
+    shap_values = explainer(X_sample)
+
+    # Check if SHAP is 3D (for binary classification in shap 0.x)
+    if shap_values.values.ndim == 3:
         shap_values_for_plots = shap_values.values[:, :, 1]
     else:
         shap_values_for_plots = shap_values.values
 
-    mean_abs_shap = np.abs(shap_values_for_plots).mean(0)
+    # Create a single-line updating progress bar across the feature dimension
+    logging.info("Computing mean absolute SHAP values with a progress bar...")
+    n_features = shap_values_for_plots.shape[1]
+
+    # Tweak bar format for a single-line display
+    bar_format = (
+        "{l_bar}{bar}| "
+        "{n_fmt}/{total_fmt} "
+        "[{elapsed}<{remaining}, {rate_fmt}{postfix}]"
+    )
+
+    mean_abs_shap = []
+    for j in tqdm(
+        range(n_features),
+        desc="SHAP Calculation",
+        dynamic_ncols=True,
+        ascii=True,
+        ncols=80,
+        bar_format=bar_format
+    ):
+        abs_shap_j = np.mean(np.abs(shap_values_for_plots[:, j]))
+        mean_abs_shap.append(abs_shap_j)
+
     shap_importance = pd.DataFrame({
         'feature': X.columns,
         'importance': mean_abs_shap
@@ -106,6 +142,6 @@ def save_model_artifacts(
     model_filename: str = 'random_forest_model.pkl',
     pipeline_filename: str = 'preprocessing_pipeline.pkl'
 ) -> None:
-    """Save model and preprocessing pipeline."""
+
     joblib.dump(model, SERIALIZED_DIR / model_filename)
     joblib.dump(pipeline, SERIALIZED_DIR / pipeline_filename)
