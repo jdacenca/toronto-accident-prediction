@@ -33,12 +33,10 @@ class ModelPerformance:
         cm = confusion_matrix(self.y_test, self.model.predict(self.x_test))
         cm_df = pd.DataFrame(cm, index=np.unique(self.y_test), columns=np.unique(self.y_test))
 
-        plt.figure(figsize=(6, 5))
-        custom_cmap = sns.light_palette("#F6866A", as_cmap=True)
-        sns.heatmap(cm_df, annot=True, fmt="d", cmap=custom_cmap, cbar=False)
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm_df, annot=True, fmt="d", cmap="viridis", cbar=True)
         plt.xlabel("Predicted", fontsize=12)
         plt.ylabel("Actual", fontsize=12)
-        plt.title("Confusion Matrix", fontsize=14, fontweight="bold")
         plt.tight_layout()
         plt.savefig(save_path)
         #plt.show()
@@ -54,11 +52,10 @@ class ModelPerformance:
 
         roc_auc = auc(fpr, tpr)
         plt.figure(figsize=(8, 6))
-        plt.plot(fpr, tpr, color="#FAC666", label=f"ROC Curve (AUC = {roc_auc:.2f})")
-        plt.plot([0, 1], [0, 1], color="#E16540", linestyle="--", label="Random Guess")
+        plt.plot(fpr, tpr, color="darkorange", label=f"ROC Curve (AUC = {roc_auc:.2f})")
+        plt.plot([0, 1], [0, 1], color="darkblue", linestyle="--", label="Random Guess")
         plt.xlabel("False Positive Rate", fontsize=12)
         plt.ylabel("True Positive Rate", fontsize=12)
-        plt.title("ROC Curve", fontsize=14, fontweight="bold")
         plt.legend(loc="lower right", frameon=False)
         plt.grid(alpha=0.3)
         plt.tight_layout()
@@ -77,8 +74,8 @@ class ModelPerformance:
         report_df = pd.DataFrame(report).iloc[:-1, :].T
 
         plt.figure(figsize=(8, 6))
-        sns.heatmap(report_df, annot=True, cmap="coolwarm", cbar=False)
-        plt.title("Classification Report", fontsize=14, fontweight="bold")
+        sns.heatmap(report_df, annot=True, cmap="rocket", cbar=True)
         plt.tight_layout()
         plt.savefig(save_path)
         #plt.show()
+
