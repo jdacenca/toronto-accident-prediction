@@ -25,9 +25,11 @@ class LREvaluation:
         - save_path: Path to save the confusion matrix to.
         """
         cm = confusion_matrix(self.y_test, self.y_pred, labels=self.model.classes_)
-        pprint(f"Confusion Matrix: \n{cm}")
+        print(f"Confusion Matrix:")
+        print(cm)
         disp = ConfusionMatrixDisplay(cm, display_labels=self.model.classes_)
         disp.plot()
+        plt.savefig(save_path)
         plt.show()
 
     def roc_auc(self, save_path):
@@ -51,6 +53,7 @@ class LREvaluation:
         plt.ylabel('True Positive Rate')
         plt.title('Receiver Operating Characteristic (ROC)')
         plt.legend(loc='lower right')
+        plt.savefig(save_path)
         plt.show()
 
     def precision_recall_auc(self, save_path):
@@ -70,6 +73,7 @@ class LREvaluation:
         plt.ylabel('Precision')
         plt.title('Precision-Recall Curve')
         plt.legend(loc='lower left')
+        plt.savefig(save_path)
         plt.show()
 
     def classification_report(self, save_path):

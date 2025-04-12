@@ -26,7 +26,8 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     # cols_drop3 = ['ROAD_CLASS','DISTRICT','ACCLOC','INVAGE','INVTYPE',
     #               'PEDCOND','CYCCOND','PEDESTRIAN','CYCLIST','AUTOMOBILE','MOTORCYCLE',
     #               'TRSN_CITY_VEH','EMERG_VEH','PASSENGER','SPEEDING','AG_DRIV','NEIGHBOURHOOD_158']
-    cols_drop4 = ['ACCLOC', 'INVTYPE']
+    # cols_drop4 = ['ACCLOC', 'INVTYPE']
+    cols_drop4 = ['INVTYPE']
     cols_drop.extend(cols_drop2)
     # cols_drop.extend(cols_drop3)
     cols_drop.extend(cols_drop4)
@@ -102,11 +103,11 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         X['DATETIME'] = pd.to_datetime(X['DATE'].astype(str) + ' ' + X['TIME'].astype(str))
         df = X.assign(
             # YEAR=X['DATETIME'].dt.year,
-            MONTH=X['DATETIME'].dt.month,
-            WEEK=X['DATETIME'].dt.isocalendar().week,
-            DAY = X['DATETIME'].dt.day,
-            DAYOFWEEK=X['DATETIME'].dt.dayofweek,
-            HOUR=X['DATETIME'].dt.hour
+            MONTH=X['DATETIME'].dt.month.astype(int),
+            WEEK=X['DATETIME'].dt.isocalendar().week.astype(int),
+            DAY = X['DATETIME'].dt.day.astype(int),
+            DAYOFWEEK=X['DATETIME'].dt.dayofweek.astype(int),
+            HOUR=X['DATETIME'].dt.hour.astype(int)
         )
         # df.drop(columns=['DATE', 'TIME','DATETIME'], inplace = True)
         df.drop(columns=['DATETIME','DATE','TIME'], inplace = True)
@@ -125,7 +126,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         categorical_features = ['ROAD_CLASS',
                                 'DISTRICT',
-                                # 'ACCLOC',
+                                'ACCLOC',
                                 'TRAFFCTL',
                                 'VISIBILITY',
                                 'LIGHT',
@@ -142,7 +143,11 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         smote = SMOTENC(categorical_features=cat_indices, random_state=54)
         X_res, y_res = smote.fit_resample(X_df, y)
-        return np.hstack((X_res, y_res.reshape(-1, 1)))
+        y_res = pd.Series(y_res, name=y.name)  # Preserve the original name
+        X_res = pd.DataFrame(X_res, columns=X_df.columns)  # Preserve column names
+
+        # return np.hstack((X_res, y_res.values.reshape(-1, 1)))
+        return pd.concat([X_res, y_res], axis=1)
 
     # Cyclic Encoding for cyclic columns extracted from DATETIME
     def _cyclic_enc(self, df, column, max_value):
@@ -207,7 +212,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         # self._cyclic_enc_transform(X)
         self._drop_columns(X)
         if self._level == 1:
-            self._smote_debug(X)
+            # self._smote_debug(X)
             X = self._apply_smote(X)
 
         # X = self._ohe_transform(X)

@@ -59,7 +59,8 @@ def build_model_default(df):
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=54)
     # log_reg = LogisticRegression(penalty='l1', C=0.1, solver='liblinear', max_iter=10000,
     #                              class_weight='balanced', max_iter=100000, random_state=54)
-    log_reg = LogisticRegression(class_weight='balanced', max_iter=10000, random_state=54)
+    # log_reg = LogisticRegression(class_weight='balanced', max_iter=10000, random_state=54)
+    log_reg = LogisticRegression(max_iter=10000, random_state=54)
 
     X_train, X_test, y_train, y_test = train_test_split(df.drop('ACCLASS', axis=1),
                                                         df['ACCLASS'],
@@ -86,11 +87,11 @@ def LR_tuning(df):
     param_grid = {
            'C': [0.1, 1, 10, 100],
            'penalty': ['l1', 'l2'],
-           'solver': ['liblinear','newton-cg','lbfgs','saga'],
+           'solver': ['lbfgs','liblinear','newton-cg','saga'],
            # 'solver': ['liblinear'],
-           'max_iter': [300, 900],
-           # 'class_weight': ['balanced', None],
-           'class_weight': ['balanced'],
+           'max_iter': [300, 1000],
+           'class_weight': ['balanced', None],
+           # 'class_weight': ['balanced'],
             'random_state' :[54]
        }
 
@@ -98,6 +99,11 @@ def LR_tuning(df):
                                cv = skf, scoring = 'f1', refit = 'f1', n_jobs = -1, verbose = True)
 
     grid_search.fit(X_train, y_train)
+
+    print(grid_search.best_params_)
+    print(grid_search.best_score_)
+    print(grid_search.score(X_test, y_test))
+    print(grid_search.best_estimator_)
 
 # %%
 ############################
@@ -108,6 +114,9 @@ def LR_tuning(df):
 # %%
 ############################
 ## Main
+
+from random import randint
+from collections import Counter
 
 if __name__ == '__main__':
     df_ksi = load_data()
@@ -121,14 +130,16 @@ if __name__ == '__main__':
     # LR_tuning(df_new)
 
     log_reg, X_train, X_test, y_train, y_test  = build_model_default(df_new)
+    print(f"Class Distribution: {Counter(df_new['ACCLASS'])}, y_train: {Counter(y_train)}, y_test: {Counter(y_test)}")
 
     evaluation = LREvaluation(log_reg, X_test, y_test)
 
 
-    evaluation.confusion_matrix(r'./insights/confusion_matrix3.png')
-    evaluation.roc_auc(r'./insights/roc_auc3.png')
-    evaluation.precision_recall_auc(r'./insights/precision_recall_auc3.png')
-    evaluation.classification_report(r'./insights/classification_report3.png')
+    round = randint(1,100)
+    evaluation.confusion_matrix(fr'./insights/confusion_matrix{round}.png')
+    evaluation.roc_auc(fr'./insights/roc_auc{round}.png')
+    evaluation.precision_recall_auc(fr'./insights/precision_recall_auc{round}.png')
+    evaluation.classification_report(fr'./insights/classification_report{round}.png')
 
 
 
