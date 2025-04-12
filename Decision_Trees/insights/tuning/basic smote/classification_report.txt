@@ -3,12 +3,12 @@ Classification Report for basic smote
 
               precision    recall  f1-score   support
 
-           0       0.97      0.95      0.96      3252
-           1       0.72      0.84      0.77       534
+           0       0.96      0.94      0.95      3253
+           1       0.66      0.77      0.71       533
 
-    accuracy                           0.93      3786
-   macro avg       0.85      0.89      0.87      3786
-weighted avg       0.94      0.93      0.93      3786
+    accuracy                           0.91      3786
+   macro avg       0.81      0.85      0.83      3786
+weighted avg       0.92      0.91      0.92      3786
 
 
 Model Parameters:

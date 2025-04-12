@@ -80,7 +80,7 @@ export default function FeatureImportanceVerticalChart({
   return (
     <Card variant="outlined" sx={{ width: "100%" }}>
       <CardContent>
-        <Typography component="h2" variant="subtitle2" gutterBottom>
+        <Typography component="h2" variant="h6" gutterBottom>
           Feature Importance
         </Typography>
         <Stack sx={{ justifyContent: "space-between" }}>

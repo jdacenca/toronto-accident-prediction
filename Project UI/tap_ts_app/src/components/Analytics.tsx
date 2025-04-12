@@ -22,6 +22,7 @@ import { AppDispatch, RootState } from "../redux/store";
 import { setModel } from "../redux/slice";
 import FeatureImportanceChart from "./FeatureImportanceChart.tsx";
 import FeatureImportanceVerticalChart from "./FeatureImportanceVerticalChart.tsx";
+import ModelPerformanceGrid from "./ModelPerformanceGrid.tsx";
 
 function Analytics() {
   const model = useSelector((state: RootState) => state.tapApp.model);
@@ -37,33 +38,33 @@ function Analytics() {
     }
   > = {
     lg: {
-      trainingAccuracy: "91.52%",
+      trainingAccuracy: "91.62%",
       testingAccuracy: "89.58%",
       unseenDataAccuracy: "80%",
     },
     rf: {
       trainingAccuracy: "100%",
-      testingAccuracy: "94.44%",
+      testingAccuracy: "94.10%",
       unseenDataAccuracy: "90%",
     },
     svc: {
-      trainingAccuracy: "99.46%",
-      testingAccuracy: "94.68%",
+      trainingAccuracy: "99.54%",
+      testingAccuracy: "94.79%",
       unseenDataAccuracy: "90%",
     },
     dt: {
       trainingAccuracy: "100%",
-      testingAccuracy: "90.74%",
-      unseenDataAccuracy: "0.7%",
+      testingAccuracy: "91.26%",
+      unseenDataAccuracy: "90%",
     },
     nn: {
-      trainingAccuracy: "97.93%",
-      testingAccuracy: "91.15%",
+      trainingAccuracy: "97.68%",
+      testingAccuracy: "92.36%",
       unseenDataAccuracy: "90%",
     },
     hv: {
-      trainingAccuracy: "99.81%",
-      testingAccuracy: "94.39%",
+      trainingAccuracy: "99.63%",
+      testingAccuracy: "92.10%",
       unseenDataAccuracy: "80%",
     },
     sv: {
@@ -187,7 +188,7 @@ function Analytics() {
           </Box>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4}}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
@@ -232,60 +233,16 @@ function Analytics() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12}}>
-              <FeatureImportanceVerticalChart model={model} />
-
+        <Grid size={{ xs: 12 }}>
+          <FeatureImportanceVerticalChart model={model} />
         </Grid>
 
-        {/* <Grid size={{ xs: 12 }}>
-          <Typography variant="h6" component="h3">
-            Performance Analysis
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="performance table">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Kernel Type</TableCell>
-                  <TableCell>C Value</TableCell>
-                  <TableCell>Gamma</TableCell>
-                  <TableCell>Degree</TableCell>
-                  <TableCell>CV Scores (5 folds)</TableCell>
-                  <TableCell>Mean Score</TableCell>
-                  <TableCell>Best Parameters</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Linear</TableCell>
-                  <TableCell>1</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>[0.964, 0.982, 0.964, 0.955, 0.973]</TableCell>
-                  <TableCell>0.9678</TableCell>
-                  <TableCell>svm_C=1, svm_kernel=linear</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>RBF</TableCell>
-                  <TableCell>0.1</TableCell>
-                  <TableCell>0.03</TableCell>
-                  <TableCell>-</TableCell>
-                  <TableCell>[0.973, 0.982, 0.955, 0.955, 0.973]</TableCell>
-                  <TableCell>0.9676</TableCell>
-                  <TableCell>svm_C=0.1, svm_gamma=0.03</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Polynomial</TableCell>
-                  <TableCell>1</TableCell>
-                  <TableCell>1.0</TableCell>
-                  <TableCell>3</TableCell>
-                  <TableCell>[0.946, 0.973, 0.955, 0.920, 0.946]</TableCell>
-                  <TableCell>0.9480</TableCell>
-                  <TableCell>svm_C=1, svm_degree=3, svm_gamma=1.0</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Grid> */}
+        <Typography variant="h6">
+          Performance Comparison Across Various Sampling Techniques
+        </Typography>
+        <Grid size={{ xs: 12, lg: 12 }}>
+          <ModelPerformanceGrid model={model} />
+        </Grid>
       </Grid>
     </Box>
   );

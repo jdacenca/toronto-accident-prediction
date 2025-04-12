@@ -138,10 +138,10 @@ def analysis(model, model_name, X_train, y_train, X_test, y_test, desc):
     test_predictions = model.predict(X_test)
 
     print("Train Data:")
-    generateMetrics(model, X_train, y_train, train_predictions, desc)
+    generateMetrics(model, X_train, y_train, train_predictions, desc+"_train")
 
     print("Test Data:")
-    generateMetrics(model, X_test, y_test, test_predictions, desc)
+    generateMetrics(model, X_test, y_test, test_predictions, desc+"_test")
 
     print("\n")
     print("="*70)

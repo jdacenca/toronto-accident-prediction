@@ -9,43 +9,30 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
     def __init__(self):
         pass
     
-    def fit(self, X: pd.DataFrame) -> 'FeatureEngineer':
-        """Fit the feature engineer."""
-            
+    def fit(self, df: pd.DataFrame) -> 'FeatureEngineer':
+        """Fit the feature engineer."""       
         return self
     
-    def _create_time_features(self, X: pd.DataFrame) -> pd.DataFrame:
+    def _create_time_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """Create time-based features."""
-        if 'TIME' in X.columns:
+        if 'TIME' in df.columns:
             # Extract hour as integer (0-23)
-            X['HOUR'] = X['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
-            # Drop original TIME column after extraction
-            X = X.drop(['TIME'], axis=1)
+            df['HOUR'] = df['TIME'].apply(lambda x: int(str(x).zfill(4)[:2]))
         
-        if 'DATE' in X.columns:
+        if 'DATE' in df.columns:
             # Convert DATE to datetime if not already
-            X['DATE'] = pd.to_datetime(X['DATE'])
-            
+            df['DATE'] = pd.to_datetime(df['DATE'])            
             # Extract month (1-12)
-            X['MONTH'] = X['DATE'].dt.month
-            
+            df['MONTH'] = df['DATE'].dt.month            
             # Extract day of month (1-31)
-            X['DAY'] = X['DATE'].dt.day
-            
+            df['DAY'] = df['DATE'].dt.day            
             # Extract week number (1-53)
-            X['WEEK'] = X['DATE'].dt.isocalendar().week
-            
+            df['WEEK'] = df['DATE'].dt.isocalendar().week            
             # Extract day of week (0-6, where 0 is Monday)
-            X['DAYOFWEEK'] = X['DATE'].dt.dayofweek
-            
-            # Drop original DATE column after extraction
-            X = X.drop(['DATE'], axis=1)
-        
-        return X
+            df['DAYOFWEEK'] = df['DATE'].dt.dayofweek
+        return df
     
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
         """Transform the data by adding engineered features."""        
-        # Create time-based features
-        X = self._create_time_features(X)
-        
-        return X
+        # Create time-based features 
+        return self._create_time_features(df)

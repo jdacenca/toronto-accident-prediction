@@ -3,12 +3,12 @@ Classification Report for basic
 
               precision    recall  f1-score   support
 
-           0       0.96      0.96      0.96      3252
-           1       0.77      0.76      0.77       534
+           0       0.97      0.97      0.97      3253
+           1       0.81      0.83      0.82       533
 
-    accuracy                           0.93      3786
-   macro avg       0.87      0.86      0.86      3786
-weighted avg       0.93      0.93      0.93      3786
+    accuracy                           0.95      3786
+   macro avg       0.89      0.90      0.89      3786
+weighted avg       0.95      0.95      0.95      3786
 
 
 Model Parameters:

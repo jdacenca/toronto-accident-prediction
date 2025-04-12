@@ -1,19 +1,19 @@
 Model,Sampling,Accuracy,Precision,Recall,F1-Score
-basic,None,80.0,0.5,0.5,0.5
-gini,None,80.0,0.5,0.5,0.5
-entropy,None,60.0,0.0,0.0,0.0
-basic smote,smote,90.0,0.6666666666666666,1.0,0.8
-gini smote,smote,90.0,0.6666666666666666,1.0,0.8
-entropy smote,smote,70.0,0.0,0.0,0.0
-basic random_over,random_over,70.0,0.0,0.0,0.0
-gini random_over,random_over,70.0,0.0,0.0,0.0
-entropy random_over,random_over,80.0,0.5,1.0,0.6666666666666666
-basic random_under,random_under,80.0,0.5,0.5,0.5
-gini random_under,random_under,80.0,0.5,0.5,0.5
-entropy random_under,random_under,80.0,0.5,0.5,0.5
-basic smote_tomek,smote_tomek,60.0,0.0,0.0,0.0
-gini smote_tomek,smote_tomek,60.0,0.0,0.0,0.0
-entropy smote_tomek,smote_tomek,70.0,0.0,0.0,0.0
-basic smote_enn,smote_enn,80.0,0.0,0.0,0.0
-gini smote_enn,smote_enn,80.0,0.0,0.0,0.0
-entropy smote_enn,smote_enn,60.0,0.0,0.0,0.0
+basic,None,100.0,1.0,1.0,1.0
+gini,None,100.0,1.0,1.0,1.0
+entropy,None,90.0,1.0,0.8,0.8888888888888888
+basic smote,smote,90.0,1.0,0.8,0.8888888888888888
+gini smote,smote,90.0,1.0,0.8,0.8888888888888888
+entropy smote,smote,90.0,1.0,0.8,0.8888888888888888
+basic random_over,random_over,100.0,1.0,1.0,1.0
+gini random_over,random_over,100.0,1.0,1.0,1.0
+entropy random_over,random_over,90.0,1.0,0.8,0.8888888888888888
+basic random_under,random_under,80.0,1.0,0.6,0.75
+gini random_under,random_under,80.0,1.0,0.6,0.75
+entropy random_under,random_under,60.0,0.6666666666666666,0.4,0.5
+basic smote_tomek,smote_tomek,90.0,1.0,0.8,0.8888888888888888
+gini smote_tomek,smote_tomek,90.0,1.0,0.8,0.8888888888888888
+entropy smote_tomek,smote_tomek,90.0,1.0,0.8,0.8888888888888888
+basic smote_enn,smote_enn,90.0,1.0,0.8,0.8888888888888888
+gini smote_enn,smote_enn,90.0,1.0,0.8,0.8888888888888888
+entropy smote_enn,smote_enn,100.0,1.0,1.0,1.0

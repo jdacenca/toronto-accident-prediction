@@ -20,7 +20,70 @@ COLUMNS_TO_DROP = [
     'VEHTYPE', 'MANOEUVER', 'DRIVACT',
     'DRIVCOND', 'PEDTYPE', 'PEDACT',
     'CYCLISTYPE', 'CYCACT', 'x', 'y',
+    'DATE', 'TIME'
 ]
+
+BINARY_COLUMNS = [
+    'PEDESTRIAN',
+    'CYCLIST',
+    'AUTOMOBILE',
+    'MOTORCYCLE',
+    'TRUCK',
+    'TRSN_CITY_VEH',
+    'EMERG_VEH',
+    'PASSENGER',
+    'SPEEDING',
+    'AG_DRIV',
+    'REDLIGHT',
+    'ALCOHOL',
+    'DISABILITY'
+]
+
+COLUMNS_TO_LABEL_ENCODE = [
+    'ROAD_CLASS',
+    'DISTRICT',
+    'ACCLOC',
+    'TRAFFCTL',
+    'VISIBILITY',
+    'LIGHT',
+    'RDSFCOND',
+    'IMPACTYPE',
+    'INVTYPE',
+    'INVAGE',
+    'PEDCOND',
+    'CYCCOND',
+    'NEIGHBOURHOOD_158',
+]
+
+NA_FILL_COLUMNS = ['PEDCOND', 'CYCCOND']
+
+TARGET = 'ACCLASS'
+
+# MONTH_MAPPING = {
+#     'JANUARY': 1, 'FEBRUARY': 2, 'MARCH': 3, 'APRIL': 4,
+#     'MAY': 5, 'JUNE': 6, 'JULY': 7, 'AUGUST': 8,
+#     'SEPTEMBER': 9, 'OCTOBER': 10, 'NOVEMBER': 11, 'DECEMBER': 12
+# }
+
+# DAY_MAPPING = {
+#     'MONDAY': 1, 'TUESDAY': 2, 'WEDNESDAY': 3, 'THURSDAY': 4,
+#     'FRIDAY': 5, 'SATURDAY': 6, 'SUNDAY': 7 
+# }
+
+# WEEK_MAPPING = {
+#     'MONDAY': 1, 'TUESDAY': 2, 'WEDNESDAY': 3, 'THURSDAY': 4,
+#     'FRIDAY': 5, 'SATURDAY': 6, 'SUNDAY': 7 
+# }
+
+# DAYOFWEEK_MAPPING = {
+#     'MONDAY': 0, 'TUESDAY': 1, 'WEDNESDAY': 2, 'THURSDAY': 3,
+#     'FRIDAY': 4, 'SATURDAY': 5, 'SUNDAY': 6 
+# }
+
+BINARY_MAPPING = {'YES': 1, 'NO': 0}
+
+TARGET_MAPPING = {'FATAL': 1, 'NON-FATAL INJURY': 0}
+
 # Model parameters
 MODEL_PARAMS = {
     'max_depth': [3, 5, 7, None],
@@ -37,21 +100,5 @@ SCORING_METRICS = {
     'accuracy': 'accuracy'
 }
 
-# Time periods for feature engineering
-TIME_PERIODS = [
-    ['Night (0-5)'], ['Morning (6-11)'],
-    ['Afternoon (12-16)'], ['Evening (17-20)'],
-    ['Night (21-23)']
-]
-
-# Time period bins
-TIME_BINS = [-1, 5, 11, 16, 20, 23]
-TIME_LABELS = ['Night (0-5)', 'Morning (6-11)', 
-               'Afternoon (12-16)', 'Evening (17-20)', 
-               'Night (21-23)']
-
 # Random state for reproducibility
 RANDOM_STATE = 48
-
-# Number of location clusters
-N_LOCATION_CLUSTERS = 10 
