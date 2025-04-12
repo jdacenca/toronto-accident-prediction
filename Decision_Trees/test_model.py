@@ -5,16 +5,14 @@ This script loads the trained Decision Tree model and preprocessing pipeline,
 and allows testing with new data entries provided either via manual input,
 a CSV file, or sample test cases.
 """
-
-import os
+import argparse
 import logging
 import pandas as pd
 import numpy as np
 import joblib
 from pathlib import Path
 from typing import Union, Any
-from utils.config import SERIALIZED_DIR, DATA_DIR
-from sklearn.tree import DecisionTreeClassifier
+from utils.config import SERIALIZED_DIR, TARGET
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -54,19 +52,6 @@ class ModelTester:
         logging.info(f"Loading preprocessing pipeline from {pipeline_path}")
         self.pipeline = joblib.load(pipeline_path)
         
-        # Load a sample from the dataset to get column structure
-        sample_data_path = DATA_DIR / 'TOTAL_KSI_6386614326836635957.csv'
-        if not sample_data_path.exists():
-            logging.warning(f"Sample data file not found: {sample_data_path}. Using any CSV file in the data directory.")
-            # Try to find any CSV file in the data directory
-            csv_files = list(DATA_DIR.glob('*.csv'))
-            if not csv_files:
-                raise FileNotFoundError("No CSV files found in the data directory.")
-            sample_data_path = csv_files[0]
-            
-        self.sample_df = pd.read_csv(sample_data_path)
-        self.columns = self.sample_df.columns.tolist()
-        
         logging.info(f"Model and pipeline loaded successfully.")
         
     def _format_prediction(self, y_pred: np.ndarray, y_prob: np.ndarray) -> dict[str, Union[str, float]]:
@@ -85,7 +70,6 @@ class ModelTester:
             'fatal_probability': float(y_prob[0][1]) if len(y_prob[0]) > 1 else float(y_prob[0]),
             'non_fatal_probability': float(y_prob[0][0]) if len(y_prob[0]) > 1 else 1 - float(y_prob[0])
         }
-
     
     def predict_single(self, data: dict[str, Any]) -> dict[str, Union[str, float]]:
         """Make a prediction for a single data entry.
@@ -98,16 +82,12 @@ class ModelTester:
         """
         # Convert dictionary to DataFrame
         df = pd.DataFrame([data])
-        
-        # Ensure all required columns are present
-        for col in self.columns:
-            if col not in df.columns:
-                df[col] = np.nan
                 
-        # Apply preprocessing pipeline
-        X = self.pipeline.transform(df)
-        
-        # Make prediction
+        # Apply preprocessing pipeline with safe transform
+        df = self.pipeline.transform(data)
+        X = df.drop(columns=[TARGET])
+        y = df[TARGET]
+        # Make predictions
         y_pred = self.model.predict(X)
         y_prob = self.model.predict_proba(X)
         
@@ -122,14 +102,11 @@ class ModelTester:
         Returns:
             List of dicts with prediction results
         """
-        # Ensure all required columns are present
-        for col in self.columns:
-            if col not in data.columns:
-                data[col] = np.nan
                 
-        # Apply preprocessing pipeline
-        X = self.pipeline.transform(data)
-        
+        # Apply preprocessing pipeline with safe transform
+        df = self.pipeline.transform(data)
+        X = df.drop(columns=[TARGET])
+        y = df[TARGET]
         # Make predictions
         y_pred = self.model.predict(X)
         y_prob = self.model.predict_proba(X)
@@ -161,101 +138,46 @@ class ModelTester:
             
         # Load data
         data = pd.read_csv(file_path)
-        
+        # Drop 'ACCLASS' column if it exists
+        data.drop(columns=['ACCLASS'], errors='ignore', inplace=True)
         return self.predict_batch(data)
-    
-    def create_sample_entry(self) -> dict[str, Any]:
-        """Create a sample data entry based on the columns in the dataset.
-        
-        Returns:
-            Dict with sample values for each column
-        """
-        # Create a sample entry with median values for numeric columns and mode for categorical
-        sample_entry = {}
-        
-        for col in self.sample_df.columns:
-            if col == 'ACCLASS':
-                continue  # Skip the target column
-                
-            if pd.api.types.is_numeric_dtype(self.sample_df[col]):
-                # For numeric columns, use median
-                sample_entry[col] = self.sample_df[col].median()
-            else:
-                # For categorical columns, use mode
-                mode_value = self.sample_df[col].mode()[0]
-                sample_entry[col] = mode_value if not pd.isna(mode_value) else "UNKNOWN"
-                
-        return sample_entry
 
 def main():
     """Main function for testing the model."""
-    print("\n====== Toronto Accident Severity Prediction Model Tester ======\n")
+    parser = argparse.ArgumentParser(description="Batch test the decision tree model")
+    
+    parser.add_argument('--input-csv', type=str, default=None, help="Path to a CSV file containing test cases")
+    
+    args = parser.parse_args()
     
     try:
         # Initialize model tester
         tester = ModelTester()
         
-        # Print model info
-        print(f"Model type: {type(tester.model).__name__}")
-        print(f"Pipeline steps: {[step[0] for step in tester.pipeline.steps]}\n")
-        
-        print("\nTest Options:")
-        print("1. Test with sample data")
-        print("2. Test with CSV file")
-        print("3. Exit")
-        
-        choice = input("\nEnter your choice (1-3): ")
-        
-        if choice == '1':
-            # Test with sample data
-            sample_entry = tester.create_sample_entry()
-            print("\nSample Entry:")
-            for key, value in sample_entry.items():
-                print(f"  - {key}: {value}")
-                
-            # Make prediction
-            result = tester.predict_single(sample_entry)
-            
-            print("\nPrediction Result:")
-            print(f"  - Predicted Class: {result['prediction']}")
-            print(f"  - Confidence: {result['confidence']:.4f}")
-            print(f"  - Fatal Accident Probability: {result['fatal_probability']:.4f}")
-            print(f"  - Non-Fatal Accident Probability: {result['non_fatal_probability']:.4f}")
-            
-        elif choice == '2':
-            # Test with CSV file
-            file_path = input("\nEnter path to CSV file: ")
-            
-            if not os.path.exists(file_path):
-                print(f"File not found: {file_path}")
-                return
-                
-            results = tester.predict_from_csv(file_path)
-            
-            print(f"\nPredicted {len(results)} entries:")
-            for i, result in enumerate(results[:10]):  # Show only first 10 results
-                print(f"\nEntry {i+1}:")
-                print(f"  - Predicted Class: {result['prediction']}")
-                print(f"  - Confidence: {result['confidence']:.4f}")
-                print(f"  - Fatal Accident Probability: {result['fatal_probability']:.4f}")
-            
-            if len(results) > 10:
-                print(f"\n... and {len(results) - 10} more entries.")
-                
-            # Calculate summary statistics
-            fatal_count = sum(1 for r in results if r['prediction'] == 'FATAL')
-            non_fatal_count = sum(1 for r in results if r['prediction'] == 'NON-FATAL')
-            
-            print("\nSummary Statistics:")
-            print(f"  - Total Entries: {len(results)}")
-            print(f"  - Predicted Fatal: {fatal_count} ({fatal_count/len(results)*100:.2f}%)")
-            print(f"  - Predicted Non-Fatal: {non_fatal_count} ({non_fatal_count/len(results)*100:.2f}%)")
-            
-        elif choice == '3':
-            print("\nExiting...")
-            return
+        # Get test cases
+        if args.input_csv:
+            # Use provided CSV file
+            test_cases = pd.read_csv(args.input_csv)
+            logging.info(f"Loaded {len(test_cases)} test cases from {args.input_csv}")
         else:
-            print("\nInvalid choice. Please run the script again and select a valid option.")
+            logging.error("No test cases available. Exiting.")
+            return
+            
+        # Make predictions
+        logging.info("Making predictions...")
+        results = tester.predict_batch(test_cases)
+            
+        # Calculate summary statistics
+        fatal_count = sum(1 for r in results if r['prediction'] == 'FATAL')
+        non_fatal_count = sum(1 for r in results if r['prediction'] == 'NON-FATAL')
+        
+        print("\nSummary Statistics:")
+        print(f"  - Total Entries: {len(results)}")
+        print(f"  - Predicted Fatal: {fatal_count} ({fatal_count/len(results)*100:.2f}%)")
+        print(f"  - Predicted Non-Fatal: {non_fatal_count} ({non_fatal_count/len(results)*100:.2f}%)")
+        print("\nDetailed Predictions:")
+        for i, result in enumerate(results):
+            print(f"Entry {i+1}: {result}")
             
     except Exception as e:
         logging.error(f"An error occurred: {e}")
