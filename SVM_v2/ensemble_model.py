@@ -98,6 +98,7 @@ def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_f
         print(f"ROC AUC: {roc_auc:.4f}")
 
 
+
         if isinstance(classifier, VotingClassifier):
             
             # Generate and save performance plots
@@ -112,6 +113,17 @@ def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_f
             performance.conf_matrix(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/confusion_matrix.png")
             performance.classification_report_heatmap(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/classification_report.png")
             performance.roc_cur(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/roc_curve.png")
+
+        else:
+
+            # Generate and save performance plots
+            folder_path = f"./ensemble_performance/{classifier_name}_{class_imb.lower()}"
+            os.makedirs(folder_path, exist_ok=True)
+            
+            performance = ModelPerformance(classifier, X_test, y_test)
+            performance.conf_matrix(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/confusion_matrix.png")
+            performance.classification_report_heatmap(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/classification_report.png")
+            performance.roc_cur(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/roc_curve.png")
 
 # ===================== FUNCTION TO SAVE RESULTS =====================
 def save_results_to_files(results, csv_file, md_file):
@@ -151,6 +163,9 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     # Split the data into features and target
     unseen_features, unseen_labels, cleaned_df, features, target = sample_and_update_data(cleaned_df)
 
+    print(f"\n====================Features====================")
+    data_overview(features)
+    
     # Encode the target variable
     label_encoder = LabelEncoder()
     target = label_encoder.fit_transform(target)
