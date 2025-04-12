@@ -17,6 +17,7 @@ import Analytics from './components/Analytics';
 import MainGrid from './components/MainGrid';
 import Prediction from './components/Prediction';
 import Exploration from './components/Exploration';
+import ModelComparison from './components/ModelComparison';
 
 import {
   chartsCustomizations,
@@ -64,6 +65,7 @@ export default function App(props: { disableCustomTheme?: boolean }) {
               <Route path="/exploration" element={<Exploration />} />
               <Route path="/prediction" element={<Prediction />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="//model-comparison" element={<ModelComparison />} />
             </Routes>
           </Stack>
         </Box>
