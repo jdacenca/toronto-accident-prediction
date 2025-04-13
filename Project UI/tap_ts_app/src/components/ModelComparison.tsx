@@ -79,11 +79,8 @@ function ModelComparison() {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
-              <Typography variant="h6" component="h3">
-                Classification Report
-              </Typography>
               <img
-                src={`/images/${model}/classification_report.png`}
+                src={`/images/combined/combined_lg_curve.png`}
                 alt="Classification Report"
                 style={{ width: "100%", height: "auto" }}
               />

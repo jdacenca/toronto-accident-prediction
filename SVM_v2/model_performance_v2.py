@@ -14,6 +14,53 @@ import os
 import matplotlib.pyplot as plt
 from sklearn.inspection import permutation_importance
 
+def plot_lift_gain_curves(classifiers, X_test, y_test, save_folder):
+    # Plot Lift & Gain curves only
+    plt.figure(figsize=(12, 10))
+    
+    for classifier in classifiers:
+        if hasattr(classifier, "predict_proba"):
+            y_test_proba = classifier.predict_proba(X_test)[:, 1]
+        else:
+            y_test_proba = classifier.predict(X_test)
+
+        # Sort the probabilities in descending order
+        sorted_indices = np.argsort(y_test_proba)[::-1]
+        sorted_probs = y_test_proba[sorted_indices]
+        sorted_true = y_test[sorted_indices]
+
+        # Calculate Lift & Gain
+        total_positive = np.sum(y_test == 1)
+        total_negative = np.sum(y_test == 0)
+        
+        cumulative_positive = np.cumsum(sorted_true)  # True positives accumulated
+        gain = cumulative_positive / total_positive  # Gain curve
+        lift = gain / (np.arange(1, len(gain) + 1) / len(y_test))  # Lift curve
+        
+        # Label name for the classifier
+        if "VotingClassifier" in str(classifier):
+            voting_type = "hard" if classifier.voting == "hard" else "soft"
+            label_name = f"Voting ({voting_type})"
+        else:
+            label_name = str(classifier).split('(')[0]
+
+        # Plot Gain curve
+        plt.plot(np.arange(1, len(gain) + 1) / len(y_test), gain, label=f"{label_name} Gain Curve")
+        
+        # Plot Lift curve
+        plt.plot(np.arange(1, len(lift) + 1) / len(y_test), lift, label=f"{label_name} Lift Curve")
+    
+    # Add labels and title
+    plt.xlabel("Percentile of Samples")
+    plt.ylabel("Gain / Lift")
+    plt.title("Combined Lift and Gain Curves")
+    plt.legend(loc="lower left")
+    plt.grid()
+    
+    # Save the combined plot
+    plt.savefig(f"ensemble_performance/performance_metrics/combined_plot/{save_folder}/combined_lift_gain_curve.png")
+    plt.show()
+
 
 def plot_combined_performance_bar_plots(classifiers, X_train, y_train, X_test, y_test, save_folder):
     """

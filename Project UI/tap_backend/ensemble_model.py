@@ -81,16 +81,22 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
 
     # Fill missing values
     unknown_columns = ['PEDCOND', 'DRIVCOND', 'MANOEUVER', 'CYCACT',
-                     'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR','INVAGE']
+                     'VEHTYPE', 'INVTYPE', 'IMPACTYPE', 'DISTRICT', 'INITDIR','INVAGE',"TRAFFCTL"]
     other_columns = ['ROAD_CLASS', 'ACCLOC', 'VISIBILITY', 'LIGHT', 'RDSFCOND', 'DRIVACT']
     boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'MOTORCYCLE',
                     'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'TRSN_CITY_VEH', 'DISABILITY','AUTOMOBILE','TRUCK']
 
-    df2[other_columns] = df2[other_columns].fillna("Other")
-    df2[unknown_columns] = df2[unknown_columns].fillna("Unknown")
-    df2[boolean_columns] = df2[boolean_columns].fillna("No")
+    categorical_columns = [
+        'ROAD_CLASS', 'DISTRICT', 'ACCLOC', 'TRAFFCTL', 'VISIBILITY', 'LIGHT',
+        'RDSFCOND', 'IMPACTYPE', 'INVTYPE', 'INITDIR', 'VEHTYPE', 'MANOEUVER',
+        'DRIVACT', 'DRIVCOND', 'PEDCOND', 'CYCACT','ACCLASS'
+    ]
 
-    df2["TRAFFCTL"] = df2["TRAFFCTL"].fillna("No_Control")
+    df2[categorical_columns] = df2[categorical_columns].apply(lambda col: col.str.upper())
+
+    df2[other_columns] = df2[other_columns].fillna("OTHER")
+    df2[unknown_columns] = df2[unknown_columns].fillna("UNKNOWN")
+    df2[boolean_columns] = df2[boolean_columns].fillna("No")
 
     # Convert boolean columns to numeric
     df2[boolean_columns] = df2[boolean_columns].replace({'Yes': 1, 'No': 0}).astype(float)
@@ -248,9 +254,9 @@ def start():
     results = []
 
     # Process and train for each class imbalance method
-    p = process_and_train(data_ksi, columns_to_drop, class_imb='undersampling', results=results)
+    p = process_and_train(data_ksi, columns_to_drop, class_imb='oversampling', results=results)
 
     return p
 
 
-start
+start()
