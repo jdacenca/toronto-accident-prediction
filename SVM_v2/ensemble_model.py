@@ -15,7 +15,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, precision_score, recall_score
 import csv
-from model_performance_v2 import ModelPerformance, plot_combined_roc_curves, plot_combined_precision_recall_curves, plot_combined_performance_bar_plots
+from model_performance_v2 import ModelPerformance, plot_combined_roc_curves, plot_combined_precision_recall_curves, plot_combined_performance_bar_plots,plot_lift_gain_curves
 import os
 
 # Random seed for reproducibility
@@ -253,7 +253,7 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     )
     
     plot_combined_performance_bar_plots(
-        fitted_classifiers, #include only the soft voting classifier from the second list
+        fitted_classifiers, 
         X_train,
         y_train,
         X_test,
@@ -261,6 +261,12 @@ def process_and_train(data, columns_to_drop, class_imb, results):
         f"bar_{class_imb}"
     )
 
+    plot_lift_gain_curves(
+        fitted_classifiers, 
+        X_test,
+        y_test,
+        f"lg_{class_imb}"
+    )
 
 # ===================== MAIN EXECUTION =====================
 # Initialize results list
