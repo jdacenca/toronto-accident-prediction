@@ -60,7 +60,7 @@ def impute(data):
     empty_district_index = df['DISTRICT'].isna()
     hood_to_district_mode = df.groupby('HOOD_158')['DISTRICT'].agg(lambda x: x.mode()[0])
     # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
-    df['DISTRICT'].fillna(df['HOOD_158'].map(hood_to_district_mode))
+    df['DISTRICT'] = df['DISTRICT'].fillna(df['HOOD_158'].map(hood_to_district_mode))
 
 
     ###############
@@ -204,11 +204,56 @@ def chi_square_test(data, labelenc_cols):
     # print("Selected Features:", selected_features)
 
 # %%
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report
+from catboost import CatBoostClassifier, Pool
+
+import shap
+def catboost(df):
+
+    # Identify categorical features
+    categorical_features = df.select_dtypes(include='object').columns.tolist()
+
+    X = df.drop('ACCLASS', axis=1)
+    y = df['ACCLASS']
+
+    # Train CatBoost to get SHAP-based feature importance
+    cat_model = CatBoostClassifier(iterations=100, depth=4, learning_rate=0.1, verbose=0, random_state=54)
+    cat_model.fit(X, y, cat_features=categorical_features)
+
+    # Use SHAP to get feature importances
+    explainer = shap.TreeExplainer(cat_model)
+    shap_values = explainer.shap_values(X)
+
+    # Get mean absolute SHAP value per feature
+    shap_importance = np.abs(shap_values).mean(axis=0)
+    shap_feature_importance = pd.Series(shap_importance, index=X.columns).sort_values(ascending=False)
+
+    shap.summary_plot(shap_values, X)
+    plt.show()
+    #  Select top N features
+    top_n = 34  # You can change this based on your dataset
+    selected_features = shap_feature_importance.head(top_n).index.tolist()
+    print(f"Selected features: {selected_features}")
+
+    # Show dependence plot for a single feature
+    for feature in ['IMPACTYPE','NEIGHBOURHOOD_158','SPEEDING','TRUCK']:
+        shap.dependence_plot(feature, shap_values, X, interaction_index=None)
+        plt.tight_layout()
+        plt.show()
+
+# %%
 data_ksi = load_data()
 df_ksi1 = init_clean(data_ksi)
 df_ksi2 = impute(df_ksi1)
 df_ksi3 = boolean_column_transform(df_ksi2)
 df_ksi4 = add_datetime_new(df_ksi3)
+
+####
 df_ksi5, cat_labels = labelenc_transform(df_ksi4)
 df_ksi6 = chi_square_test(df_ksi4, cat_labels)
 
@@ -240,3 +285,5 @@ for col in numeric_cols:
 chi2_feature_importance(df_ksi3, df_ksi5_drop_col, 'ACCLASS', top_n=31, plot=True)
 
 df_ksi6 = chi_square_test(df_ksi5_drop, df_ksi5_drop_col)
+
+catboost(df_ksi4_drop)

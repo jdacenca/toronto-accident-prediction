@@ -29,7 +29,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     # cols_drop4 = ['ACCLOC', 'INVTYPE']
     # cols_drop4 = ['INVTYPE']
     cols_drop4 = ['INVTYPE', 'INVAGE', 'PEDCOND', 'CYCCOND','NEIGHBOURHOOD_158', 'IMPACTYPE']
-    cols_drop5 = ['NEIGHBOURHOOD_158',
+    cols_drop5 = [ 'NEIGHBOURHOOD_158',
                     'ALCOHOL',
                     'WEEK',
                     'AG_DRIV',
@@ -47,10 +47,34 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
                     'ROAD_CLASS',
                     'PEDCOND',
                     'RDSFCOND',]
+    cols_drop6 = ['PEDCOND',
+                     'ACCLOC',
+                     'HOUR',
+                     'TRAFFCTL',
+                     'WEEK',
+                     'VISIBILITY',
+                     'TRSN_CITY_VEH',
+                     'LONGITUDE',
+                     'AUTOMOBILE',
+                     'MONTH',
+                     'CYCLIST',
+                     'DAY',
+                     'RDSFCOND',
+                     'CYCCOND',
+                     'DAYOFWEEK',
+                     'MOTORCYCLE',
+                     'PASSENGER',
+                     'ROAD_CLASS',
+                     'REDLIGHT',
+                     'INVTYPE',
+                     'ALCOHOL',
+                     'EMERG_VEH',
+                     'DISABILITY']# Based on SHAP importance
     cols_drop.extend(cols_drop2)
     # cols_drop.extend(cols_drop3)
     # cols_drop.extend(cols_drop4)
-    cols_drop.extend(cols_drop5)
+    # cols_drop.extend(cols_drop5)
+    cols_drop.extend(cols_drop6)
 
 
     def __init__(self, level = 2):
@@ -165,21 +189,49 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     def _apply_smote(self, df):
         print("Preprocessing data : _apply_smote")
         """Apply SMOTENC on combined [X, y] array"""
+        orig_cat_features = [ 'ROAD_CLASS', 'DISTRICT', 'ACCLOC','TRAFFCTL',
+                                'VISIBILITY','LIGHT','RDSFCOND','IMPACTYPE',
+                                'INVTYPE','INVAGE','PEDCOND','CYCCOND',
+                                'NEIGHBOURHOOD_158']
+        features_to_drop = ['PEDCOND',
+                     'ACCLOC',
+                     'HOUR',
+                     'TRAFFCTL',
+                     'WEEK',
+                     'VISIBILITY',
+                     'TRSN_CITY_VEH',
+                     'LONGITUDE',
+                     'AUTOMOBILE',
+                     'MONTH',
+                     'CYCLIST',
+                     'DAY',
+                     'RDSFCOND',
+                     'CYCCOND',
+                     'DAYOFWEEK',
+                     'MOTORCYCLE',
+                     'PASSENGER',
+                     'ROAD_CLASS',
+                     'REDLIGHT',
+                     'INVTYPE',
+                     'ALCOHOL',
+                     'EMERG_VEH',
+                     'DISABILITY']
 
-        categorical_features = [ #'ROAD_CLASS',
-                                'DISTRICT',
-                                'ACCLOC',
-                                'TRAFFCTL',
-                                # 'VISIBILITY',
-                                'LIGHT',
-                                # 'RDSFCOND',
-                                'IMPACTYPE',
-                                'INVTYPE',
-                                'INVAGE',
-                                # 'PEDCOND',
-                                # 'CYCCOND',
-                                # 'NEIGHBOURHOOD_158'
-                                ]
+        # categorical_features = [ 'ROAD_CLASS',
+        #                         'DISTRICT',
+        #                         'ACCLOC',
+        #                         'TRAFFCTL',
+        #                         'VISIBILITY',
+        #                         'LIGHT',
+        #                          'RDSFCOND',
+        #                         'IMPACTYPE',
+        #                          'INVTYPE',
+        #                         'INVAGE',
+        #                          'PEDCOND',
+        #                          'CYCCOND',
+        #                         'NEIGHBOURHOOD_158'
+        #                         ]
+        categorical_features =[feature for feature in orig_cat_features if feature not in features_to_drop]
         X_df, y = df.drop(['ACCLASS'], axis=1), df['ACCLASS']
         cat_indices = [X_df.columns.get_loc(col) for col in categorical_features]
 
@@ -226,6 +278,9 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         for col in labelenc_cols:
             df[col] = lblenc.fit_transform(df[col])
 
+    def _standard_scaler(self, df, numeric_features):
+        scaler = StandardScaler()
+        df[numeric_features] = scaler.fit_transform(df[numeric_features])
 
     def _aggregate(self, df):
         pass
@@ -269,4 +324,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         # X = self._ohe_transform(X)
         self._labelenc_transform(data)
+
+        numeric_features = data.select_dtypes(include=[np.number]).columns
+        self._standard_scaler(data, numeric_features)
         return data

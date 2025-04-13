@@ -91,6 +91,7 @@ class LREvaluation:
         pprint(report)
         report_df = pd.DataFrame(report).iloc[:-1, :].T
 
+        report_df.to_csv(save_path.replace(".png",".csv"))
         plt.figure(figsize=(8, 6))
         sns.heatmap(report_df, annot=True, cmap="coolwarm", cbar=False)
         plt.title("Classification Report", fontsize=14, fontweight="bold")
