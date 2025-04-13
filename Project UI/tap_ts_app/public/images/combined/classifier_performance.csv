@@ -1,7 +1,7 @@
 Classifier,Class Imbalance,Train Accuracy,Test Accuracy,Unseen Accuracy (10),Precision,Recall,F1 Score,Unseen Accuracy (6000),ROC AUC
 LogisticRegression,Oversampling,0.9162,0.8958,0.8,0.8958,0.8958,0.8958,0.8962,0.963
 RandomForestClassifier,Oversampling,1.0,0.941,0.9,0.9413,0.941,0.941,0.7837000000000001,0.9882
-SVC,Oversampling,0.9954,0.9479,0.9,0.9482,0.9479,0.9479,0.9684,0.9837
+SVC,Oversampling,0.9954,0.9479,1.0,0.9482,0.9479,0.9479,0.9684,0.9837
 DecisionTreeClassifier,Oversampling,1.0,0.9126,0.7,0.9142,0.9126,0.9125,0.3654,0.9126
 MLPClassifier,Oversampling,0.9768,0.9236,0.9,0.9255,0.9236,0.9235,0.8297,0.9624
 HardVotingClassifier,Oversampling,0.9971,0.9416,0.9416,0.9422,0.9416,0.9415,0.8709,0.9416
