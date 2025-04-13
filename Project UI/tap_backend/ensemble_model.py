@@ -86,6 +86,14 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'MOTORCYCLE',
                     'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'TRSN_CITY_VEH', 'DISABILITY','AUTOMOBILE','TRUCK']
 
+    categorical_columns = [
+        'ROAD_CLASS', 'DISTRICT', 'ACCLOC', 'TRAFFCTL', 'VISIBILITY', 'LIGHT',
+        'RDSFCOND', 'IMPACTYPE', 'INVTYPE', 'INITDIR', 'VEHTYPE', 'MANOEUVER',
+        'DRIVACT', 'DRIVCOND', 'PEDCOND', 'CYCACT','ACCLASS'
+    ]
+
+    data_ksi[categorical_columns] = data_ksi[categorical_columns].apply(lambda col: col.str.upper())
+    
     df2[other_columns] = df2[other_columns].fillna("OTHER")
     df2[unknown_columns] = df2[unknown_columns].fillna("UNKNOWN")
     df2[boolean_columns] = df2[boolean_columns].fillna("No")
