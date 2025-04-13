@@ -92,8 +92,8 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
         'DRIVACT', 'DRIVCOND', 'PEDCOND', 'CYCACT','ACCLASS'
     ]
 
-    data_ksi[categorical_columns] = data_ksi[categorical_columns].apply(lambda col: col.str.upper())
-    
+    df2[categorical_columns] = df2[categorical_columns].apply(lambda col: col.str.upper())
+
     df2[other_columns] = df2[other_columns].fillna("OTHER")
     df2[unknown_columns] = df2[unknown_columns].fillna("UNKNOWN")
     df2[boolean_columns] = df2[boolean_columns].fillna("No")
@@ -254,9 +254,9 @@ def start():
     results = []
 
     # Process and train for each class imbalance method
-    p = process_and_train(data_ksi, columns_to_drop, class_imb='undersampling', results=results)
+    p = process_and_train(data_ksi, columns_to_drop, class_imb='oversampling', results=results)
 
     return p
 
 
-start
+start()
