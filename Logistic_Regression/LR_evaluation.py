@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import pandas as pd
 from pprint import pprint
+from LR_preprocessor import LRPreprocessor
 
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
@@ -10,10 +11,13 @@ from sklearn.metrics import (
     precision_recall_curve, roc_curve)
 
 class LREvaluation:
-    def __init__(self, model, X_test, y_test):
+    def __init__(self, model, preprocessor, X_test, y_test):
         self.model = model
-        self.X_test = X_test
-        self.y_test = y_test
+        df_test = preprocessor.transform(pd.concat([X_test, y_test], axis=1))
+        # self.X_test = X_test
+        # self.y_test = y_test
+        self.X_test, self.y_test = df_test.drop('ACCLASS', axis = 1), df_test['ACCLASS']
+
         self.y_pred = self.model.predict(self.X_test)
         self.y_prob = self.model.predict_proba(self.X_test)[:,-1]
 

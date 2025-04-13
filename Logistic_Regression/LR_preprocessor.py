@@ -27,118 +27,160 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     #               'PEDCOND','CYCCOND','PEDESTRIAN','CYCLIST','AUTOMOBILE','MOTORCYCLE',
     #               'TRSN_CITY_VEH','EMERG_VEH','PASSENGER','SPEEDING','AG_DRIV','NEIGHBOURHOOD_158']
     # cols_drop4 = ['ACCLOC', 'INVTYPE']
-    cols_drop4 = ['INVTYPE']
+    # cols_drop4 = ['INVTYPE']
+    cols_drop4 = ['INVTYPE', 'INVAGE', 'PEDCOND', 'CYCCOND','NEIGHBOURHOOD_158', 'IMPACTYPE']
+    cols_drop5 = ['NEIGHBOURHOOD_158',
+                    'ALCOHOL',
+                    'WEEK',
+                    'AG_DRIV',
+                    'AUTOMOBILE',
+                    'DAY',
+                    'VISIBILITY',
+                    'EMERG_VEH',
+                    'CYCCOND',
+                    'DAYOFWEEK',
+                    'MONTH',
+                    'DISABILITY',
+                    'REDLIGHT',
+                    'MOTORCYCLE',
+                    'PASSENGER',
+                    'ROAD_CLASS',
+                    'PEDCOND',
+                    'RDSFCOND',]
     cols_drop.extend(cols_drop2)
     # cols_drop.extend(cols_drop3)
-    cols_drop.extend(cols_drop4)
+    # cols_drop.extend(cols_drop4)
+    cols_drop.extend(cols_drop5)
 
 
     def __init__(self, level = 2):
-        self._level = level # Level 1, performs all the clean-up, imputation and encoding
+        self._level = level # Level 1, performs all the clean-up, imputation and encoding, sampling
                             # Level 2, only performs the minimal required encoding
+    @property
+    def level(self):
+        return self._level
 
-    def _init_clean(self, X):
+    @level.setter
+    def level(self, value):
+        self._level = value
+
+
+    def _init_clean(self, df):
+        print("Preprocessing data : _init_clean")
         ###############
         # Clean up DATE and TIME columns to correct type
 
         # Only extract date
-        X['DATE'] = pd.to_datetime(X['DATE'], format='%m/%d/%Y %I:%M:%S %p').dt.normalize()
+        df['DATE'] = pd.to_datetime(df['DATE'], format='%m/%d/%Y %I:%M:%S %p').dt.normalize()
 
         # Original 'TIME' column is 'int64' so 0006 is 6 which is an issue for to_datetime()
         # Fix the format with leading zero with zfill()
-        X['TIME'] = X['TIME'].apply(lambda x: str(x).zfill(4))
-        X['TIME'] = pd.to_datetime(X['TIME'],format='%H%M').dt.time
+        df['TIME'] = df['TIME'].apply(lambda x: str(x).zfill(4))
+        df['TIME'] = pd.to_datetime(df['TIME'], format='%H%M').dt.time
 
         ###############
         # Clean up the ROAD_CLASS for trailing space
-        X['ROAD_CLASS'] = X['ROAD_CLASS'].str.strip()
+        df['ROAD_CLASS'] = df['ROAD_CLASS'].str.strip()
 
-    def _impute(self, X):
+    def _district_fit(self, df):
+        print("Preprocessing data : _district_fit")
+        # Fit: Get the most frequent DISTRICT per HOOD_158
+        self.hood_to_district_mode = df.groupby('HOOD_158')['DISTRICT'].agg(lambda x: x.mode()[0])
+
+    def _impute(self, df):
+        print("Preprocessing data : _impute")
         ###############
         # Impute the empty ACCNUM from date, time, longtitue and latitude
 
-        datetime = pd.to_datetime(X['DATE'].astype(str) + ' ' + X['TIME'].astype(str))
-        long_lat = X[['LONGITUDE', 'LATITUDE']].astype(str).agg('_'.join, axis=1)
+        datetime = pd.to_datetime(df['DATE'].astype(str) + ' ' + df['TIME'].astype(str))
+        long_lat = df[['LONGITUDE', 'LATITUDE']].astype(str).agg('_'.join, axis=1)
         datetime_long_lat = datetime.astype(str) + "_" + long_lat
-        X['ACCNUM'] = X['ACCNUM'].fillna(datetime_long_lat).astype(str)
+        df['ACCNUM'] = df['ACCNUM'].fillna(datetime_long_lat).astype(str)
 
         ###############
         # Impute the ACCLASS
-        X['ACCLASS'] = X['ACCLASS'].fillna(X['INJURY'])
-        X['ACCLASS'] = X['ACCLASS'].replace('Property Damage O', 'Non-Fatal Injury')   # Or dropped
+        df['ACCLASS'] = df['ACCLASS'].fillna(df['INJURY'])
+        df['ACCLASS'] = df['ACCLASS'].replace('Property Damage O', 'Non-Fatal Injury')   # Or dropped
 
         ###############
         # Impute the missing DISTRICT based on HOOD_158, NEIGHBOURHOOD_158
-        empty_district_index = X['DISTRICT'].isna()
-        X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
+        empty_district_index = df['DISTRICT'].isna()
+        # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
+        df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+
 
         ###############
         # Impute blank with 'Other'
         other_columns = ['ROAD_CLASS', 'ACCLOC', 'TRAFFCTL','VISIBILITY',
                          'LIGHT', 'RDSFCOND', 'IMPACTYPE', 'INVTYPE']
 
-        X[other_columns] = X[other_columns].fillna("Other")
+        df[other_columns] = df[other_columns].fillna("Other")
 
         ###############
         # Impute blank with 'Unknown'
         unknown_columns = ['PEDCOND', 'CYCCOND']
-        X[unknown_columns] = X[unknown_columns].fillna("Unknown")
+        df[unknown_columns] = df[unknown_columns].fillna("Unknown")
 
         ###############
         # Perform binary column transformation inside impute
         # self._binary_column_transform(X)
 
-    def _boolean_column_transform(self, X):
+    def _boolean_column_transform(self, df):
+        print("Preprocessing data : _boolean_column_transform")
         ###############
         # Binary column imputation with True / False
         col_boolean = ['ACCLASS', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'EMERG_VEH', 'PASSENGER',
                       'SPEEDING', 'AG_DRIV', 'ALCOHOL', 'DISABILITY', 'REDLIGHT', 'TRSN_CITY_VEH']
 
         for col in col_boolean:
-            X[col] = X[col].map(
+            df[col] = df[col].map(
                 {'Yes': True, 'No': False, np.nan: False, 'Fatal': True, 'Non-Fatal Injury': False, True: True, False: False})
 
-        print(X['ACCLASS'].value_counts())
-    def _add_datetime_new(self, X):
-        X['DATETIME'] = pd.to_datetime(X['DATE'].astype(str) + ' ' + X['TIME'].astype(str))
-        df = X.assign(
+        print(df['ACCLASS'].value_counts())
+
+    def _add_datetime_new(self, df):
+        print("Preprocessing data : _add_datetime_new")
+        df['DATETIME'] = pd.to_datetime(df['DATE'].astype(str) + ' ' + df['TIME'].astype(str))
+        df = df.assign(
             # YEAR=X['DATETIME'].dt.year,
-            MONTH=X['DATETIME'].dt.month.astype(int),
-            WEEK=X['DATETIME'].dt.isocalendar().week.astype(int),
-            DAY = X['DATETIME'].dt.day.astype(int),
-            DAYOFWEEK=X['DATETIME'].dt.dayofweek.astype(int),
-            HOUR=X['DATETIME'].dt.hour.astype(int)
+            MONTH=df['DATETIME'].dt.month.astype(int),
+            WEEK=df['DATETIME'].dt.isocalendar().week.astype(int),
+            DAY = df['DATETIME'].dt.day.astype(int),
+            DAYOFWEEK=df['DATETIME'].dt.dayofweek.astype(int),
+            HOUR=df['DATETIME'].dt.hour.astype(int)
         )
         # df.drop(columns=['DATE', 'TIME','DATETIME'], inplace = True)
         df.drop(columns=['DATETIME','DATE','TIME'], inplace = True)
         return df
 
-    def _smote_debug(self,X):
-        for i, col in enumerate(X.columns):
+    def _smote_debug(self, df):
+        print("Preprocessing data : _smote_debug")
+        for i, col in enumerate(df.columns):
             try:
                 print(f"Testing column: {col} (index {i})")
-                _ = np.array(X[col], dtype=np.uint32)
+                _ = np.array(df[col], dtype=np.uint32)
             except Exception as e:
                 print(f"❌ Column '{col}' at index {i} caused an issue: {e}")
 
-    def _apply_smote(self, X):
+    def _apply_smote(self, df):
+        print("Preprocessing data : _apply_smote")
         """Apply SMOTENC on combined [X, y] array"""
 
-        categorical_features = ['ROAD_CLASS',
+        categorical_features = [ #'ROAD_CLASS',
                                 'DISTRICT',
                                 'ACCLOC',
                                 'TRAFFCTL',
-                                'VISIBILITY',
+                                # 'VISIBILITY',
                                 'LIGHT',
-                                'RDSFCOND',
+                                # 'RDSFCOND',
                                 'IMPACTYPE',
-                                # 'INVTYPE',
+                                'INVTYPE',
                                 'INVAGE',
-                                'PEDCOND',
-                                'CYCCOND',
-                                'NEIGHBOURHOOD_158'
+                                # 'PEDCOND',
+                                # 'CYCCOND',
+                                # 'NEIGHBOURHOOD_158'
                                 ]
-        X_df, y = X.drop(['ACCLASS'], axis=1), X['ACCLASS']
+        X_df, y = df.drop(['ACCLASS'], axis=1), df['ACCLASS']
         cat_indices = [X_df.columns.get_loc(col) for col in categorical_features]
 
         smote = SMOTENC(categorical_features=cat_indices, random_state=54)
@@ -151,70 +193,80 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
     # Cyclic Encoding for cyclic columns extracted from DATETIME
     def _cyclic_enc(self, df, column, max_value):
+        print("Preprocessing data : _cyclic_enc")
         df[column + '_sin'] = np.sin(2 * np.pi * df[column] / max_value)
         df[column + '_cos'] = np.cos(2 * np.pi * df[column] / max_value)
         # return df
 
-    def _cyclic_enc_transform(self, X):
+    def _cyclic_enc_transform(self, df):
+        print("Preprocessing data : _cyclic_enc_transform")
         col_cyclic_encoding = ['MONTH', 'WEEK', 'DAY', 'DAYOFWEEK', 'HOUR']
         max_cyclic_encoding = [12, 53, 31, 7, 24]
         for col, max in zip(col_cyclic_encoding, max_cyclic_encoding):
             # print(f"{col} -> {max}")
-            self._cyclic_enc(X, col, max)
-        X.drop(col_cyclic_encoding, axis=1, inplace=True)
+            self._cyclic_enc(df, col, max)
+        df.drop(col_cyclic_encoding, axis=1, inplace=True)
         # return df
 
-    def _ohe_transform(self, X):
-        ohe_cols = X.select_dtypes(include=['object']).columns.tolist()
+    def _ohe_transform(self, df):
+        print("Preprocessing data : _ohe_transform")
+        ohe_cols = df.select_dtypes(include=['object']).columns.tolist()
         ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False) # to handle the unseen category as other
-        df_ohe = ohe.fit_transform(X[ohe_cols])
+        df_ohe = ohe.fit_transform(df[ohe_cols])
         df_ohe = pd.DataFrame(df_ohe, columns=ohe.get_feature_names_out(ohe_cols))
 
-        df_new = pd.concat([X, df_ohe], axis=1)
+        df_new = pd.concat([df, df_ohe], axis=1)
         df_new.drop(ohe_cols, axis=1, inplace=True)
         return df_new
 
-    def _labelenc_transform(self, X):
-        labelenc_cols = X.select_dtypes(include=['object']).columns.tolist()
+    def _labelenc_transform(self, df):
+        print("Preprocessing data : _labelenc_transform")
+        labelenc_cols = df.select_dtypes(include=['object']).columns.tolist()
         lblenc = LabelEncoder()
         for col in labelenc_cols:
-            X[col] = lblenc.fit_transform(X[col])
+            df[col] = lblenc.fit_transform(df[col])
 
 
-    def _aggregate(self, X):
+    def _aggregate(self, df):
         pass
 
-    def _preprocess(self, X):
+    def _preprocess(self, df):
         pass
 
-    def _drop_columns(self, X):
+    def _drop_columns(self, df):
+        print("Preprocessing data : _drop_columns")
         cols_drop = []
         for col in self.cols_drop:   # Only drop those columns still exist in the X
-            if col in X.columns:
+            if col in df.columns:
                 cols_drop.append(col)
 
-        X.drop(cols_drop, axis=1, inplace=True)
+        df.drop(cols_drop, axis=1, inplace=True)
 
-    def fit(self, X, y=None):
+    def fit(self, df, y=None):
+        print("Preprocessing data : fit")
+        self._district_fit(df)
         return self
 
-    def transform(self, X, y=None):
-        print("Transforming data")
-        if self._level == 1:
-            self._init_clean(X)
-            self._impute(X)
-            self._boolean_column_transform(X)
-            self._aggregate(X)
+    def transform(self, df, y=None):
+        print("Preprocessing data : Transform")
+        data = df.copy()
+        # if self._level == 1:
+        self._init_clean(data)
+        self._impute(data)
+        self._boolean_column_transform(data)
+        # self._aggregate(data)
+        # self._boolean_column_transform(data)
 
-
-        self._boolean_column_transform(X)
-        X = self._add_datetime_new(X)
+        data = self._add_datetime_new(data)
         # self._cyclic_enc_transform(X)
-        self._drop_columns(X)
+
+        self._drop_columns(data)
+
+        # Perform SMOTENC to the training data (level = 1)
         if self._level == 1:
-            # self._smote_debug(X)
-            X = self._apply_smote(X)
+            self._smote_debug(data)
+            data = self._apply_smote(data)
 
         # X = self._ohe_transform(X)
-        self._labelenc_transform(X)
-        return X
+        self._labelenc_transform(data)
+        return data
