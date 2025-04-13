@@ -55,11 +55,8 @@ function ModelComparison() {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
-              <Typography variant="h6" component="h3">
-                Combined ROC Curve (Train)
-              </Typography>
               <img
-                src={`/images/combined/combined_training_roc.png`}
+                src={`/images/combined/combined_roc_curve_testing.png`}
                 alt="Conmbined_roc"
                 style={{ width: "100%", height: "auto" }}
               />
@@ -70,11 +67,8 @@ function ModelComparison() {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
-              <Typography variant="h6" component="h3">
-                Combined ROC Curve (Test)
-              </Typography>
               <img
-                src={`/images/combined/combined_training_roc.png`}
+                src={`/images/combined/combined_pr_curve_testing.png`}
                 alt="Roc Curve"
                 style={{ width: "100%", height: "auto" }}
               />

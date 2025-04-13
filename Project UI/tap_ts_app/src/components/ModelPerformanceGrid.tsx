@@ -35,13 +35,12 @@ function ExpandableCell({ value }: GridRenderCellParams) {
 
 const columns: GridColDef[] = [
 //  Kernel,Train Acc.,Test Acc.,Unseen Acc.,Parameters,Precision,F1-Score,Recall,ROC Score,Class Imbalance
-{field: "id", headerName: "ID", width: 80},
-{field: "Kernel", headerName: "Kernel", width: 80},
-{field: "Train Acc.", headerName: "Train Acc.", width: 120,type: "number"},
-{field: "Test Acc.", headerName: "Test Acc.", width: 120,type: "number"},
-{field: "Unseen Acc.", headerName: "Unseen Acc.", width: 120,type: "number"},
-{field: "Parameters", headerName: "Parameters", width: 100},
-{field: "Precision", headerName: "Precision", width: 100,type: "number"},
+{field: "id", headerName: "ID", width: 70},
+{field: "Train Acc.", headerName: "Train Acc.%", width: 110,type: "number"},
+{field: "Test Acc.", headerName: "Test Acc.%", width: 110,type: "number"},
+{field: "Unseen Acc.", headerName: "Unseen Acc.%", width: 120,type: "number"},
+{field: "Parameters", headerName: "Parameters", width: 150},
+{field: "Precision", headerName: "Precision", width: 110,type: "number"},
 {field: "F1-Score", headerName: "F1-Score", width: 100,type: "number"},
 {field: "Recall", headerName: "Recall", width: 100,type: "number"},
 {field: "ROC Score", headerName: "ROC Score", width: 100,type: "number"},

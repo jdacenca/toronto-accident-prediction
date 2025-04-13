@@ -15,7 +15,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, precision_score, recall_score
 import csv
-from model_performance import ModelPerformance
+from model_performance_v2 import ModelPerformance, plot_combined_roc_curves, plot_combined_precision_recall_curves, plot_combined_performance_bar_plots
 import os
 
 # Random seed for reproducibility
@@ -39,7 +39,7 @@ columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id
 
 
 # ===================== FUNCTION TO STORE METRICS =====================
-def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_features, unseen_labels, voting_type, class_imb, results):
+def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_features, unseen_labels, class_imb, results):
     """
     Stores metrics for hard and soft voting classifiers with various classifiers and generates performance plots.
 
@@ -48,22 +48,35 @@ def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_f
     - X_train, y_train: Training data.
     - X_test, y_test: Test data.
     - unseen_features, unseen_labels: Unseen data for evaluation.
-    - voting_type: Type of voting ("Hard" or "Soft").
     - class_imb: Class imbalance method ("oversampling", "undersampling", or "original").
     - results: List to store all results.
     """
-    print(f"\n===================== {voting_type.upper()} VOTING METRICS ({class_imb.upper()}) =====================")
+    voting_type = None
+    fitted_classifiers = []
+    print(f"\n===================== VOTING METRICS ({class_imb.upper()}) =====================")
     for classifier in classifiers:
+        # Check if the classifier is a VotingClassifier
+        if "VotingClassifier" in str(classifier):
+            voting_type = "hard" if classifier.voting == "hard" else "soft"
+
         classifier.fit(X_train, y_train)
+        fitted_classifiers.append(classifier)
         y_pred = classifier.predict(X_test)
 
         # Calculate metrics
         train_acc = classifier.score(X_train, y_train)
         test_acc = accuracy_score(y_test, y_pred)
+
         precision = precision_score(y_test, y_pred, average='weighted', zero_division=1)
         recall = recall_score(y_test, y_pred, average='weighted', zero_division=1)
         f1 = f1_score(y_test, y_pred, average='weighted', zero_division=1)
-        roc_auc = roc_auc_score(y_test, y_pred, average='weighted', multi_class='ovr')
+
+        if hasattr(classifier, "predict_proba"):
+            y_pred_proba = classifier.predict_proba(X_test)[:, 1]
+        else:
+            y_pred_proba = classifier.predict(X_test)
+
+        roc_auc = roc_auc_score(y_test, y_pred_proba)
 
         # Evaluate on unseen data
         unseen_pred = classifier.predict(unseen_features)
@@ -97,33 +110,33 @@ def store_voting_metrics(classifiers, X_train, y_train, X_test, y_test, unseen_f
         print(f"F1 Score: {f1:.4f}")
         print(f"ROC AUC: {roc_auc:.4f}")
 
-
-
+        # Save results to CSV
         if isinstance(classifier, VotingClassifier):
-            
             # Generate and save performance plots
-            folder_path = f"./ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}"
+            folder_path = f"./ensemble_performance/performance_metrics/{voting_type.lower()}voting_{class_imb.lower()}"
             os.makedirs(folder_path, exist_ok=True)
 
             #pickle the model
             import joblib
             joblib.dump(classifier, f"ensemble_performance/voting_pickles/{voting_type.lower()}voting_{class_imb.lower()}_model.pkl")
 
-            performance = ModelPerformance(classifier, X_test, y_test)
-            performance.conf_matrix(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/confusion_matrix.png")
-            performance.classification_report_heatmap(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/classification_report.png")
-            performance.roc_cur(f"ensemble_performance/{voting_type.lower()}voting_{class_imb.lower()}/roc_curve.png")
+            performance = ModelPerformance(classifier, X_train, y_train, X_test, y_test)
+            performance.conf_matrix(f"ensemble_performance/performance_metrics/{voting_type.lower()}voting_{class_imb.lower()}/confusion_matrix.png")
+            performance.classification_report_heatmap(f"ensemble_performance/performance_metrics/{voting_type.lower()}voting_{class_imb.lower()}/classification_report.png")
+            performance.roc_cur(f"ensemble_performance/performance_metrics/{voting_type.lower()}voting_{class_imb.lower()}/roc_curve.png")
+
 
         else:
-
             # Generate and save performance plots
-            folder_path = f"./ensemble_performance/{classifier_name}_{class_imb.lower()}"
+            folder_path = f"./ensemble_performance/performance_metrics/{classifier_name}_{class_imb.lower()}"
             os.makedirs(folder_path, exist_ok=True)
             
-            performance = ModelPerformance(classifier, X_test, y_test)
-            performance.conf_matrix(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/confusion_matrix.png")
-            performance.classification_report_heatmap(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/classification_report.png")
-            performance.roc_cur(f"ensemble_performance/{classifier_name}_{class_imb.lower()}/roc_curve.png")
+            performance = ModelPerformance(classifier, X_train, y_train, X_test, y_test)
+            performance.conf_matrix(f"ensemble_performance/performance_metrics/{classifier_name}_{class_imb.lower()}/confusion_matrix.png")
+            performance.classification_report_heatmap(f"ensemble_performance/performance_metrics/{classifier_name}_{class_imb.lower()}/classification_report.png")
+            performance.roc_cur(f"ensemble_performance/performance_metrics/{classifier_name}_{class_imb.lower()}/roc_curve.png")
+
+    return fitted_classifiers
 
 # ===================== FUNCTION TO SAVE RESULTS =====================
 def save_results_to_files(results, csv_file, md_file):
@@ -162,9 +175,6 @@ def process_and_train(data, columns_to_drop, class_imb, results):
 
     # Split the data into features and target
     unseen_features, unseen_labels, cleaned_df, features, target = sample_and_update_data(cleaned_df)
-
-    print(f"\n====================Features====================")
-    data_overview(features)
     
     # Encode the target variable
     label_encoder = LabelEncoder()
@@ -186,43 +196,71 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     log_reg_H = LogisticRegression(max_iter=1400)
     dt_H = DecisionTreeClassifier(criterion='entropy', max_depth=42)
     nn_H = MLPClassifier(activation='tanh', alpha=0.01, hidden_layer_sizes=(15, 10, 1), learning_rate='invscaling', max_iter=1000, solver='adam')
-    svm_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1)
+    svm_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True)
     svm_soft_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True)  # For soft voting
     rf_H = RandomForestClassifier(n_estimators=1000, random_state=37, n_jobs=-1, class_weight='balanced')
 
     # Hard voting
     voting_H = VotingClassifier(estimators=[('lr', log_reg_H), ('rf', rf_H), ('svm', svm_H), ('dt', dt_H), ('nn', nn_H)], voting='hard')
-    classifiers_hard = [log_reg_H, rf_H, svm_H, dt_H, nn_H, voting_H]
-
-    store_voting_metrics(
-        classifiers_hard,
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        unseen_features,
-        unseen_labels,
-        "Hard",
-        class_imb,
-        results
-    )
-
-    # Soft voting
     voting_S = VotingClassifier(estimators=[('lr', log_reg_H), ('rf', rf_H), ('svm', svm_soft_H), ('dt', dt_H), ('nn', nn_H)], voting='soft')
-    classifiers_soft = [log_reg_H, rf_H, svm_soft_H, dt_H, nn_H, voting_S]
 
-    store_voting_metrics(
-        classifiers_soft,
+    classifiers = [log_reg_H, rf_H, svm_H, dt_H, nn_H, voting_H, voting_S]
+
+    fitted_classifiers = store_voting_metrics(
+        classifiers,
         X_train,
         y_train,
         X_test,
         y_test,
         unseen_features,
         unseen_labels,
-        "Soft",
         class_imb,
-        results
+        results,
     )
+
+    # # Soft voting
+    # voting_S = VotingClassifier(estimators=[('lr', log_reg_H), ('rf', rf_H), ('svm', svm_soft_H), ('dt', dt_H), ('nn', nn_H)], voting='soft')
+    # classifiers_soft = [log_reg_H, rf_H, svm_soft_H, dt_H, nn_H, voting_S]
+
+    # fitted_classifiers_S= store_voting_metrics(
+    #     classifiers_soft,
+    #     X_train,
+    #     y_train,
+    #     X_test,
+    #     y_test,
+    #     unseen_features,
+    #     unseen_labels,
+    #     "Soft",
+    #     class_imb,
+    #     results
+    # )
+
+       # Generate combined ROC curves for hard voting classifiers
+    plot_combined_roc_curves(
+        fitted_classifiers, #include only the soft voting classifier from the second list
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        f"roc_{class_imb}"
+    )
+
+    plot_combined_precision_recall_curves(
+        fitted_classifiers, #include only the soft voting classifier from the second list
+        X_test,
+        y_test,
+        f"pr_{class_imb}"
+    )
+    
+    plot_combined_performance_bar_plots(
+        fitted_classifiers, #include only the soft voting classifier from the second list
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        f"bar_{class_imb}"
+    )
+
 
 # ===================== MAIN EXECUTION =====================
 # Initialize results list
