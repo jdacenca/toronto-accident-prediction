@@ -14,63 +14,6 @@ import os
 import matplotlib.pyplot as plt
 from sklearn.inspection import permutation_importance
 
-def calculate_and_save_permutation_importance(original_feature_names, classifier, X_test, y_test, voting_type, class_imb):
-    """
-    Calculates permutation importance for a given classifier, displays a bar chart, and saves results to a CSV file.
-
-    Parameters:
-    - classifier: The classifier for which to calculate permutation importance.
-    - X_test: Test features.
-    - y_test: Test labels.
-    - original_feature_names: List of original feature names.
-    - voting_type: Type of voting ("hard" or "soft").
-    - class_imb: Class imbalance method.
-    """
-
-    # Compute permutation importance
-    perm_importance = permutation_importance(classifier, X_test, y_test, n_repeats=10, random_state=17, n_jobs=-1)
-
-    # Take absolute value and sort
-    abs_importance_mean = np.abs(perm_importance.importances_mean)
-    sorted_idx = np.argsort(abs_importance_mean)[::-1]  # Sort in descending order
-
-    # Use the original feature names passed as parameter
-    feature_names = np.array(original_feature_names)
-
-    # Create a DataFrame for better visualization
-    importance_df = pd.DataFrame({
-        "Feature": feature_names[sorted_idx],
-        "Importance": abs_importance_mean[sorted_idx],
-    })
-
-    # Create directory if it doesn't exist
-    dir_path = f"./ensemble_performance/permutation_importance"
-    os.makedirs(dir_path, exist_ok=True)
-
-    # Save to CSV
-    csv_filename = f"{voting_type.lower()}voting_{class_imb.lower()}_permutation_importance.csv"
-    csv_path = os.path.join(dir_path, csv_filename)
-    importance_df.to_csv(csv_path, index=False)
-    print(f"Permutation importance saved to {csv_path}")
-
-    # Print DataFrame
-    print("Feature importances (Permutation Importance):")
-    print(importance_df)
-
-    # Plot
-    plt.figure(figsize=(12, 6))
-    plt.barh(importance_df["Feature"], importance_df["Importance"], color='skyblue')
-    plt.xlabel("Absolute Permutation Importance")
-    plt.title("Feature Importance (Descending Order)")
-    plt.gca().invert_yaxis()  # Highest importance at the top
-    plt.tight_layout()
-
-    # Save figure
-    img_filename = f"{voting_type.lower()}voting_{class_imb.lower()}_permutation_importance.png"
-    img_path = os.path.join(dir_path, img_filename)
-    plt.savefig(img_path)
-    plt.show()
-
 
 def plot_combined_performance_bar_plots(classifiers, X_train, y_train, X_test, y_test, save_folder):
     """
