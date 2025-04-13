@@ -7,6 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import RandomOverSampler
 
 # Random seed for reproducibility
 np.random.seed(17)
@@ -75,13 +76,6 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     # Extract season
     df2['SEASON'] = df2['MONTH'].apply(month_to_season).astype(float)
 
-    # Extract hour from TIME
-    df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
-    df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
-
-    df2['HOUR'] = df2['HOUR'].astype(float)
-    df2['MINUTE'] = df2['MINUTE'].astype(float)
-
     # Replace specific values
     df2['ROAD_CLASS'] = df2['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
 
@@ -111,6 +105,13 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     df2.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
     df2['INVAGE'] = df2['AVG_AGE'].fillna(df2['AVG_AGE'].mean()).astype(float)
 
+    # Extract hour from TIME
+    df2['HOUR'] = df2['TIME'].apply(lambda x: f"{int(x) // 100:02d}" if x >= 100 else '00')  # Extract hours for 3 or 4 digits
+    df2['MINUTE'] = df2['TIME'].apply(lambda x: f"{int(x) % 100:02d}" if x >= 100 else f"{int(x):02d}")  # Extract minutes
+
+    df2['HOUR'] = df2['HOUR'].astype(float)
+    df2['MINUTE'] = df2['MINUTE'].astype(float)
+
     df2["DIVISION"] = df2["DIVISION"].replace('NSA', '00').str[1:].astype(float)
     print("\n===================== DIVISION =====================")
     print(df2["DIVISION"])
@@ -122,7 +123,7 @@ def data_cleaning(df, columns_to_drop, class_imb='original'):
     # Convert LATITUDE and LONGITUDE to float
     df2[['LATITUDE', 'LONGITUDE']] = df2[['LATITUDE', 'LONGITUDE']].astype(float)
 
-    df2.drop(columns=['TIME','DATE','DAY','ACCNUM'], inplace=True)
+    df2.drop(columns=['TIME','DATE','DAY','ACCNUM','AVG_AGE'], inplace=True)
 
     # Handle class imbalance
     if class_imb == 'oversampling':
@@ -220,6 +221,7 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     unseen_features, unseen_labels, cleaned_df, features, target = sample_and_update_data(cleaned_df)
 
     print(features.columns)
+    print(features.info())
     
     # Encode the target variable
     label_encoder = LabelEncoder()
@@ -249,3 +251,5 @@ def start():
     p = process_and_train(data_ksi, columns_to_drop, class_imb='undersampling', results=results)
 
     return p
+
+
