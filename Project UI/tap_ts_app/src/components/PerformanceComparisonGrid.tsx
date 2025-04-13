@@ -53,16 +53,21 @@ const columns: GridColDef[] = [
     width: 120,
     type: "number",
   },
-  { field: "Precision", headerName: "Precision", width: 100, type: "number" },
-  { field: "Recall", headerName: "Recall", width: 100, type: "number" },
-  { field: "F1 Score", headerName: "F1-Score", width: 100, type: "number" },
-  { field: "ROC AUC", headerName: "ROC AUC", width: 100, type: "number" },
+  { field: "Precision", headerName: "Precision", width: 110, type: "number" },
+  { field: "Recall", headerName: "Recall", width: 110, type: "number" },
+  { field: "F1 Score", headerName: "F1-Score", width: 110, type: "number" },
+  { field: "ROC AUC", headerName: "ROC AUC", width: 110, type: "number" },
   {
     field: "Unseen Accuracy (6000)",
     headerName: "Large Unseen (6k)%",
-    width: 150,
+    width: 160,
     type: "number",
   },
+  { field: "Class Imbalance",
+    headerName: "Class Imbalance",
+    width: 160,
+   
+  }
 ];
 
 export default function PerformanceComparisonGrid() {
@@ -80,7 +85,16 @@ export default function PerformanceComparisonGrid() {
         } else {
           const parsedRows = result.data.map((row: any, index: number) => ({
             id: row.id || index + 1,
-            ...row,
+            Classifier: row.Classifier,
+            "Train Accuracy": row["Train Accuracy"] * 100,
+            "Test Accuracy": row["Test Accuracy"] * 100,
+            "Unseen Accuracy (10)": row["Unseen Accuracy (10)"] * 100,
+            Precision: row.Precision,
+            Recall: row.Recall ,
+            "F1 Score": row["F1 Score"] ,
+            "ROC AUC": row["ROC AUC"] ,
+            "Unseen Accuracy (6000)": row["Unseen Accuracy (6000)"] * 100,
+            "Class Imbalance": row["Class Imbalance"],
           }));
           setRows(parsedRows);
         }

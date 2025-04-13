@@ -42,15 +42,21 @@ function ModelComparison() {
             Model Comparison
           </Typography>
         </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12 }}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" component="h3">
-                Combined ROC Curve (Train)
+                Performance
               </Typography>
+              <AccuracyChart />
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card variant="outlined">
+            <CardContent>
               <img
-                src={`/images/combined/combined_training_roc.png`}
+                src={`/images/combined/combined_roc_curve_testing.png`}
                 alt="Conmbined_roc"
                 style={{ width: "100%", height: "auto" }}
               />
@@ -61,11 +67,8 @@ function ModelComparison() {
         <Grid size={{ xs: 12, md: 4 }}>
           <Card variant="outlined">
             <CardContent>
-              <Typography variant="h6" component="h3">
-                Combined ROC Curve (Test)
-              </Typography>
               <img
-                src={`/images/combined/combined_training_roc.png`}
+                src={`/images/combined/combined_pr_curve_testing.png`}
                 alt="Roc Curve"
                 style={{ width: "100%", height: "auto" }}
               />
@@ -84,16 +87,6 @@ function ModelComparison() {
                 alt="Classification Report"
                 style={{ width: "100%", height: "auto" }}
               />
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" component="h3">
-                Performance Comparison
-              </Typography>
-              <AccuracyChart />
             </CardContent>
           </Card>
         </Grid>

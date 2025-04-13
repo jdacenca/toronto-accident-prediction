@@ -48,7 +48,14 @@ class ModelPerformance:
         Parameters:
         - save_path: Path to save the ROC curve plot.
         """
-        fpr, tpr, _ = roc_curve(self.y_test, self.model.predict(self.x_test))
+
+        if hasattr(self.model, "predict_proba"):
+            y_scores = self.model.predict_proba(self.x_test)[:, 1]
+        else:
+            y_scores = self.model.predict(self.x_test)
+        
+        # Compute ROC curve and ROC area
+        fpr, tpr, _ = roc_curve(self.y_test, y_scores)
 
         roc_auc = auc(fpr, tpr)
         plt.figure(figsize=(8, 6))
