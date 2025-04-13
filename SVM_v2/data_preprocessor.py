@@ -231,12 +231,12 @@ def data_preprocessing_svm(features, smote=False):
         pipe_svm_ksi = imPipeline([
             ('preprocessor', preprocessor),
             ('smote', SMOTE(random_state=17)),
-            ('svm', SVC(random_state=17))
+            ('svm', SVC(random_state=17,probability=True))
         ])
     else:
         pipe_svm_ksi = Pipeline([
             ('preprocessor', preprocessor),
-            ('svm', SVC(random_state=17))
+            ('svm', SVC(random_state=17,probability=True))
         ])
 
     return pipe_svm_ksi
@@ -305,7 +305,12 @@ def train_and_evaluate_model(model_name, grid_search, X_train, y_train, X_test, 
     precision = precision_score(y_test, y_pred, average='weighted')
     f1 = f1_score(y_test, y_pred, average='weighted')
     recall = recall_score(y_test, y_pred, average='weighted')
-    roc = roc_auc_score(y_test, y_pred, average='weighted')
+    if hasattr(best_model, "predict_proba"):
+        y_pred_proba = best_model.predict_proba(X_test)[:, 1]
+    else:
+        y_pred_proba = best_model.predict(X_test)
+
+    roc = roc_auc_score(y_test, y_pred_proba, average='weighted')
 
     # Log results
     results.append({
