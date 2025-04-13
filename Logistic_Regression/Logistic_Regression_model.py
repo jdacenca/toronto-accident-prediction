@@ -301,7 +301,7 @@ if __name__ == '__main__':
     print(f"Class Distribution: {Counter(df_new_train['ACCLASS'])}, y_new_train: {Counter(y_new_train)}, y_test: {Counter(y_test)}")
 
     lr_preprocessor.level = 2   # Do not perform SMOTENC on transform
-    pipe_lr = Pipeline([('lr', lr_preprocessor)])
+
     evaluation = LREvaluation(log_reg, lr_preprocessor, X_test, y_test)
 
 
@@ -317,6 +317,9 @@ if __name__ == '__main__':
     evaluation_train.roc_auc(fr'./insights/train_roc_auc{round}.png')
     evaluation_train.precision_recall_auc(fr'./insights/train_precision_recall_auc{round}.png')
     evaluation_train.classification_report(fr'./insights/train_classification_report{round}.png')
+
+    lr_preprocessor.level = 3
+    pipe_lr = Pipeline([('lr', lr_preprocessor)])
 
     joblib.dump(log_reg , r'pickles/logistic_regression_model.pkl')
     joblib.dump(pipe_lr, r'pickles/log_reg_preprocessing_pipeline.pkl')

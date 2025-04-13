@@ -111,6 +111,12 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         # Fit: Get the most frequent DISTRICT per HOOD_158
         self.hood_to_district_mode = df.groupby('HOOD_158')['DISTRICT'].agg(lambda x: x.mode()[0])
 
+    def _district_transform(self, df):
+        print("Preprocessing data : _district_transform")
+        empty_district_index = df['DISTRICT'].isna()
+        # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
+        df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+
     def _impute(self, df):
         print("Preprocessing data : _impute")
         ###############
@@ -128,26 +134,68 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         ###############
         # Impute the missing DISTRICT based on HOOD_158, NEIGHBOURHOOD_158
-        empty_district_index = df['DISTRICT'].isna()
-        # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
-        df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+        # empty_district_index = df['DISTRICT'].isna()
+        # # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
+        # df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+        self._district_transform(df)
 
-
-        ###############
         # Impute blank with 'Other'
-        other_columns = ['ROAD_CLASS', 'ACCLOC', 'TRAFFCTL','VISIBILITY',
+
+        other_columns = ['ROAD_CLASS', 'ACCLOC', 'TRAFFCTL', 'VISIBILITY',
                          'LIGHT', 'RDSFCOND', 'IMPACTYPE', 'INVTYPE']
 
-        df[other_columns] = df[other_columns].fillna("Other")
+        other_columns_exist = [x for x in df.columns.to_list() if x in other_columns]
+        df[other_columns_exist] = df[other_columns_exist].fillna("Other")
 
         ###############
         # Impute blank with 'Unknown'
+
         unknown_columns = ['PEDCOND', 'CYCCOND']
-        df[unknown_columns] = df[unknown_columns].fillna("Unknown")
+
+        unknown_columns_exist = [x for x in df.columns.to_list() if x in unknown_columns]
+        df[unknown_columns_exist] = df[unknown_columns_exist].fillna("Unknown")
 
         ###############
         # Perform binary column transformation inside impute
         # self._binary_column_transform(X)
+
+    def _impute_predict(self, df):
+        print("Preprocessing data : _impute_predict")
+        ###############
+        # Impute the empty ACCNUM from date, time, longtitue and latitude
+
+        # datetime = pd.to_datetime(df['DATE'].astype(str) + ' ' + df['TIME'].astype(str))
+        # long_lat = df[['LONGITUDE', 'LATITUDE']].astype(str).agg('_'.join, axis=1)
+        # datetime_long_lat = datetime.astype(str) + "_" + long_lat
+        # df['ACCNUM'] = df['ACCNUM'].fillna(datetime_long_lat).astype(str)
+
+        ###############
+        # Impute the ACCLASS
+        # df['ACCLASS'] = df['ACCLASS'].fillna(df['INJURY'])
+        # df['ACCLASS'] = df['ACCLASS'].replace('Property Damage O', 'Non-Fatal Injury')  # Or dropped
+
+        ###############
+        # Impute the missing DISTRICT based on HOOD_158, NEIGHBOURHOOD_158
+        # empty_district_index = df['DISTRICT'].isna()
+        # # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
+        # df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+        self._district_transform(df)
+
+        # Impute blank with 'Other'
+
+        other_columns = ['ROAD_CLASS', 'ACCLOC', 'TRAFFCTL', 'VISIBILITY',
+                         'LIGHT', 'RDSFCOND', 'IMPACTYPE', 'INVTYPE']
+
+        other_columns_exist = [x for x in df.columns.to_list() if x in other_columns]
+        df[other_columns_exist] = df[other_columns_exist].fillna("Other")
+
+        ###############
+        # Impute blank with 'Unknown'
+
+        unknown_columns = ['PEDCOND', 'CYCCOND']
+
+        unknown_columns_exist = [x for x in df.columns.to_list() if x in unknown_columns]
+        df[unknown_columns_exist] = df[unknown_columns_exist].fillna("Unknown")
 
     def _boolean_column_transform(self, df):
         print("Preprocessing data : _boolean_column_transform")
@@ -156,11 +204,31 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         col_boolean = ['ACCLASS', 'PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'EMERG_VEH', 'PASSENGER',
                       'SPEEDING', 'AG_DRIV', 'ALCOHOL', 'DISABILITY', 'REDLIGHT', 'TRSN_CITY_VEH']
 
-        for col in col_boolean:
+        col_boolean_exist = [x for x in df.columns.to_list() if x in col_boolean]
+        for col in col_boolean_exist:
             df[col] = df[col].map(
                 {'Yes': True, 'No': False, np.nan: False, 'Fatal': True, 'Non-Fatal Injury': False, True: True, False: False})
 
         print(df['ACCLASS'].value_counts())
+
+    def _string_uppercase(self, df):
+        print("Preprocessing data : _string_uppercase")
+        cols_to_upper = ['ROAD_CLASS',
+                         'DISTRICT',
+                         'ACCLOC',
+                         'TRAFFCTL',
+                         'VISIBILITY',
+                         'LIGHT',
+                         'RDSFCOND',
+                         'IMPACTYPE',
+                         'INVTYPE',
+                         'INVAGE',
+                         'PEDCOND',
+                         'CYCCOND',
+                         'NEIGHBOURHOOD_158']
+        cols_to_upper_exist = [x for x in df.columns.to_list() if x in cols_to_upper]
+        for col in cols_to_upper_exist:
+            df[col] = df[col].str.upper()
 
     def _add_datetime_new(self, df):
         print("Preprocessing data : _add_datetime_new")
@@ -305,17 +373,25 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     def transform(self, df, y=None):
         print("Preprocessing data : Transform")
         data = df.copy()
-        # if self._level == 1:
-        self._init_clean(data)
-        self._impute(data)
-        self._boolean_column_transform(data)
-        # self._aggregate(data)
-        # self._boolean_column_transform(data)
+        if self._level <= 2:
+            self._init_clean(data)
 
-        data = self._add_datetime_new(data)
+        if self._level <= 2:
+            self._impute(data)
+        else:
+            self._impute_predict(data)
+
+        if self._level <= 3:
+            self._boolean_column_transform(data)
+            self._string_uppercase(data)
+        # self._aggregate(data)
+
+        if self._level <=2:
+            data = self._add_datetime_new(data)
         # self._cyclic_enc_transform(X)
 
-        self._drop_columns(data)
+        if self._level <= 3:
+            self._drop_columns(data)
 
         # Perform SMOTENC to the training data (level = 1)
         if self._level == 1:
@@ -323,8 +399,10 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
             data = self._apply_smote(data)
 
         # X = self._ohe_transform(X)
-        self._labelenc_transform(data)
+        if self._level <= 3:
+            self._labelenc_transform(data)
 
-        numeric_features = data.select_dtypes(include=[np.number]).columns
-        self._standard_scaler(data, numeric_features)
+            numeric_features = data.select_dtypes(include=[np.number]).columns
+            self._standard_scaler(data, numeric_features)
+
         return data
