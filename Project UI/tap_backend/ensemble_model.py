@@ -258,5 +258,3 @@ def start():
 
     return p
 
-
-start()

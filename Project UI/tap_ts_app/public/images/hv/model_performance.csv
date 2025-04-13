@@ -1,3 +1,3 @@
 Class Imbalance,Train Acc.,Test Acc.,Unseen Acc.,Precision,Recall,F1-Score,Unseen Accuracy (6000),ROC Score,Parameters
-Oversampling,99.71,94.16,90,0.9422,0.9416,0.9415,0.8709,0.9416,log_reg_rf_svm_dt_mlp_H
-Undersampling,99.63,92.1,80,0.921,0.921,0.921,0.297,0.921,log_reg_rf_svm_dt_mlp_H
+Oversampling,99.71,94.16,100,0.9422,0.9416,0.9415,0.8709,0.9416,log_reg_rf_svm_dt_mlp_H
+Undersampling,99.63,92.1,100,0.921,0.921,0.921,0.297,0.921,log_reg_rf_svm_dt_mlp_H
