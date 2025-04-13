@@ -50,8 +50,11 @@ def create_pickle(model, desc):
         ('classifier', model)  # Add your model as the next step
     ])
 
-    with open(f'./output/mlp_model_{desc}.pkl', 'wb') as file:
-        joblib.dump(full_pipeline, file)
+    with open(f'./output/mlp_model_preprocessing_{desc}.pkl', 'wb') as file:
+        joblib.dump(preprocessor, file)
+
+    with open(f'./output/mlp_single_model_{desc}.pkl', 'wb') as file:
+        joblib.dump(model, file)
 
     print("Model saved as mlp_model.pkl")
 

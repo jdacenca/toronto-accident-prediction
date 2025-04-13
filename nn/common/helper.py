@@ -46,8 +46,8 @@ def clean_dataset(df, drop_fields):
 
     df['MONTH'] = pd.to_datetime(df['DATE']).dt.month
     df['DAY'] = pd.to_datetime(df['DATE']).dt.day
-    df['WEEK'] = pd.to_datetime(df['DATE']).dt.isocalendar().week
-    df['DAYOFWEEK'] = pd.to_datetime(df['DATE']).dt.dayofweek
+    #df['WEEK'] = pd.to_datetime(df['DATE']).dt.isocalendar().week
+    #df['DAYOFWEEK'] = pd.to_datetime(df['DATE']).dt.dayofweek
     df.drop(['DATE'], axis=1, inplace=True)
 
     df['TIME'] = df['TIME'].apply(convert_to_time)

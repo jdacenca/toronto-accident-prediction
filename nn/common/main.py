@@ -118,7 +118,7 @@ column_le = [
     'PEDCOND',
     'CYCCOND',
     'NEIGHBOURHOOD_158',
-    'WEEK',
+    #'WEEK',
     #'MONTH','DAY','WEEK', 'DAYOFWEEK'
 ]
 

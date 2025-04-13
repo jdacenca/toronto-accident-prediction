@@ -37,7 +37,7 @@ def ncr(x, y):
     print("\n", "-"*70)
     print("Under Sampling using Neighborhood Cleaning Rule (NCR)")
     print('Original dataset shape: ', Counter(y))
-    us = NeighbourhoodCleaningRule(random_state=32)
+    us = NeighbourhoodCleaningRule()
 
     X_res, y_res = us.fit_resample(x, y)
     print('Resampled dataset shape: ', Counter(y_res))
