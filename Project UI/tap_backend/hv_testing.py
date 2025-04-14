@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -14,30 +15,30 @@ def month_to_season(month):
         return 3  # Fall
 
 # Clean and preprocess the data
-def data_cleaning(data_ksi):
+def data_cleaning(data_ksi, columns_to_drop):
     data_ksi = data_ksi.copy()
 
     # Drop unnecessary columns
-    #data_ksi.drop(columns=columns_to_drop, inplace=True)
+    data_ksi.drop(columns=columns_to_drop, inplace=True)
     
     # Handle missing target values and specific rows
-    #data_ksi['ACCLASS'] = data_ksi['ACCLASS'].fillna('Fatal')
-    #data_ksi.drop(data_ksi[data_ksi['ACCLASS'] == 'Property Damage O'].index, inplace=True)
-    #data_ksi.drop_duplicates(inplace=True)
+    data_ksi['ACCLASS'] = data_ksi['ACCLASS'].fillna('Fatal')
+    data_ksi.drop(data_ksi[data_ksi['ACCLASS'] == 'Property Damage O'].index, inplace=True)
+    data_ksi.drop_duplicates(inplace=True)
 
-    #data_ksi.drop(columns=['ACCNUM'], inplace=True)
+    data_ksi.drop(columns=['ACCNUM'], inplace=True)
     
     # Format date and time
-    #data_ksi["DATE"] = pd.to_datetime(data_ksi["DATE"]).dt.to_period("D").astype(str)
+    data_ksi["DATE"] = pd.to_datetime(data_ksi["DATE"]).dt.to_period("D").astype(str)
     
     # Extract date components from the 'DATE' column
-    #data_ksi['MONTH'] = pd.to_datetime(data_ksi['DATE']).dt.month
+    data_ksi['MONTH'] = pd.to_datetime(data_ksi['DATE']).dt.month
     
     # Extract season
     data_ksi['SEASON'] = data_ksi['MONTH'].apply(month_to_season).astype(float)
     
     # Replace specific values
-    #data_ksi['ROAD_CLASS'] = data_ksi['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
+    data_ksi['ROAD_CLASS'] = data_ksi['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
     
     # Fill missing values
     unknown_columns = ['PEDCOND', 'DRIVCOND', 'MANOEUVER', 'CYCACT',
@@ -93,3 +94,43 @@ def data_cleaning(data_ksi):
     data_ksi.drop(columns=['TIME','DATE','AVG_AGE'], inplace=True)
 
     return data_ksi
+
+
+# Main script
+if __name__ == "__main__":
+    # Load model and data
+    model=  joblib.load("./pickle_files/ensemble/Soft_Voting_Classifier.pkl")
+    preprocessor = joblib.load("./pickle_files/ensemble/preprocessor.pkl")
+    label_encoder= joblib.load("./pickle_files/ensemble/label_encoder.pkl")
+    data_path = "./data/Total_KSI.csv"
+ 
+    data_ksi = pd.read_csv(data_path).head(10)
+
+    # Drop unnecessary columns
+    columns_to_drop = [ 'OBJECTID', 'INDEX',  # index_id 
+    'FATAL_NO', # sequence No. - high missing values
+    'OFFSET', #high missing values
+    'x', 'y','CYCLISTYPE', 'PEDTYPE', 'PEDACT', # high correlation
+    'EMERG_VEH',       # 0 permutation importance 
+    'CYCCOND',         # 0 permutation importance 
+    "NEIGHBOURHOOD_158","NEIGHBOURHOOD_140","STREET1","STREET2","INJURY" # based on feature importance
+    ]   
+
+    cleaned_df = data_cleaning(data_ksi, columns_to_drop)
+
+    # Split features and target
+    features = cleaned_df.drop(columns=["ACCLASS"])
+    target = cleaned_df["ACCLASS"]
+
+    # Transform data
+    features_transformed = preprocessor.transform(features)
+    target_encoded = label_encoder.transform(target)
+
+    print(target_encoded)    #
+    predictions = model.predict(features_transformed)
+    accuracy_score = accuracy_score(target_encoded, predictions)
+
+    print(f"Accuracy: {accuracy_score:.2f}")
+    print(predictions)
+
+ 

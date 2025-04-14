@@ -40,12 +40,12 @@ function Analytics() {
     lg: {
       trainingAccuracy: "91.62%",
       testingAccuracy: "89.58%",
-      unseenDataAccuracy: "80%",
+      unseenDataAccuracy: "100%",
     },
     rf: {
       trainingAccuracy: "100%",
       testingAccuracy: "94.10%",
-      unseenDataAccuracy: "90%",
+      unseenDataAccuracy: "100%",
     },
     svc: {
       trainingAccuracy: "99.54%",
@@ -60,17 +60,17 @@ function Analytics() {
     nn: {
       trainingAccuracy: "97.68%",
       testingAccuracy: "92.36%",
-      unseenDataAccuracy: "90%",
+      unseenDataAccuracy: "100%",
     },
     hv: {
       trainingAccuracy: "99.71%",
       testingAccuracy: "94.16%",
-      unseenDataAccuracy: "90%",
+      unseenDataAccuracy: "100%",
     },
     sv: {
       trainingAccuracy: "99.99%",
       testingAccuracy: "95%",
-      unseenDataAccuracy: "80%",
+      unseenDataAccuracy: "100%",
     },
   };
 

@@ -267,13 +267,14 @@ def process_and_train(data, columns_to_drop, class_imb, results):
         y_test,
         f"lg_{class_imb}"
     )
+    
 
 # ===================== MAIN EXECUTION =====================
 # Initialize results list
 results = []
 
 # Process and train for each class imbalance method
-class_imbalance_methods = ["oversampling", "undersampling"]
+class_imbalance_methods = ["oversampling"]
 
 for method in class_imbalance_methods:
     process_and_train(data_ksi, columns_to_drop, class_imb=method, results=results)

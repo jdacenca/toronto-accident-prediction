@@ -11,12 +11,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
-from ensemble_model import start
 
 from config import hood_id_158_upp, hood_id_140_upp, hood_158_vs_140_upp
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Input data path
 input_file_path = './data/TOTAL_KSI_6386614326836635957.csv'
@@ -33,183 +32,189 @@ rf_preprocessing_model = load_model("./pickle_files/preprocessing_pipeline_rf.pk
 nn_model = load_model("./pickle_files/mlp_model_Smote+Tomek.pkl")    #./pickle_files/mlp_model_Random Sampling.pkl
 svm_model = load_model("./pickle_files/best_svm_rbf_oversampling.pkl")
 
-hardvoting_model = load_model("./pickle_files/hardvoting_undersampling_model.pkl")
-softvoting_model = load_model("./pickle_files/softvoting_undersampling_model.pkl")
-
-preprocessor_voting = start()
+ensemble_preprocessor = load_model("./pickle_files/ensemble/preprocessor.pkl")
+hardvoting_model = load_model("./pickle_files/ensemble/Hard_Voting_Classifier.pkl")
+softvoting_model = load_model("./pickle_files/ensemble/Soft_Voting_Classifier.pkl")
 
 @app.route('/predict/<model>', methods=['POST'])
 def get_prediction(model):
     """
     Endpoint to get the number of accidents per month.
     """
-    if model == 'nn':
-        #print(request.data)
-        string_data = request.data.decode('utf-8')
+    if request.method == 'OPTIONS':
+        # Flask-CORS should handle this automatically, but sometimes explicit handling helps
+        return '', 204, {'Access-Control-Allow-Origin': 'http://localhost:5173',
+                         'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                         'Access-Control-Allow-Headers': 'Content-Type'}
+    elif request.method == 'POST':
+        if model == 'nn':
+            #print(request.data)
+            string_data = request.data.decode('utf-8')
 
-        # Parse the JSON string into a Python dictionary
-        data_dict = json.loads(string_data) 
+            # Parse the JSON string into a Python dictionary
+            data_dict = json.loads(string_data) 
+            
+            new_data = pd.DataFrame([data_dict])
+            print(new_data)
+            new_data = new_data.drop(columns=['ACCLASS', 'ACCLOC', 'INVTYPE', 'HOUR', 'DAYOFWEEK', 'WEEK'], axis=0)
+            p = nn_model.predict(new_data)
+            print(f"PREDICITON: {p}")
+        elif model == 'dt':
+            
+            string_data = request.data.decode('utf-8')
+
+            # Parse the JSON string into a Python dictionary
+            data_dict = json.loads(string_data) 
+
+            new_data = pd.DataFrame([data_dict])
+            print(new_data)
+
+            data = dt_preprocessing_model.transform(new_data)
+            X = data.drop(columns=['ACCLASS'])
+            p = dt_model.predict(X)
+            print(p)
+        elif model == 'svm':
+            string_data = request.data.decode('utf-8')
+            data_dict = json.loads(string_data) 
+
+            boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
+                        'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY','EMERG_VEH']
+            
+            new_data = pd.DataFrame([data_dict])
+            print(new_data)
+            new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
+            new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
+            new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
+            new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
+            new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
+            new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
+            new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
+            new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
+            new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
+
+            if new_data['MONTH'].isin([12, 1, 2]).any():
+                new_data['SEASON'] = 0  # Winter
+            elif new_data['MONTH'].isin([3, 4, 5]).any():
+                new_data['SEASON'] =  1  # Spring
+            elif new_data['MONTH'].isin([6, 7, 8]).any():
+                new_data['SEASON'] =  2  # Summer
+            else:
+                new_data['SEASON'] =  3  # Fall
+            
+            print(new_data)
+
+            p = svm_model.predict(new_data)
+            print(p)
+        elif model == 'rf':
+            print("RF")
+            string_data = request.data.decode('utf-8')
+
+            # Parse the JSON string into a Python dictionary
+            data_dict = json.loads(string_data) 
+
+            new_data = pd.DataFrame([data_dict])
+            print(new_data)
+
+            data = rf_preprocessing_model.transform(new_data)
+            #X = data.drop(columns=['ACCLASS'])
+            p = rf_model.predict(data)
+            print(p)
+        elif model == 'sv':
+            string_data = request.data.decode('utf-8')
+            data_dict = json.loads(string_data) 
+
+            boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
+                        'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
+            
+            new_data = pd.DataFrame([data_dict])
+
+            new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
+            new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
+            new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
+            new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
+            new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
+            new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
+            new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
+            new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
+            new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
+
+            if new_data['MONTH'].isin([12, 1, 2]).any():
+                new_data['SEASON'] = 0  # Winter
+            elif new_data['MONTH'].isin([3, 4, 5]).any():
+                new_data['SEASON'] =  1  # Spring
+            elif new_data['MONTH'].isin([6, 7, 8]).any():
+                new_data['SEASON'] =  2  # Summer
+            else:
+                new_data['SEASON'] =  3  # Fall
+
+            val = new_data['NEIGHBOURHOOD_158'].to_string(index=False)
+
+            new_data['HOOD_158'] = hood_id_158_upp[val]
+            hood_140 = hood_158_vs_140_upp[val]
+            print(f"HOOD_140: {hood_140}")
+            new_data['HOOD_140'] = hood_id_140_upp[hood_140]
+
+            new_data['DIVISION'] = new_data['DIVISION'].replace('NSA', '00').str[1:].astype(float)
+            new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
+
+            processed_data = ensemble_preprocessor.transform(new_data)
+            print(processed_data)
+
+            p = softvoting_model.predict(processed_data)
+            print(p)
+
+        elif model == 'hv':
+            string_data = request.data.decode('utf-8')
+            data_dict = json.loads(string_data) 
+
+            boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
+                        'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
+            
+            new_data = pd.DataFrame([data_dict])
+
+            new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
+            new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
+            new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
+            new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
+            new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
+            new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
+            new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
+            new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
+            new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
+
+            if new_data['MONTH'].isin([12, 1, 2]).any():
+                new_data['SEASON'] = 0  # Winter
+            elif new_data['MONTH'].isin([3, 4, 5]).any():
+                new_data['SEASON'] =  1  # Spring
+            elif new_data['MONTH'].isin([6, 7, 8]).any():
+                new_data['SEASON'] =  2  # Summer
+            else:
+                new_data['SEASON'] =  3  # Fall
+
+            val = new_data['NEIGHBOURHOOD_158'].to_string(index=False)
+
+            new_data['HOOD_158'] = hood_id_158_upp[val]
+            hood_140 = hood_158_vs_140_upp[val]
+            print(f"HOOD_140: {hood_140}")
+            new_data['HOOD_140'] = hood_id_140_upp[hood_140]
+
+            new_data['DIVISION'] = new_data['DIVISION'].replace('NSA', '00').str[1:].astype(float)
+            new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
+
+            processed_data = ensemble_preprocessor.transform(new_data)
+            print(processed_data)
+
+            p = hardvoting_model.predict(processed_data)
+            print(p)
         
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-        new_data = new_data.drop(columns=['ACCLASS', 'ACCLOC', 'INVTYPE', 'HOUR', 'DAYOFWEEK', 'WEEK'], axis=0)
-        p = nn_model.predict(new_data)
-        print(f"PREDICITON: {p}")
-    elif model == 'dt':
         
-        string_data = request.data.decode('utf-8')
-
-        # Parse the JSON string into a Python dictionary
-        data_dict = json.loads(string_data) 
-
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-
-        data = dt_preprocessing_model.transform(new_data)
-        X = data.drop(columns=['ACCLASS'])
-        p = dt_model.predict(X)
-        print(p)
-    elif model == 'svm':
-        string_data = request.data.decode('utf-8')
-        data_dict = json.loads(string_data) 
-
-        boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
-                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY','EMERG_VEH']
-        
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-        new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
-        new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
-        new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
-        new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
-        new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
-        new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
-        new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
-        new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
-        new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
-
-        if new_data['MONTH'].isin([12, 1, 2]).any():
-            new_data['SEASON'] = 0  # Winter
-        elif new_data['MONTH'].isin([3, 4, 5]).any():
-            new_data['SEASON'] =  1  # Spring
-        elif new_data['MONTH'].isin([6, 7, 8]).any():
-            new_data['SEASON'] =  2  # Summer
+        if p[0] == 1:
+            json_data = json.dumps({"prediction": "FATAL"})
         else:
-            new_data['SEASON'] =  3  # Fall
-        
-        print(new_data)
+            json_data = json.dumps({"prediction": "NON-FATAL"})
 
-        p = svm_model.predict(new_data)
-        print(p)
-    elif model == 'rf':
-        print("RF")
-        string_data = request.data.decode('utf-8')
-
-        # Parse the JSON string into a Python dictionary
-        data_dict = json.loads(string_data) 
-
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-
-        data = rf_preprocessing_model.transform(new_data)
-        #X = data.drop(columns=['ACCLASS'])
-        p = rf_model.predict(data)
-        print(p)
-    elif model == 'sv':
-        string_data = request.data.decode('utf-8')
-        data_dict = json.loads(string_data) 
-
-        boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
-                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
-        
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-        new_data["TRAFFCTL"] = new_data["TRAFFCTL"].fillna("No_Control")
-        new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
-        new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
-        new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
-        new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
-        new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
-        new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
-        new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
-        new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
-        new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
-
-        if new_data['MONTH'].isin([12, 1, 2]).any():
-            new_data['SEASON'] = 0  # Winter
-        elif new_data['MONTH'].isin([3, 4, 5]).any():
-            new_data['SEASON'] =  1  # Spring
-        elif new_data['MONTH'].isin([6, 7, 8]).any():
-            new_data['SEASON'] =  2  # Summer
-        else:
-            new_data['SEASON'] =  3  # Fall
-
-        val = new_data['NEIGHBOURHOOD_158'].to_string(index=False)
-        print(f"VALUE: {val}")
-
-        new_data['HOOD_158'] = hood_id_158_upp[val]
-        hood_140 = hood_id_140_upp[val]
-        new_data['HOOD_140'] = hood_140
-        
-        new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
-        print(new_data)
-
-        p = softvoting_model.predict(new_data)
-        print(p)
-
-    elif model == 'hv':
-        string_data = request.data.decode('utf-8')
-        data_dict = json.loads(string_data) 
-
-        boolean_columns = ['PEDESTRIAN', 'CYCLIST', 'AUTOMOBILE', 'MOTORCYCLE', 'TRUCK', 'TRSN_CITY_VEH',
-                       'PASSENGER', 'SPEEDING', 'AG_DRIV', 'REDLIGHT', 'ALCOHOL', 'DISABILITY']
-        
-        new_data = pd.DataFrame([data_dict])
-        print(new_data)
-        new_data[boolean_columns] = new_data[boolean_columns].replace({'YES': 1, 'NO': 0}).astype(float)
-        new_data['INVAGE'] = new_data['INVAGE'].str.replace('OVER 95', '95 TO 100')
-        new_data['INVAGE'] = new_data['INVAGE'].replace('UNKNOWN', np.nan)
-        new_data[['min_age', 'max_age']] = new_data['INVAGE'].str.split(' TO ', expand=True)
-        new_data['min_age'] = pd.to_numeric(new_data['min_age'], errors='coerce')
-        new_data['max_age'] = pd.to_numeric(new_data['max_age'], errors='coerce')
-        new_data['AVG_AGE'] = new_data[['min_age', 'max_age']].mean(axis=1).astype(float)
-        new_data.drop(columns=['INVAGE','min_age', 'max_age'], inplace=True)
-        new_data['INVAGE'] = new_data['AVG_AGE'].fillna(new_data['AVG_AGE'].mean()).astype(float)
-
-        if new_data['MONTH'].isin([12, 1, 2]).any():
-            new_data['SEASON'] = 0  # Winter
-        elif new_data['MONTH'].isin([3, 4, 5]).any():
-            new_data['SEASON'] =  1  # Spring
-        elif new_data['MONTH'].isin([6, 7, 8]).any():
-            new_data['SEASON'] =  2  # Summer
-        else:
-            new_data['SEASON'] =  3  # Fall
-
-        val = new_data['NEIGHBOURHOOD_158'].to_string(index=False)
-
-        new_data['HOOD_158'] = hood_id_158_upp[val]
-        hood_140 = hood_158_vs_140_upp[val]
-        print(f"HOOD_140: {hood_140}")
-        new_data['HOOD_140'] = hood_id_140_upp[hood_140]
-
-        new_data['DIVISION'] = new_data['DIVISION'].replace('NSA', '00').str[1:].astype(float)
-        #new_data['DIVISION'] = division.replace('NSA', '00').str[1:].astype(float)
-        new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
-
-        processed_data = preprocessor_voting.transform(new_data)
-        print(processed_data)
-
-        p = hardvoting_model.predict(processed_data)
-        print(p)
-    
-    
-    if p[0] == 1:
-        json_data = json.dumps({"prediction": "FATAL"})
-    else:
-        json_data = json.dumps({"prediction": "NON-FATAL"})
-
-    print(json_data)
-    return json_data, 200
+        print(json_data)
+        return json_data, 200
 
 # ===================== DATA PREPROCESSING =====================
 def data_preprocessing(features):

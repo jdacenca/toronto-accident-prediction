@@ -12,8 +12,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import ExploreIcon from '@mui/icons-material/Explore';
-
-import { styled } from '@mui/material/styles';
+import CompareIcon from '@mui/icons-material/Compare';import { styled } from '@mui/material/styles';
 import { Link, useLocation } from 'react-router-dom';
 import { computeRowsUpdates } from '@mui/x-data-grid/hooks/features/rows/gridRowsUtils';
 
@@ -24,7 +23,7 @@ const mainListItems = [
   { text: 'Data Exploration', icon: <ExploreIcon />, location: '/exploration' },
   { text: 'Model Analytics', icon: <AnalyticsRoundedIcon />, location: '/analytics' },
   { text: 'Model Prediction', icon: <AccountTreeIcon />, location: '/prediction' },
-  { text: 'Model Comparison', icon: <AccountTreeIcon />, location: '/model-comparison' },
+  { text: 'Model Comparison', icon: <CompareIcon/>, location: '/model-comparison' },
 ];
 
 const secondaryListItems = [
