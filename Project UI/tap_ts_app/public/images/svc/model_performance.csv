@@ -19,3 +19,4 @@ linear,86.25,86.18,80,C=1_linear,0.8308,0.8047,0.8618,0.5152,undersampling_origi
 rbf,88.13,86.93,80,C=1_γ=0.03_rbf,0.8795,0.8176,0.8693,0.5352,undersampling_original
 poly,96.12,90.36,80,C=0.1_deg=3_γ=0.1_poly,0.8953,0.8914,0.9036,0.7062,undersampling_original
 poly,97.51,87.15,60,C=0.1_deg=3_γ=0.1_poly,0.8901,0.8786,0.8715,0.8922,original_weighted_prob
+rbf,86.76,81.32,80,C=1_linear,0.8804,0.8345,0.8132,0.864,original_weighted_prob
