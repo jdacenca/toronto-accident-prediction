@@ -15,7 +15,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, precision_score, recall_score
 import csv
-from model_performance_v2 import ModelPerformance, plot_combined_roc_curves, plot_combined_precision_recall_curves, plot_combined_performance_bar_plots,plot_lift_gain_curves
+from model_performance_v2 import ModelPerformance#, plot_combined_roc_curves, plot_combined_precision_recall_curves, plot_combined_performance_bar_plots,plot_lift_gain_curves
 import os
 
 # Random seed for reproducibility
@@ -176,9 +176,6 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     # Split the data into features and target
     unseen_features, unseen_labels, cleaned_df, features, target = sample_and_update_data(cleaned_df)
     
-    # Encode the target variable
-    label_encoder = LabelEncoder()
-    target = label_encoder.fit_transform(target)
 
     # Split the data into train & test
     X_train, X_test, y_train, y_test = train_test_split(
@@ -196,8 +193,8 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     log_reg_H = LogisticRegression(max_iter=1400)
     dt_H = DecisionTreeClassifier(criterion='entropy', max_depth=42)
     nn_H = MLPClassifier(activation='tanh', alpha=0.01, hidden_layer_sizes=(15, 10, 1), learning_rate='invscaling', max_iter=1000, solver='adam')
-    svm_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True)
-    svm_soft_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True)  # For soft voting
+    svm_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True, class_weight='balanced')  # For hard voting
+    svm_soft_H = SVC(C=0.1, kernel='poly', degree=3, gamma=0.1, probability=True ,class_weight='balanced')  # For soft voting
     rf_H = RandomForestClassifier(n_estimators=1000, random_state=37, n_jobs=-1, class_weight='balanced')
 
     # Hard voting
@@ -235,38 +232,38 @@ def process_and_train(data, columns_to_drop, class_imb, results):
     #     results
     # )
 
-       # Generate combined ROC curves for hard voting classifiers
-    plot_combined_roc_curves(
-        fitted_classifiers, #include only the soft voting classifier from the second list
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        f"roc_{class_imb}"
-    )
+    #    # Generate combined ROC curves for hard voting classifiers
+    # plot_combined_roc_curves(
+    #     fitted_classifiers, #include only the soft voting classifier from the second list
+    #     X_train,
+    #     y_train,
+    #     X_test,
+    #     y_test,
+    #     f"roc_{class_imb}"
+    # )
 
-    plot_combined_precision_recall_curves(
-        fitted_classifiers, #include only the soft voting classifier from the second list
-        X_test,
-        y_test,
-        f"pr_{class_imb}"
-    )
+    # plot_combined_precision_recall_curves(
+    #     fitted_classifiers, #include only the soft voting classifier from the second list
+    #     X_test,
+    #     y_test,
+    #     f"pr_{class_imb}"
+    # )
     
-    plot_combined_performance_bar_plots(
-        fitted_classifiers, 
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        f"bar_{class_imb}"
-    )
+    # plot_combined_performance_bar_plots(
+    #     fitted_classifiers, 
+    #     X_train,
+    #     y_train,
+    #     X_test,
+    #     y_test,
+    #     f"bar_{class_imb}"
+    # )
 
-    plot_lift_gain_curves(
-        fitted_classifiers, 
-        X_test,
-        y_test,
-        f"lg_{class_imb}"
-    )
+    # plot_lift_gain_curves(
+    #     fitted_classifiers, 
+    #     X_test,
+    #     y_test,
+    #     f"lg_{class_imb}"
+    # )
     
 
 # ===================== MAIN EXECUTION =====================
@@ -274,7 +271,7 @@ def process_and_train(data, columns_to_drop, class_imb, results):
 results = []
 
 # Process and train for each class imbalance method
-class_imbalance_methods = ["oversampling"]
+class_imbalance_methods = ["oversampling", "undersampling", "original"]
 
 for method in class_imbalance_methods:
     process_and_train(data_ksi, columns_to_drop, class_imb=method, results=results)

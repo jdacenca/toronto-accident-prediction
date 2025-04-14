@@ -193,12 +193,13 @@ def sample_and_update_data(cleaned_df):
 
     cleaned_df = cleaned_df.drop(cleaned_df.index[-10:])
 
-    # Encode the target variable
-    label_encoder = LabelEncoder()
-    target = label_encoder.fit_transform(target)
+    # Manually encode the target variable
+    target_mapping = {'Non-Fatal Injury': 0, 'Fatal': 1}
 
-    # Encode unseen labels
-    unseen_labels = label_encoder.transform(unseen_labels)
+    # Apply the mapping to the target and unseen_labels
+    target = target.map(target_mapping)
+    unseen_labels = unseen_labels.map(target_mapping)
+
 
     return unseen_features, unseen_labels, cleaned_df, features, target
 
