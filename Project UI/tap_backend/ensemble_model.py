@@ -14,30 +14,30 @@ def month_to_season(month):
         return 3  # Fall
 
 # Clean and preprocess the data
-def data_cleaning(data_ksi):
+def data_cleaning(data_ksi, columns_to_drop):
     data_ksi = data_ksi.copy()
 
     # Drop unnecessary columns
-    #data_ksi.drop(columns=columns_to_drop, inplace=True)
+    data_ksi.drop(columns=columns_to_drop, inplace=True)
     
     # Handle missing target values and specific rows
-    #data_ksi['ACCLASS'] = data_ksi['ACCLASS'].fillna('Fatal')
-    #data_ksi.drop(data_ksi[data_ksi['ACCLASS'] == 'Property Damage O'].index, inplace=True)
-    #data_ksi.drop_duplicates(inplace=True)
+    data_ksi['ACCLASS'] = data_ksi['ACCLASS'].fillna('Fatal')
+    data_ksi.drop(data_ksi[data_ksi['ACCLASS'] == 'Property Damage O'].index, inplace=True)
+    data_ksi.drop_duplicates(inplace=True)
 
-    #data_ksi.drop(columns=['ACCNUM'], inplace=True)
+    data_ksi.drop(columns=['ACCNUM'], inplace=True)
     
     # Format date and time
-    #data_ksi["DATE"] = pd.to_datetime(data_ksi["DATE"]).dt.to_period("D").astype(str)
+    data_ksi["DATE"] = pd.to_datetime(data_ksi["DATE"]).dt.to_period("D").astype(str)
     
     # Extract date components from the 'DATE' column
-    #data_ksi['MONTH'] = pd.to_datetime(data_ksi['DATE']).dt.month
+    data_ksi['MONTH'] = pd.to_datetime(data_ksi['DATE']).dt.month
     
     # Extract season
     data_ksi['SEASON'] = data_ksi['MONTH'].apply(month_to_season).astype(float)
     
     # Replace specific values
-    #data_ksi['ROAD_CLASS'] = data_ksi['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
+    data_ksi['ROAD_CLASS'] = data_ksi['ROAD_CLASS'].str.replace(r'MAJOR ARTERIAL ', 'MAJOR ARTERIAL', regex=False)
     
     # Fill missing values
     unknown_columns = ['PEDCOND', 'DRIVCOND', 'MANOEUVER', 'CYCACT',

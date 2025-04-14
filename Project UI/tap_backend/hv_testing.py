@@ -125,6 +125,7 @@ if __name__ == "__main__":
     # Transform data
     features_transformed = preprocessor.transform(features)
     target_encoded = label_encoder.transform(target)
+    
 
     print(target_encoded)    #
     predictions = model.predict(features_transformed)
