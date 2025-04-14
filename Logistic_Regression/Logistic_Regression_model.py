@@ -318,8 +318,25 @@ if __name__ == '__main__':
     evaluation_train.precision_recall_auc(fr'./insights/train_precision_recall_auc{round}.png')
     evaluation_train.classification_report(fr'./insights/train_classification_report{round}.png')
 
-    lr_preprocessor.level = 3
-    pipe_lr = Pipeline([('lr', lr_preprocessor)])
+    # lr_preprocessor.level = 3
+    # pipe_lr = Pipeline([('lr', lr_preprocessor)])
+    pipe_lr = Pipeline([('lr', LRPreprocessor(level=3))])
+
+    print("Pipeline fitting:")
+    pipe_lr.fit(pd.concat([X_train, y_train], axis=1))
 
     joblib.dump(log_reg , r'pickles/logistic_regression_model.pkl')
     joblib.dump(pipe_lr, r'pickles/log_reg_preprocessing_pipeline.pkl')
+
+    testdict = {'ROAD_CLASS': {0: 'LOCAL'}, 'DISTRICT': {0: 'NORTH YORK'}, 'LATITUDE': {0: 43.684166917643296},
+                'LONGITUDE': {0: -79.43998504705428}, 'ACCLOC': {0: 'AT INTERSECTION'}, 'TRAFFCTL': {0: 'NO CONTROL'},
+                'VISIBILITY': {0: 'CLEAR'}, 'LIGHT': {0: 'DARK'}, 'RDSFCOND': {0: 'DRY'}, 'ACCLASS': {0: 'Fatal'},
+                'IMPACTYPE': {0: 'APPROACHING'}, 'INVTYPE': {0: 'DRIVER'}, 'INVAGE': {0: '25 TO 29'},
+                'PEDCOND': {0: 'NORMAL'}, 'CYCCOND': {0: 'NORMAL'}, 'PEDESTRIAN': {0: 'NO'}, 'CYCLIST': {0: 'NO'},
+                'AUTOMOBILE': {0: 'NO'}, 'MOTORCYCLE': {0: 'NO'}, 'TRUCK': {0: 'NO'}, 'TRSN_CITY_VEH': {0: 'NO'},
+                'EMERG_VEH': {0: 'NO'}, 'PASSENGER': {0: 'NO'}, 'SPEEDING': {0: 'NO'}, 'AG_DRIV': {0: 'NO'},
+                'REDLIGHT': {0: 'NO'}, 'ALCOHOL': {0: 'NO'}, 'DISABILITY': {0: 'NO'},
+                'NEIGHBOURHOOD_158': {0: 'WOODBINE-LUMSDEN'}}
+
+    testpkl1 = pd.DataFrame.from_dict(testdict)
+    print(pipe_lr.transform(testpkl1))

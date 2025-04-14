@@ -80,6 +80,9 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
     def __init__(self, level = 2):
         self._level = level # Level 1, performs all the clean-up, imputation and encoding, sampling
                             # Level 2, only performs the minimal required encoding
+        self._lblencoder = {}
+        self._scaler = StandardScaler()
+
     @property
     def level(self):
         return self._level
@@ -115,7 +118,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         print("Preprocessing data : _district_transform")
         empty_district_index = df['DISTRICT'].isna()
         # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
-        df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
+        df['DISTRICT'] = df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
 
     def _impute(self, df):
         print("Preprocessing data : _impute")
@@ -179,7 +182,7 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         # empty_district_index = df['DISTRICT'].isna()
         # # X['DISTRICT'] = X.groupby('HOOD_158')['DISTRICT'].transform(lambda x: x.fillna(x.mode()[0]))
         # df['DISTRICT'].fillna(df['HOOD_158'].map(self.hood_to_district_mode))
-        self._district_transform(df)
+        # self._district_transform(df)
 
         # Impute blank with 'Other'
 
@@ -206,8 +209,11 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         col_boolean_exist = [x for x in df.columns.to_list() if x in col_boolean]
         for col in col_boolean_exist:
+            df[col] = df[col].str.upper()
+            # df[col] = df[col].map(
+            #     {'Yes': True, 'No': False, np.nan: False, 'Fatal': True, 'Non-Fatal Injury': False, True: True, False: False})
             df[col] = df[col].map(
-                {'Yes': True, 'No': False, np.nan: False, 'Fatal': True, 'Non-Fatal Injury': False, True: True, False: False})
+                {'YES': True, 'NO': False, np.nan: False, 'FATAL': True, 'NON-FATAL INJURY': False, True: True, False: False})
 
         print(df['ACCLASS'].value_counts())
 
@@ -339,16 +345,29 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
         df_new.drop(ohe_cols, axis=1, inplace=True)
         return df_new
 
-    def _labelenc_transform(self, df):
+    def _labelenc(self, df, method):
         print("Preprocessing data : _labelenc_transform")
         labelenc_cols = df.select_dtypes(include=['object']).columns.tolist()
-        lblenc = LabelEncoder()
-        for col in labelenc_cols:
-            df[col] = lblenc.fit_transform(df[col])
+        # lblenc = LabelEncoder()
 
-    def _standard_scaler(self, df, numeric_features):
-        scaler = StandardScaler()
-        df[numeric_features] = scaler.fit_transform(df[numeric_features])
+        # objmethod = getattr(self._lblencoder, method)
+        for col in labelenc_cols:
+            # df[col] = self._lblencoder.fit_transform(df[col])
+            if method == 'fit':
+                le = LabelEncoder()
+                le.fit(df[col])
+                self._lblencoder[col] = le
+            else:
+                df[col] = self._lblencoder[col].transform(df[col])
+
+    def _standard_scaler(self, df, numeric_features, method):
+        # scaler = StandardScaler()
+        # df[numeric_features] = self._scaler.fit_transform(df[numeric_features])
+        objmethod = getattr(self._scaler, method)
+        if method == 'fit':
+            objmethod(df[numeric_features])
+        else:
+            df[numeric_features] = objmethod(df[numeric_features])
 
     def _aggregate(self, df):
         pass
@@ -367,7 +386,21 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
     def fit(self, df, y=None):
         print("Preprocessing data : fit")
-        self._district_fit(df)
+        data = df.copy()
+        if self._level <= 3:
+            self._district_fit(data)
+
+            self._init_clean(data)
+            self._impute(data)
+            self._boolean_column_transform(data)
+            self._string_uppercase(data)
+            data = self._add_datetime_new(data)
+            self._drop_columns(data)
+
+            self._labelenc(data, 'fit')
+            numeric_features = data.select_dtypes(include=[np.number]).columns
+            self._standard_scaler(data, numeric_features, 'fit')
+        self.fitted_ = True
         return self
 
     def transform(self, df, y=None):
@@ -400,9 +433,11 @@ class LRPreprocessor(BaseEstimator, TransformerMixin):
 
         # X = self._ohe_transform(X)
         if self._level <= 3:
-            self._labelenc_transform(data)
+            numeric_features = data.select_dtypes(include=[np.number]).columns.to_list()
+            self._standard_scaler(data, numeric_features, 'transform')
 
-            numeric_features = data.select_dtypes(include=[np.number]).columns
-            self._standard_scaler(data, numeric_features)
+            self._labelenc(data, 'transform')
+
+
 
         return data
