@@ -429,6 +429,52 @@ export default function Prediction() {
       console.error('Failed to load options. Please try again later.');
     }
 
+    // Form the data object
+    const new_lr_data = {
+      'ROAD_CLASS': roadClass.toUpperCase(),
+      'DISTRICT': district.toUpperCase(),
+      'LATITUDE': lat,
+      'LONGITUDE': long,
+      'ACCLOC': collitionLocation.toUpperCase(),
+      'TRAFFCTL': traffic.toUpperCase(),
+      'VISIBILITY': visibility.toUpperCase(),
+      'LIGHT': light.toUpperCase(),
+      'RDSFCOND': roadSurface.toUpperCase(),
+      'ACCLASS': 'Fatal',
+      'IMPACTYPE': impactType.toUpperCase(),
+      'INVTYPE': invtype.toUpperCase(),
+      'INVAGE': age.toUpperCase(),
+      'PEDCOND': pedestrian.toUpperCase(),
+      'CYCCOND': cyclist.toUpperCase(),
+      'PEDESTRIAN': isPedestrianM,
+      'CYCLIST': isCyclistM,
+      'AUTOMOBILE': isAutomobileM,
+      'MOTORCYCLE': isMotorcycleM,
+      'TRUCK': isTruckM,
+      'TRSN_CITY_VEH': isCityVehicleM,
+      'EMERG_VEH': isEmergencyM,
+      'PASSENGER': isPassengerM,
+      'SPEEDING': isSpeedingM,
+      'AG_DRIV': isAggressiveM,
+      'REDLIGHT': isRedLightM,
+      'ALCOHOL': isAlcoholM,
+      'DISABILITY': isDisabilityM,
+      'NEIGHBOURHOOD_158': neighbourhood.toUpperCase()
+    }
+    // Logistic Regression
+    try {
+      const response = await fetch(apiUrl + '/predict/lr', {method: 'POST', body: JSON.stringify(new_lr_data), headers: {'Content-Type': 'application/json'}});
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setlr(data["prediction"]);
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      console.error('Failed to load options. Please try again later.');
+    }
+
     // SVM
     const svm_new_data = {
       'ROAD_CLASS': roadClass.toUpperCase(),

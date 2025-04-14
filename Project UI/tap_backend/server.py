@@ -25,6 +25,8 @@ data = data_util.load_data(input_file_path)
 clean_data = data_util.clean_data(data)
 
 # Load each model
+lr_model = load_model("./pickle_files/logistic_regression_model.pkl")
+lr_preprocessing_model = load_model("./pickle_files/log_reg_preprocessing_pipeline.pkl")
 dt_model = load_model("./pickle_files/decision_tree_model.pkl")
 dt_preprocessing_model = load_model("./pickle_files/preprocessing_pipeline.pkl")
 rf_model = load_model("./pickle_files/random_forest_model.pkl")
@@ -120,6 +122,21 @@ def get_prediction(model):
             p = rf_model.predict(data)
 
             print(p)
+        elif model == 'lr':
+            print("LR")
+            string_data = request.data.decode('utf-8')
+
+            # Parse the JSON string into a Python dictionary
+            data_dict = json.loads(string_data)
+            print(data_dict) 
+            new_data = pd.DataFrame([data_dict])
+            print(new_data)
+
+            data = lr_preprocessing_model.transform(new_data)
+
+            p = lr_model.predict(data)
+
+            print(p)
         elif model == 'sv':
             string_data = request.data.decode('utf-8')
             data_dict = json.loads(string_data) 
@@ -152,14 +169,12 @@ def get_prediction(model):
 
             new_data['HOOD_158'] = hood_id_158_upp[val]
             hood_140 = hood_158_vs_140_upp[val]
-            print(f"HOOD_140: {hood_140}")
             new_data['HOOD_140'] = hood_id_140_upp[hood_140]
 
             new_data['DIVISION'] = new_data['DIVISION'].replace('NSA', '00').str[1:].astype(float)
             new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
 
             processed_data = ensemble_preprocessor.transform(new_data)
-            print(processed_data)
 
             p = softvoting_model.predict(processed_data)
             print(p)
@@ -196,18 +211,17 @@ def get_prediction(model):
 
             new_data['HOOD_158'] = hood_id_158_upp[val]
             hood_140 = hood_158_vs_140_upp[val]
-            print(f"HOOD_140: {hood_140}")
             new_data['HOOD_140'] = hood_id_140_upp[hood_140]
 
             new_data['DIVISION'] = new_data['DIVISION'].replace('NSA', '00').str[1:].astype(float)
             new_data.drop(columns=['NEIGHBOURHOOD_158'], inplace=True)
 
             processed_data = ensemble_preprocessor.transform(new_data)
-            print(processed_data)
 
             p = hardvoting_model.predict(processed_data)
             print(p)
-        
+        else:
+            return "Model not found", 404
         
         if p[0] == 1:
             json_data = json.dumps({"prediction": "NON-FATAL"})
