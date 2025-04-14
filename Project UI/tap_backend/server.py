@@ -118,6 +118,7 @@ def get_prediction(model):
             data = rf_preprocessing_model.transform(new_data)
             #X = data.drop(columns=['ACCLASS'])
             p = rf_model.predict(data)
+
             print(p)
         elif model == 'sv':
             string_data = request.data.decode('utf-8')
@@ -209,9 +210,9 @@ def get_prediction(model):
         
         
         if p[0] == 1:
-            json_data = json.dumps({"prediction": "FATAL"})
-        else:
             json_data = json.dumps({"prediction": "NON-FATAL"})
+        else:
+            json_data = json.dumps({"prediction": "FATAL"})
 
         print(json_data)
         return json_data, 200
