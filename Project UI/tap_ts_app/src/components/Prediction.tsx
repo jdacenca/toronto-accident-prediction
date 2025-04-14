@@ -530,7 +530,7 @@ export default function Prediction() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setsvm(data["prediction"]);
+      setsv(data["prediction"]);
 
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -543,7 +543,7 @@ export default function Prediction() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setsvm(data["prediction"]);
+      sethv(data["prediction"]);
 
     } catch (err) {
       console.error('Error fetching data:', err);
